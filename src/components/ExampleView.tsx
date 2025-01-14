@@ -1,30 +1,36 @@
 import React, { useEffect } from "react";
 import { Home, Copy, Check } from "lucide-react";
-import { Examplets } from "../data/tsexamples";
-//import { Examplego } from "../data/goexamples";
+import { Example } from "../data/goexamples"; // aqui preciso que altere dinamicamente com base no botão da tecnologia selecionada na home
 import Prism from "prismjs";
 import "prismjs/components/prism-typescript";
 import "prismjs/themes/prism-tomorrow.css";
 
 interface ExampleViewProps {
-  example: Examplets;
+  examples: Example;
   onBackClick: () => void;
+  onNavigateNext: () => void;
+  onNavigatePrevious: () => void;
 }
 
-export function ExampleView({ example, onBackClick }: ExampleViewProps) {
+export function ExampleView({
+  examples,
+  onBackClick,
+  onNavigateNext,
+  onNavigatePrevious,
+}: ExampleViewProps) {
   const [copied, setCopied] = React.useState(false);
 
   useEffect(() => {
     Prism.highlightAll();
-  }, [example]);
+  }, [examples]);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(example.code);
+    await navigator.clipboard.writeText(examples.code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const explanationLines = example.explanation
+  const explanationLines = examples.explanation
     .split("\n")
     .map((line, index) => {
       if (line.startsWith("//")) {
@@ -48,7 +54,7 @@ export function ExampleView({ example, onBackClick }: ExampleViewProps) {
           onClick={onBackClick}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
-          <Home size={28} />
+          <Home size={22} />
           <span>Voltar para Home</span>
         </button>
       </div>
@@ -56,9 +62,9 @@ export function ExampleView({ example, onBackClick }: ExampleViewProps) {
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600">
           <h2 className="text-2xl font-bold mb-2 text-white">
-            {example.title}
+            {examples.title}
           </h2>
-          <p className="text-blue-100">{example.description}</p>
+          <p className="text-blue-100">{examples.description}</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-0">
@@ -75,7 +81,7 @@ export function ExampleView({ example, onBackClick }: ExampleViewProps) {
             <div className="bg-[#1E1E1E] p-6 h-[600px] rounded-xl m-4">
               <pre className="h-full overflow-y-auto rounded-lg">
                 <code className="language-typescript font-['Fira_Code']">
-                  {example.code}
+                  {examples.code}
                 </code>
               </pre>
             </div>
@@ -92,6 +98,22 @@ export function ExampleView({ example, onBackClick }: ExampleViewProps) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Botões de navegação */}
+        <div className="flex justify-between mt-4 p-4">
+          <button
+            onClick={onNavigatePrevious}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          >
+            Tópico anterior
+          </button>
+          <button
+            onClick={onNavigateNext}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          >
+            Próximo Tópico
+          </button>
         </div>
       </div>
     </div>

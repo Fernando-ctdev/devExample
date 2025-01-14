@@ -1,4 +1,4 @@
-export interface Examplets {
+export interface Example {
   title: string;
   description: string;
   code: string;
@@ -50,7 +50,7 @@ export const topics: ExampleCategory[] = [
   },
 ];
 
-export const examplests: Record<string, Examplets> = {
+export const examplests: Record<string, Example> = {
   tipos: {
     title: "Tipos de Dados",
     description: "Os tipos básicos e estruturados em TypeScript",
