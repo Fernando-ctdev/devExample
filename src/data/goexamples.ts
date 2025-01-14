@@ -84,14 +84,7 @@ export const topics: ExampleCategory[] = [
   {
     category: "Principais Verbos de Formatação",
     items: [
-      { id: "Sprintf", title: "Sprintf" },
-      { id: "Print", title: "Print" },
-      { id: "Println", title: "Println" },
-      { id: "Fprintf", title: "Fprintf" },
-      { id: "Fprint", title: "Fprint" },
-      { id: "Errorf", title: "Errorf" },
-      { id: "Scan", title: "Scan" },
-      { id: "Scanf", title: "Scanf" },
+      { id: "Verbos", title: "Verbos de Formatação" },
     ],
   },
 ];
@@ -738,18 +731,166 @@ func main() {
       "O padrão Multiplexador permite combinar múltiplas fontes de dados, facilitando a agregação de valores de diferentes canais.",
   },
   fmt: {
-    title: "Pacote fmt",
-    description: "Uso do pacote fmt para formatação e saída de dados",
-    code: `// Exemplo de uso do pacote fmt
-import "fmt"
+    title: "Funções do Pacote fmt",
+    description: "Principais funções do pacote fmt em Go para entrada e saída formatada",
+    code: `// Print - Imprime diretamente no console
+fmt.Print("Olá", "Mundo", 123)
+// retorno: OláMundo123
 
-func main() {
-    fmt.Println("Olá, Go!")
-    nome := "João"
-    idade := 30
-    fmt.Printf("Nome: %s, Idade: %d\n", nome, idade)
-}`,
-    explanation: `O pacote fmt é usado para formatar e imprimir dados. A função Println imprime uma linha com uma quebra de linha no final, enquanto a função Printf permite especificar a formatação de dados, como no exemplo de 'Nome' e 'Idade'.`,
+// Println - Imprime com quebra de linha
+fmt.Println("Olá", "Mundo", 123)
+// retorno: Olá Mundo 123
+// (adiciona espaços entre argumentos e quebra de linha no final)
+
+// Printf - Imprime texto formatado
+nome := "João"
+idade := 25
+fmt.Printf("Nome: %s, Idade: %d\\n", nome, idade)
+// retorno: Nome: João, Idade: 25
+
+// Sprintf - Retorna string formatada
+texto := fmt.Sprintf("Nome: %s, Idade: %d", nome, idade)
+fmt.Println(texto)
+// retorno: Nome: João, Idade: 25
+
+// Fprintf - Escreve texto formatado em um io.Writer
+arquivo, err := os.Create("saida.txt")
+if err != nil {
+    return err
+}
+defer arquivo.Close()
+
+fmt.Fprintf(arquivo, "Nome: %s\\n", nome)
+// retorno: Escreve "Nome: João" no arquivo saida.txt
+
+// Fprint - Escreve diretamente em um io.Writer
+fmt.Fprint(arquivo, "Olá Mundo")
+// retorno: Escreve "Olá Mundo" no arquivo sem formatação
+
+// Errorf - Cria um erro formatado
+err = fmt.Errorf("erro: usuário %s não encontrado", nome)
+fmt.Println(err)
+// retorno: erro: usuário João não encontrado
+
+// Scan - Lê entrada do usuário
+var nome string
+var idade int
+fmt.Print("Digite nome e idade: ")
+fmt.Scan(&nome, &idade)
+// Espera entrada do usuário: João 25
+fmt.Printf("Nome: %s, Idade: %d\\n", nome, idade)
+// retorno: Nome: João, Idade: 25
+
+// Scanf - Lê entrada formatada
+var dia, mes, ano int
+fmt.Print("Digite a data (DD/MM/AAAA): ")
+fmt.Scanf("%d/%d/%d", &dia, &mes, &ano)
+// Espera entrada do usuário: 15/03/2024
+fmt.Printf("Data: %02d/%02d/%d\\n", dia, mes, ano)
+// retorno: Data: 15/03/2024
+
+// Exemplos práticos combinando funções
+
+// Exemplo 1: Log formatado
+logMsg := fmt.Sprintf("[%s] Usuário %s logado", 
+    time.Now().Format("2006-01-02"), nome)
+fmt.Println(logMsg)
+// retorno: [2024-01-14] Usuário João logado
+
+// Exemplo 2: Relatório em arquivo
+header := fmt.Sprintf("Relatório - %s\\n", 
+    time.Now().Format("Jan 2006"))
+fmt.Fprintf(arquivo, header)
+fmt.Fprintf(arquivo, "Usuário: %s\\n", nome)
+fmt.Fprintf(arquivo, "Idade: %d\\n", idade)
+// retorno: Escreve relatório formatado no arquivo
+
+// Exemplo 3: Tratamento de erro com formato
+if idade < 18 {
+    err := fmt.Errorf("usuário %s não tem idade mínima (%d < 18)", 
+        nome, idade)
+    fmt.Println(err)
+    return err
+}
+// retorno: usuário João não tem idade mínima (15 < 18)`,
+    explanation: `// Funções de Saída Básica
+
+fmt.Print 
+- Imprime argumentos diretamente
+- Não adiciona espaços ou quebras de linha
+- Útil para saída simples e contínua
+
+fmt.Println
+- Imprime argumentos com espaços entre eles
+- Adiciona quebra de linha no final
+- Melhor para leitura e debug
+
+fmt.Printf
+- Imprime texto formatado usando verbos (%s, %d, etc)
+- Permite controle preciso do formato de saída
+- Essencial para saídas personalizadas
+
+
+// Funções de Formatação
+
+fmt.Sprintf
+- Similar ao Printf, mas retorna string
+- Não imprime, apenas formata
+- Útil para criar mensagens formatadas
+
+fmt.Errorf
+- Cria erro com mensagem formatada
+- Usa mesma sintaxe do Printf
+- Ideal para mensagens de erro descritivas
+
+
+// Funções de Arquivo
+
+fmt.Fprintf
+- Escreve texto formatado em io.Writer
+- Pode escrever em arquivos, conexões, etc
+- Combina formatação com escrita em arquivo
+
+fmt.Fprint
+- Escreve texto direto em io.Writer
+- Sem formatação especial
+- Versão básica do Fprintf
+
+
+// Funções de Entrada
+
+fmt.Scan
+- Lê entrada do usuário
+- Separa por espaços automaticamente
+- Converte para tipos especificados
+
+fmt.Scanf
+- Lê entrada formatada do usuário
+- Usa padrão especificado
+- Mais controle sobre formato de entrada
+
+
+// Dicas de Uso
+
+Print/Println
+- Use para debug e saídas simples
+- Println é mais comum por ser mais legível
+
+Printf/Sprintf
+- Use para mensagens formatadas
+- Sprintf quando precisar da string
+
+Fprintf/Fprint
+- Use para escrever em arquivos
+- Fprintf para conteúdo formatado
+
+Errorf
+- Use para criar erros descritivos
+- Melhor que strings de erro simples
+
+Scan/Scanf
+- Use para entrada do usuário
+- Scanf quando formato é importante`,
   },
   string: {
     title: "Pacote string",
@@ -815,74 +956,129 @@ func main() {
 }`,
     explanation: `O pacote net/http é utilizado para criar servidores HTTP e fazer requisições. O exemplo cria um servidor HTTP simples que responde "Olá, Mundo!" para qualquer requisição na raiz ("/").`,
   },
-  Sprintf: {
-    title: "Sprintf",
-    description: "Formatação de strings com o método Sprintf em Go",
-    code: `// Usando Sprintf para formatar uma string, 
-    // comum usar 
-%s - Para textos (strings)
-%d - Para números inteiros
-%f - Para números decimais
-%t - Para verdadeiro/falso (true/false)
-%v - Serve para qualquer tipo (versátil)
-
+  Verbos: {
+    title: "Verbos de Formatação em Go",
+    description: "Principais verbos de formatação para usar com fmt.Printf, fmt.Sprintf, etc.",
+    code: `// Verbos básicos de formatação
 nome := "João"
 idade := 25
-result := fmt.Sprintf("Nome: %s, Idade: %d", nome, idade)`,
-    explanation: `O método 'Sprintf' é utilizado para formatar uma string com valores dinâmicos. Ele retorna a string formatada sem imprimir na tela, permitindo maior controle sobre a saída.`,
-  },
-  Print: {
-    title: "Print",
-    description: "Impressão de dados na saída padrão com Print em Go",
-    code: `// Usando Print para imprimir na saída padrão
-fmt.Print("Olá, Mundo!")`,
-    explanation: `'Print' imprime o texto ou os valores passados como argumento na saída padrão (geralmente o terminal), sem adicionar uma nova linha no final.`,
-  },
-  Println: {
-    title: "Println",
-    description: "Impressão de dados com Println, incluindo uma nova linha",
-    code: `// Usando Println para imprimir com nova linha
-fmt.Println("Olá, Mundo!")`,
-    explanation: `O método 'Println' funciona de forma similar ao 'Print', mas com a diferença de que ele automaticamente adiciona uma nova linha ao final da impressão.`,
-  },
-  Fprintf: {
-    title: "Fprintf",
-    description: "Impressão formatada em um writer com Fprintf",
-    code: `// Usando Fprintf para formatar e imprimir em um writer (ex: arquivo)
-file, _ := os.Create("saida.txt")
-fmt.Fprintf(file, "Nome: %s, Idade: %d", nome, idade)`,
-    explanation: `'Fprintf' é similar ao 'Sprintf', mas imprime a saída formatada para um 'writer' (por exemplo, arquivos, buffers, etc.), ao invés da saída padrão.`,
-  },
-  Fprint: {
-    title: "Fprint",
-    description: "Impressão simples em um writer com Fprint",
-    code: `// Usando Fprint para imprimir sem formatação em um writer
-file, _ := os.Create("saida.txt")
-fmt.Fprint(file, "Texto simples")`,
-    explanation: `'Fprint' imprime os dados passados para um 'writer', mas sem realizar qualquer formatação, diferente do 'Fprintf' que permite formatação.`,
-  },
-  Errorf: {
-    title: "Errorf",
-    description: "Criação de erros formatados com Errorf",
-    code: `// Usando Errorf para criar um erro formatado
-err := fmt.Errorf("Erro: %s, Código: %d", "Falha ao processar", 404)`,
-    explanation: `'Errorf' cria um erro formatado similar ao 'Sprintf', mas ao invés de uma string comum, ele retorna um valor do tipo 'error', que pode ser manipulado em fluxos de controle de erro.`,
-  },
-  Scan: {
-    title: "Scan",
-    description: "Leitura de entrada com Scan",
-    code: `// Usando Scan para ler entrada do usuário
-var nome string
-fmt.Scan(&nome)`,
-    explanation: `'Scan' é utilizado para ler dados da entrada padrão (geralmente teclado) e armazená-los em variáveis. O exemplo lê uma string do usuário e a armazena na variável 'nome'.`,
-  },
-  Scanf: {
-    title: "Scanf",
-    description: "Leitura de entrada formatada com Scanf",
-    code: `// Usando Scanf para ler uma entrada formatada
-var nome string
-var idade int
-fmt.Scanf("%s %d", &nome, &idade)`,
-    explanation: `'Scanf' permite ler entradas da mesma forma que 'Scan', mas com a capacidade de especificar um formato de leitura (como '%s' para string e '%d' para inteiros). Isso ajuda a garantir que a entrada seja lida corretamente no formato desejado.`,
-  },
+altura := 1.75
+programador := true
+
+// %s - Para strings (texto)
+fmt.Printf("Nome: %s\\n", nome)
+// retorno: Nome: João
+
+// %d - Para números inteiros (int)
+fmt.Printf("Idade: %d anos\\n", idade)
+// retorno: Idade: 25 anos
+
+// %f - Para números decimais (float)
+fmt.Printf("Altura: %.2f metros\\n", altura)
+// retorno: Altura: 1.75 metros
+
+// %t - Para booleanos (true/false)
+fmt.Printf("É programador? %t\\n", programador)
+// retorno: É programador? true
+
+// %v - Para qualquer tipo de valor
+fmt.Printf("Dados: %v, %v, %v, %v\\n", nome, idade, altura, programador)
+// retorno: Dados: João, 25, 1.75, true
+
+// %#v - Mostra a sintaxe Go do valor
+fmt.Printf("Sintaxe Go: %#v\\n", nome)
+// retorno: Sintaxe Go: "João"
+
+// %T - Mostra o tipo do valor
+fmt.Printf("Tipos: %T, %T, %T, %T\\n", nome, idade, altura, programador)
+// retorno: Tipos: string, int, float64, bool
+
+// %%  - Imprime o símbolo %
+fmt.Printf("Porcentagem: 100%%\\n")
+// retorno: Porcentagem: 100%
+
+// Alinhamento e precisão
+// %ns - Alinha texto à direita em n espaços
+fmt.Printf("|%10s|\\n", nome)
+// retorno: |      João|
+
+// %-ns - Alinha texto à esquerda em n espaços
+fmt.Printf("|%-10s|\\n", nome)
+// retorno: |João      |
+
+// %.nf - Define casas decimais para float
+fmt.Printf("Altura: %.1f\\n", altura)
+// retorno: Altura: 1.8
+
+// Formatação de números
+numero := 1234567
+// %,d - Adiciona separador de milhar
+fmt.Printf("Número: %,d\\n", numero)
+// retorno: Número: 1,234,567
+
+// %x ou %X - Hexadecimal (minúsculo ou maiúsculo)
+fmt.Printf("Hex: %x - %X\\n", 255, 255)
+// retorno: Hex: ff - FF
+
+// %b - Binário
+fmt.Printf("Binário: %b\\n", 7)
+// retorno: Binário: 111`,
+    explanation: `// Verbos básicos de formatação
+
+* %s - Usado para strings (textos)
+Formata e exibe strings
+Não adiciona aspas na saída
+
+* %d Usado para números inteiros
+Formata números inteiros
+Pode usar com int, int32, int64, etc.
+
+* %f Usado para números decimais
+Formata números de ponto flutuante
+Pode controlar casas decimais com * %.nf
+
+* %t Usado para booleanos
+Mostra true ou false
+Útil para valores lógicos
+
+* %v Verbo genérico
+Funciona com qualquer tipo
+Formato padrão do valor
+
+* %#v Formato sintático Go
+Mostra como o valor seria em código Go
+Inclui tipos e estruturas
+
+* %T Mostra o tipo
+Exibe o tipo Go do valor
+Útil para debugging
+
+// Alinhamento e precisão
+
+* %ns Alinhamento à direita
+n define o número de espaços
+Preenche com espaços à esquerda
+
+* %-ns Alinhamento à esquerda
+n define o número de espaços
+Preenche com espaços à direita
+
+* %.nf Precisão decimal
+n define número de casas decimais
+Arredonda o valor automaticamente
+
+// Formatação especial de números
+
+* %,d Separador de milhar
+Adiciona vírgula a cada 3 dígitos
+Facilita leitura de números grandes
+
+* %x/* %X Formato hexadecimal
+Minúsculo ou maiúsculo
+Base 16
+
+* %b Formato binário
+Mostra número em base 2
+Útil para operações bit a bit`,
+  }
 };

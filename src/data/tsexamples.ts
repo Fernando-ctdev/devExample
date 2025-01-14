@@ -2259,7 +2259,7 @@ Chamada recursiva com resto da divisão`,
   },
   "funcoes-anonimas": {
     title: "Funções Anônimas",
-    description: "Funções sem nome e suas aplicações em TypeScript",
+    description: "Funções anônimas e suas aplicações em TypeScript",
     code: `// IIFE (Immediately Invoked Function Expression)
 (function() {
     console.log("Executado imediatamente");
