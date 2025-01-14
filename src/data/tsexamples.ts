@@ -17,7 +17,13 @@ export const topics: ExampleCategory[] = [
   {
     category: "Fundamentos Typescript",
     items: [
-      { id: "tipos", title: "Tipos de Dados" },
+    { id: "tiposPrimitivos", title: "Tipos Primitivos" },
+      { id: "tiposCompostos", title: "Tipos Compostos" },
+      { id: "tiposCustomizados", title: "Tipos Customizados" },
+      { id: "enums", title: "Enums" },
+      { id: "typeAssertions", title: "Type Assertions" },
+      { id: "tiposLiterais", title: "Tipos Literais" },
+      { id: "tiposObjeto", title: "Tipos de Objeto" },
       { id: "variaveis", title: "Variáveis e Escopo" },
       { id: "operadores", title: "Operadores" },
     ],
@@ -35,7 +41,7 @@ export const topics: ExampleCategory[] = [
     items: [
       { id: "estruturas", title: "Estruturas condicionais" },
       { id: "loops", title: "Loops e Iterações" },
-      { id: "condicionais", title: "Condicionais" },
+      { id: "condicionais", title: "Condicionais type guards" },
     ],
   },
   {
@@ -51,190 +57,258 @@ export const topics: ExampleCategory[] = [
 ];
 
 export const examplests: Record<string, Example> = {
-  tipos: {
-    title: "Tipos de Dados",
-    description: "Os tipos básicos e estruturados em TypeScript",
-    code: `// Tipos primitivos
-let texto: string = "Olá";
-// retorno: "Olá"
-
-let numero: number = 42;
-// retorno: 42
-
-let decimal: number = 3.14;
-// retorno: 3.14
-
-let booleano: boolean = true;
-// retorno: true
-
-let nulo: null = null;
-// retorno: null
-
-let indefinido: undefined = undefined;
-// retorno: undefined
-
-let simbolo: symbol = Symbol("sym");
-// retorno: Symbol(sym)
-
-let bigInt: bigint = 100n;
-// retorno: 100n
-
-
-// Tipos compostos
-let array: number[] = [1, 2, 3];
-// retorno: [1, 2, 3]
-
-let tupla: [string, number] = ["idade", 25];
-// retorno: ["idade", 25]
-
-let union: string | number = "texto";
-// retorno: "texto"
-union = 42;
-// retorno: 42
-
-let qualquerCoisa: any = 4;
-// retorno: 4
-qualquerCoisa = "mudei o tipo";
-// retorno: "mudei o tipo"
-
-
-// Tipos customizados
-type Ponto = {
-    x: number;
-    y: number;
-};
-
-let coordenada: Ponto = { x: 10, y: 20 };
-// retorno: { x: 10, y: 20 }
-
-interface Pessoa {
-    nome: string;
-    idade: number;
-    email?: string;  // Propriedade opcional
-}
-
-let usuario: Pessoa = { 
-    nome: "João", 
-    idade: 25 
-};
-// retorno: { nome: "João", idade: 25 }
-
-
-// Enums
-enum DiaDaSemana {
-    DOMINGO,     // 0
-    SEGUNDA,     // 1
-    TERCA,       // 2
-    QUARTA,      // 3
-    QUINTA,      // 4
-    SEXTA,       // 5
-    SABADO      // 6
-}
-let dia: DiaDaSemana = DiaDaSemana.SEGUNDA;
-// retorno: 1
-
-// Enum com valores personalizados
-enum Status {
-    ATIVO = "ATIVO",
-    INATIVO = "INATIVO"
-}
-let statusAtual: Status = Status.ATIVO;
-// retorno: "ATIVO"
-
-
-// Type assertions
-let valor: any = "uma string";
-let tamanho: number = (valor as string).length;
-// retorno: 10
-
-let comprimento: number = (<string>valor).length;
-// retorno: 10
-
-
-// Literal types
-let alinhamento: "left" | "right" | "center" = "left";
-// retorno: "left"
-
-type Opcoes = "sim" | "não" | "talvez";
-let resposta: Opcoes = "sim";
-// retorno: "sim"
-
-
-// Tipos objeto
-let config: object = { tema: "dark", fonte: 12 };
-// retorno: { tema: "dark", fonte: 12 }
-
-let dados: Record<string, number> = { 
-    idade: 25, 
-    ano: 2024 
-};
-// retorno: { idade: 25, ano: 2024 }`,
-    explanation: `// Tipos primitivos
-
-string - Representa textos e caracteres, pode usar aspas simples ou duplas
-
-number - Representa números, tanto inteiros quanto decimais
-
-boolean - Representa valores verdadeiro (true) ou falso (false)
-
-null - Representa um valor nulo intencional
-
-undefined - Representa uma variável que não foi atribuída
-
-symbol - Representa um identificador único e imutável
-
-bigint - Representa números inteiros muito grandes
-
-
-// Tipos compostos
-
-array - Lista ordenada de elementos do mesmo tipo, definido como tipo[] ou Array<tipo>
-
-tuple - Array com número fixo de elementos, cada um podendo ter um tipo diferente
-
-union - Permite que uma variável aceite mais de um tipo, definido com |
-
-any - Permite qualquer tipo, desativa a verificação de tipo (evitar usar)
-
-
-// Tipos customizados
-
-type - Cria um alias para um tipo complexo, útil para reutilização
-
-interface - Define um contrato para objetos, similar ao type mas mais extensível
-
-Propriedades opcionais - Marcadas com ? podem existir ou não no objeto
-
-
-// Enums
-
-enum - Conjunto de constantes nomeadas, pode ser numérico ou string
-
-Enums numéricos - Valores são atribuídos automaticamente começando do 0
-
-Enums string - Valores precisam ser explicitamente atribuídos
-
-
-// Type assertions
-
-as - Forma moderna de dizer ao TypeScript que você sabe o tipo melhor que ele
-
-<tipo> - Forma antiga de type assertion, não usar em arquivos .tsx
-
-
-// Literal types
-
-Valores específicos - Tipo pode ser um valor literal específico
-
-Union de literals - Combina múltiplos valores possíveis
-
-
-// Tipos objeto
-
-object - Tipo genérico para qualquer valor não primitivo
-
-Record - Define um objeto com chaves e valores de tipos específicos`,
-  },
+    tiposPrimitivos: {
+        title: "Tipos Primitivos em TypeScript",
+        description: "Os tipos básicos fundamentais do TypeScript",
+        code: `// Tipos primitivos
+    let texto: string = "Olá";
+    // retorno: "Olá"
+    
+    let numero: number = 42;
+    // retorno: 42
+    
+    let decimal: number = 3.14;
+    // retorno: 3.14
+    
+    let booleano: boolean = true;
+    // retorno: true
+    
+    let nulo: null = null;
+    // retorno: null
+    
+    let indefinido: undefined = undefined;
+    // retorno: undefined
+    
+    let simbolo: symbol = Symbol("sym");
+    // retorno: Symbol(sym)
+    
+    let bigInt: bigint = 100n;
+    // retorno: 100n`,
+        explanation: `Os tipos primitivos são os blocos fundamentais de construção em TypeScript:
+    
+    string - Representa textos e caracteres, pode usar aspas simples ou duplas
+    
+    number - Representa números, tanto inteiros quanto decimais
+    
+    boolean - Representa valores verdadeiro (true) ou falso (false)
+    
+    null - Representa um valor nulo intencional
+    
+    undefined - Representa uma variável que não foi atribuída
+    
+    symbol - Representa um identificador único e imutável
+    
+    bigint - Representa números inteiros muito grandes`
+      },
+    
+      tiposCompostos: {
+        title: "Tipos Compostos em TypeScript",
+        description: "Arrays, tuplas e unions em TypeScript",
+        code: `// Arrays
+    let array: number[] = [1, 2, 3];
+    // retorno: [1, 2, 3]
+    
+    // Tuplas
+    let tupla: [string, number] = ["idade", 25];
+    // retorno: ["idade", 25]
+    
+    // Union Types
+    let union: string | number = "texto";
+    // retorno: "texto"
+    union = 42;
+    // retorno: 42
+    
+    // Any (usar com moderação)
+    let qualquerCoisa: any = 4;
+    // retorno: 4
+    qualquerCoisa = "mudei o tipo";
+    // retorno: "mudei o tipo"`,
+        explanation: `Os tipos compostos permitem criar estruturas mais complexas:
+    
+    Arrays - Lista ordenada de elementos do mesmo tipo, definido como tipo[] ou Array<tipo>
+    
+    Tuplas - Array com número fixo de elementos, cada um podendo ter um tipo diferente
+    
+    Union Types - Permite que uma variável aceite mais de um tipo, definido com |
+    
+    Any - Permite qualquer tipo, desativa a verificação de tipo (deve ser evitado quando possível)`
+      },
+    
+      tiposCustomizados: {
+        title: "Tipos Customizados em TypeScript",
+        description: "Criando tipos personalizados com type e interface",
+        code: `// Type
+    type Ponto = {
+        x: number;
+        y: number;
+    };
+    
+    let coordenada: Ponto = { x: 10, y: 20 };
+    // retorno: { x: 10, y: 20 }
+    
+    // Interface
+    interface Pessoa {
+        nome: string;
+        idade: number;
+        email?: string;  // Propriedade opcional
+    }
+    
+    let usuario: Pessoa = { 
+        nome: "João", 
+        idade: 25 
+    };
+    // retorno: { nome: "João", idade: 25 }`,
+        explanation: `Tipos customizados permitem definir estruturas complexas reutilizáveis:
+    
+    //Type - Cria um alias para um tipo complexo, útil para reutilização
+    - Pode representar qualquer tipo de dados
+    - Não pode ser estendido após criação
+    
+    //Interface - Define um contrato para objetos
+    - Mais flexível para objetos
+    - Pode ser estendida
+    - Suporta propriedades opcionais (marcadas com ?)`
+      },
+    
+      enums: {
+        title: "Enums em TypeScript",
+        description: "Conjuntos de constantes nomeadas",
+        code: `// Enum Numérico
+    enum DiaDaSemana {
+        DOMINGO,     // 0
+        SEGUNDA,     // 1
+        TERCA,       // 2
+        QUARTA,      // 3
+        QUINTA,      // 4
+        SEXTA,       // 5
+        SABADO      // 6
+    }
+    let dia: DiaDaSemana = DiaDaSemana.SEGUNDA;
+    // retorno: 1
+    
+    // Enum com valores string
+    enum Status {
+        ATIVO = "ATIVO",
+        INATIVO = "INATIVO"
+    }
+    let statusAtual: Status = Status.ATIVO;
+    // retorno: "ATIVO"`,
+        explanation: `Enums são úteis para representar conjuntos fixos de valores:
+    
+    //Enum Numérico
+    - Valores são atribuídos automaticamente começando do 0
+    - Cada membro recebe um número sequencial
+    - Pode ser referenciado pelo nome ou número
+    
+    //Enum String
+    - Valores precisam ser explicitamente atribuídos
+    - Mais seguros para serialização
+    - Mais fáceis de depurar`
+      },
+    
+      typeAssertions: {
+        title: "Type Assertions em TypeScript",
+        description: "Formas de afirmar o tipo de uma variável",
+        code: `// Usando 'as'
+    let valor: any = "uma string";
+    let tamanho: number = (valor as string).length;
+    // retorno: 10
+    
+    // Usando sintaxe angular
+    let comprimento: number = (<string>valor).length;
+    // retorno: 10
+    
+    // Type assertion em objetos
+    let usuario: any = {
+        nome: "João",
+        idade: 25
+    };
+    
+    let idade = (usuario as { idade: number }).idade;
+    // retorno: 25`,
+        explanation: `Type assertions são formas de dizer ao TypeScript que você sabe mais sobre o tipo de uma variável do que ele:
+    
+    //as - Forma moderna de type assertion
+    - Sintaxe mais clara e preferida
+    - Funciona em todos os contextos, incluindo .tsx
+    
+    //Sintaxe angular (<>)
+    - Sintaxe antiga
+    - Não funciona em arquivos .tsx
+    - Ainda suportada mas não recomendada
+    
+    Use type assertions com cuidado, pois elas podem contornar a segurança de tipos do TypeScript`
+      },
+    
+      tiposLiterais: {
+        title: "Tipos Literais em TypeScript",
+        description: "Tipos que representam valores específicos",
+        code: `// Literal types
+    let alinhamento: "left" | "right" | "center" = "left";
+    // retorno: "left"
+    
+    type Opcoes = "sim" | "não" | "talvez";
+    let resposta: Opcoes = "sim";
+    // retorno: "sim"
+    
+    // Combinando com outros tipos
+    type Resultado = number | "erro" | "pendente";
+    let status: Resultado = "pendente";
+    // retorno: "pendente"
+    status = 42;
+    // retorno: 42`,
+        explanation: `Tipos literais permitem especificar exatamente quais valores são aceitos:
+    
+    //Valores Literais
+    - Podem ser strings, números ou booleanos
+    - Restringem uma variável a valores específicos
+    - Úteis para configurações e estados
+    
+    //Union de Literais
+    - Combina múltiplos valores possíveis
+    - Pode ser combinado com outros tipos
+    - Oferece autocompletar no IDE`
+      },
+    
+      tiposObjeto: {
+        title: "Tipos de Objeto em TypeScript",
+        description: "Diferentes formas de tipar objetos",
+        code: `// Objeto genérico
+    let config: object = { tema: "dark", fonte: 12 };
+    // retorno: { tema: "dark", fonte: 12 }
+    
+    // Record
+    let dados: Record<string, number> = { 
+        idade: 25, 
+        ano: 2024 
+    };
+    // retorno: { idade: 25, ano: 2024 }
+    
+    // Object literal type
+    let usuario: {
+        nome: string;
+        idade: number;
+        ativo?: boolean;
+    } = {
+        nome: "Maria",
+        idade: 30
+    };
+    // retorno: { nome: "Maria", idade: 30 }`,
+        explanation: `TypeScript oferece várias formas de tipar objetos:
+    
+    //object
+    - Tipo genérico para qualquer valor não primitivo
+    - Menos específico e seguro
+    
+    //Record<K,T>
+    - Define um objeto com chaves e valores de tipos específicos
+    - Útil para objetos com estrutura uniforme
+    
+    //Object literal type
+    - Define a estrutura exata do objeto
+    - Pode incluir propriedades opcionais
+    - Mais específico e seguro`
+      },
 
   variaveis: {
     title: "Variáveis e Escopo",
@@ -1459,7 +1533,7 @@ Map tipado com generics
 Destructuring mantém tipos das chaves e valores`,
   },
   condicionais: {
-    title: "Condicionais",
+    title: "Condicionais type guards",
     description: "Diferentes tipos de condicionais e type guards em TypeScript",
     code: `// Type Guards básicos
 function processaValor(valor: string | number) {
