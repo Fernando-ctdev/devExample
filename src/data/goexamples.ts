@@ -906,36 +906,360 @@ func main() {
     explanation: `O pacote strings oferece várias funções úteis para manipulação de strings. A função ToUpper converte todos os caracteres de uma string para maiúsculas.`,
   },
   int: {
-    title: "Tipo int",
-    description: "Trabalhando com o tipo de dado int em Go",
-    code: `// Exemplo de uso do tipo int
-var numero int = 42
-fmt.Println(numero)`,
-    explanation: `O tipo int é utilizado para armazenar números inteiros. Em Go, o tipo int pode variar em tamanho dependendo do sistema, mas é adequado para a maioria dos usos de números inteiros.`,
+    title: "Tipo int em Go",
+    description: "Trabalhando com números inteiros e suas operações em Go",
+    code: `// Declaração de variáveis int
+var numero int = 42        // Declaração com var
+idade := 25               // Declaração curta
+const maxValor = 100      // Constante
+
+// Tipos específicos de int
+var num8 int8 = 127       // -128 até 127
+var num16 int16 = 32767   // -32768 até 32767
+var num32 int32 = 2147483647
+var num64 int64 = 9223372036854775807
+
+// Operações matemáticas
+soma := 10 + 5           // 15
+subtracao := 10 - 5      // 5
+multiplicacao := 10 * 5   // 50
+divisao := 10 / 3        // 3 (divisão inteira)
+resto := 10 % 3          // 1 (resto da divisão)
+
+// Operadores de incremento/decremento
+numero++                 // Incrementa 1
+numero--                 // Decrementa 1
+
+// Conversões
+var x float64 = 123.456
+numeroInt := int(x)      // 123 (trunca decimal)
+
+// Funções úteis para int
+absoluto := abs(-42)     // 42
+maximo := max(10, 20)    // 20
+minimo := min(10, 20)    // 10
+
+// Strings e int
+strNumero := "42"
+// Convertendo string para int
+num, err := strconv.Atoi(strNumero)
+if err != nil {
+    fmt.Println("Erro na conversão:", err)
+}
+
+// Convertendo int para string
+str := strconv.Itoa(numero)
+
+// Comparações
+maior := 10 > 5          // true
+menor := 10 < 20         // true
+igual := 10 == 10        // true
+diferente := 10 != 5     // true
+maiorIgual := 10 >= 10   // true
+menorIgual := 5 <= 10    // true
+
+// Operadores bit a bit
+and := 12 & 25          // AND bit a bit
+or := 12 | 25           // OR bit a bit
+xor := 12 ^ 25          // XOR bit a bit
+leftShift := 12 << 2    // Deslocamento à esquerda
+rightShift := 12 >> 2   // Deslocamento à direita`,
+    explanation: `// Tipos de Int em Go
+
+int - Tipo padrão, tamanho depende da arquitetura (32 ou 64 bits)
+int8 - 8 bits (-128 a 127)
+int16 - 16 bits (-32768 a 32767)
+int32 - 32 bits (-2^31 a 2^31-1)
+int64 - 64 bits (-2^63 a 2^63-1)
+
+// Quando usar cada tipo
+- int: Use para a maioria dos casos
+- int8/int16: Quando precisar economizar memória
+- int32: Para compatibilidade específica
+- int64: Para números muito grandes
+
+// Operações Matemáticas
++ : Adição
+- : Subtração
+* : Multiplicação
+/ : Divisão (trunca decimais)
+% : Resto da divisão
+++ : Incremento
+-- : Decremento
+
+// Conversões
+- strconv.Atoi(): String para int
+- strconv.Itoa(): Int para string
+- int(): Conversão entre tipos numéricos
+
+// Boas Práticas
+1. Use int para contadores e índices
+2. Verifique overflow em operações
+3. Trate erros em conversões
+4. Use constantes quando o valor não muda
+5. Considere o range do tipo escolhido
+
+// Operadores Bit a Bit
+& : AND - Útil para máscaras de bits
+| : OR - Combina flags
+^ : XOR - Toggle de bits
+<< : Multiplica por 2^n
+>> : Divide por 2^n`,
   },
+
   time: {
-    title: "Pacote time",
-    description: "Manipulação de datas e horários com o pacote time",
-    code: `// Exemplo de uso do pacote time
-import "time"
+    title: "Pacote time em Go",
+    description: "Manipulação de datas, horários e durações com o pacote time",
+    code: `// Obtendo data e hora atual
+agora := time.Now()
+fmt.Println("Data e Hora:", agora)
+// retorno: 2024-01-14 15:04:05.123456789 -0300 BRT
 
-func main() {
-    agora := time.Now()
-    fmt.Println("Data e Hora atuais:", agora)
-}`,
-    explanation: `O pacote time fornece funcionalidades para manipular datas, horas e durações. A função time.Now() retorna o horário atual do sistema.`,
+// Componentes da data/hora
+ano := agora.Year()           // 2024
+mes := agora.Month()          // January
+dia := agora.Day()            // 14
+hora := agora.Hour()          // 15
+minuto := agora.Minute()      // 4
+segundo := agora.Second()     // 5
+nanoseg := agora.Nanosecond() // 123456789
+
+// Formatação de data
+layoutBR := "02/01/2006"
+layoutUS := "2006-01-02"
+layoutCompleto := "02/01/2006 15:04:05"
+
+dataBR := agora.Format(layoutBR)
+// retorno: 14/01/2024
+
+dataUS := agora.Format(layoutUS)
+// retorno: 2024-01-14
+
+// Parsing de string para time
+dataStr := "14/01/2024"
+dataParsed, err := time.Parse(layoutBR, dataStr)
+if err != nil {
+    fmt.Println("Erro ao parsear data:", err)
+}
+
+// Criando data específica
+data := time.Date(2024, 1, 14, 15, 4, 5, 0, time.Local)
+
+// Comparações de tempo
+antes := data.Before(agora)   // true se data é anterior
+depois := data.After(agora)   // true se data é posterior
+igual := data.Equal(agora)    // true se datas são iguais
+
+// Operações com tempo
+amanha := agora.AddDate(0, 0, 1)  // Adiciona 1 dia
+ontem := agora.AddDate(0, 0, -1)  // Subtrai 1 dia
+proxMes := agora.AddDate(0, 1, 0) // Adiciona 1 mês
+proxAno := agora.AddDate(1, 0, 0) // Adiciona 1 ano
+
+// Durações
+duration := time.Hour * 24        // 1 dia
+duasHoras := time.Hour * 2        // 2 horas
+dezMinutos := time.Minute * 10    // 10 minutos
+
+// Timer e Sleep
+time.Sleep(time.Second * 2)       // Pausa por 2 segundos
+
+// Criando timer
+timer := time.NewTimer(time.Second * 5)
+<-timer.C                         // Espera 5 segundos
+
+// Criando ticker (repetição)
+ticker := time.NewTicker(time.Second)
+for i := 0; i < 5; i++ {
+    <-ticker.C                    // Executa a cada segundo
+    fmt.Println("Tick")
+}
+ticker.Stop()
+
+// Medindo tempo de execução
+inicio := time.Now()
+// ... código a ser medido ...
+duracao := time.Since(inicio)
+fmt.Printf("Tempo de execução: %v\\n", duracao)`,
+    explanation: `// Principais Conceitos
+
+Time
+- Representa um instante no tempo
+- Precisão de nanosegundos
+- Inclui informação de fuso horário
+
+Duration
+- Representa um período de tempo
+- Pode ser positivo ou negativo
+- Útil para cálculos de intervalo
+
+Location
+- Representa um fuso horário
+- Importante para conversões
+- Afeta formatação e parsing
+
+// Formatação
+Go usa uma data específica como referência:
+- 2006 = Ano
+- 01 = Mês
+- 02 = Dia
+- 15 = Hora (24h)
+- 04 = Minuto
+- 05 = Segundo
+
+// Operações Comuns
+- AddDate(): Adiciona anos, meses, dias
+- Add(): Adiciona uma duração
+- Sub(): Calcula diferença entre tempos
+- Since(): Tempo decorrido desde
+- Until(): Tempo até
+
+// Usos Práticos
+1. Timestamps em logs
+2. Agendamento de tarefas
+3. Medição de performance
+4. Controle de expiração
+5. Formatação para display
+
+// Timer e Ticker
+Timer
+- Executa uma vez após delay
+- Pode ser cancelado
+- Útil para timeouts
+
+Ticker
+- Executa periodicamente
+- Deve ser parado manualmente
+- Útil para tarefas recorrentes`,
   },
-  os: {
-    title: "Pacote os",
-    description: "Interação com o sistema operacional através do pacote os",
-    code: `// Exemplo de uso do pacote os
-import "os"
 
-func main() {
-    args := os.Args
-    fmt.Println("Argumentos passados:", args)
-}`,
-    explanation: `O pacote os oferece funções para interagir com o sistema operacional. No exemplo, os.Args retorna uma lista de argumentos passados ao programa na linha de comando.`,
+  os: {
+    title: "Pacote os em Go",
+    description: "Interação com o sistema operacional: arquivos, processos, ambiente",
+    code: `// Argumentos da linha de comando
+args := os.Args               // Lista de argumentos
+programName := args[0]        // Nome do programa
+if len(args) > 1 {
+    firstArg := args[1]       // Primeiro argumento
+}
+
+// Variáveis de ambiente
+home := os.Getenv("HOME")     // Lê variável
+os.Setenv("API_KEY", "123")   // Define variável
+allEnv := os.Environ()        // Todas variáveis
+
+// Diretório atual
+dir, err := os.Getwd()        // Obtém diretório atual
+if err != nil {
+    log.Fatal(err)
+}
+
+os.Chdir("/tmp")              // Muda diretório
+
+// Manipulação de arquivos
+// Criação
+file, err := os.Create("arquivo.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer file.Close()
+
+// Escrita
+data := []byte("Olá, Mundo!")
+file.Write(data)
+
+// Leitura
+file, err = os.Open("arquivo.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer file.Close()
+
+buffer := make([]byte, 1024)
+n, err := file.Read(buffer)
+
+// Informações do arquivo
+fileInfo, err := os.Stat("arquivo.txt")
+if err != nil {
+    log.Fatal(err)
+}
+size := fileInfo.Size()
+mode := fileInfo.Mode()
+modTime := fileInfo.ModTime()
+
+// Manipulação de diretórios
+os.Mkdir("novapasta", 0755)       // Cria diretório
+os.MkdirAll("pasta/subpasta", 0755) // Cria hierarquia
+
+// Listagem de diretório
+entries, err := os.ReadDir(".")
+for _, entry := range entries {
+    fmt.Println(entry.Name())
+}
+
+// Remoção
+os.Remove("arquivo.txt")          // Remove arquivo
+os.RemoveAll("pasta")            // Remove recursivamente
+
+// Processos
+pid := os.Getpid()               // ID do processo
+ppid := os.Getppid()             // ID do processo pai
+
+// Sinais
+sigs := make(chan os.Signal, 1)
+signal.Notify(sigs, os.Interrupt)
+go func() {
+    <-sigs
+    fmt.Println("Recebeu sinal de interrupção")
+    os.Exit(0)
+}()
+
+// Permissões de arquivo
+os.Chmod("arquivo.txt", 0644)    // Muda permissões
+os.Chown("arquivo.txt", 1000, 1000) // Muda proprietário`,
+    explanation: `// Principais Funcionalidades
+
+Argumentos e Ambiente
+- os.Args: Argumentos da linha de comando
+- os.Getenv/Setenv: Variáveis de ambiente
+- os.Environ: Lista todas variáveis
+
+Arquivos e Diretórios
+- Create/Open: Manipulação de arquivos
+- Mkdir/MkdirAll: Criação de diretórios
+- Remove/RemoveAll: Remoção de arquivos/diretórios
+- ReadDir: Lista conteúdo de diretório
+
+Processos e Sinais
+- Getpid/Getppid: IDs de processo
+- Signal: Manipulação de sinais
+- Exit: Termina o programa
+
+// Permissões de Arquivo (Unix)
+- 0644: rw-r--r-- (Padrão para arquivos)
+- 0755: rwxr-xr-x (Padrão para diretórios)
+- 0600: rw------- (Privado)
+
+// Boas Práticas
+1. Sempre feche arquivos (use defer)
+2. Trate erros adequadamente
+3. Verifique permissões
+4. Use caminhos absolutos com cuidado
+5. Limpe recursos temporários
+
+// Casos de Uso Comuns
+1. Scripts e automação
+2. Manipulação de arquivos
+3. Logging e diagnóstico
+4. Gerenciamento de configuração
+5. Interação com sistema operacional
+
+// Dicas de Segurança
+1. Valide entradas de usuário
+2. Evite permissões excessivas
+3. Use caminhos seguros
+4. Trate sinais apropriadamente
+5. Limpe dados sensíveis`,
   },
   "net/http": {
     title: "Pacote net/http",
