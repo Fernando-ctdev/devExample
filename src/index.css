@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+pre {
+  font-family: 'Fira Code', monospace;
+}
+
+pre[class*="language-"] {
+  background: #1E1E1E !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+code[class*="language-"] {
+  font-family: 'Fira Code', monospace !important;
+  text-shadow: none !important;
+}
+
+.token.comment {
+  color: #6a9955 !important;
+}
+
+.token.keyword {
+  color: #569cd6 !important;
+}
+
+.token.string {
+  color: #ce9178 !important;
+}
+
+.token.number {
+  color: #b5cea8 !important;
+}
+
+.token.boolean {
+  color: #569cd6 !important;
+}
+
+.token.function {
+  color: #dcdcaa !important;
+}
+/* Estilização da barra de rolagem */
+pre::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+pre::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Para Firefox */
+pre {
+  scrollbar-width: thin;
+  scrollbar-color: #555 #2d2d2d;
+}
+
+.prose-invert {
+  color: #d4d4d4;
+}
+
+.prose-invert strong {
+  color: white;
+}
+
+/* comentários em negrito */
+.prose .font-bold {
+  color: #2c5282; /* um azul escuro para os títulos */
+}
+
+pre::-webkit-scrollbar-track {
+  background: #eeeeee;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: #cccccc;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+  background: #bbbbbb;
+}
