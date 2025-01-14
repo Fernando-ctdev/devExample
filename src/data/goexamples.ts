@@ -246,8 +246,8 @@ Neste exemplo, mostramos como manipular o valor de uma variável indiretamente a
 
 Maps: {
     title: "Maps",
-    description: "Mapas (ou dicionários) em Go",
-    code: `// Mapas em Go para armazenar pares chave-valor
+    description: "Maps (ou dicionários) em Go",
+    code: `// Maps em Go para armazenar pares chave-valor
 var numeros map[string]int = map[string]int{"um": 1, "dois": 2}
 
 // Criando um map com a notação curta

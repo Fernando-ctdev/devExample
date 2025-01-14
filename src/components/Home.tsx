@@ -6,7 +6,7 @@ interface HomeProps {
   onExampleClick: (id: string) => void;
   currentTech: string;
   onTechChange: (tech: string) => void;
-  topics: any[]; // Você pode definir um tipo mais específico aqui
+  topics: any[];
 }
 
 export function Home({
@@ -60,49 +60,55 @@ export function Home({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Hero Section */}
-        <div className="mb-12 text-center">
-          <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-            {techButtons.find(btn => btn.tech === currentTech)?.title || 'Select a technology'}
-          </h1>
-          <p className="text-gray-600 text-lg">Explore, aprenda e domine diferentes tecnologias de programação</p>
-        </div>
+      {/* Fixed Header Section */}
+      <div className="fixed top-0 left-0 right-0 bg-gradient-to-br from-gray-50 to-gray-100 z-10 border-b border-none">
+        <div className="max-w-6xl mx-auto p-6">
+          {/* Hero Section */}
+          <div className="mb-8 text-center">
+            <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              {techButtons.find(btn => btn.tech === currentTech)?.title || 'Select a technology'}
+            </h1>
+            <p className="text-gray-600 text-lg">Explore, aprenda e domine diferentes tecnologias de programação</p>
+          </div>
 
-        {/* Tech Buttons */}
-        <div className="flex flex-wrap gap-4 mb-12 items-center justify-center">
-          {techButtons.map(({ title, tech, color, hoverColor, logo, alt, padding }, index) => (
-            <button
-              key={index}
-              className={`flex items-center gap-3 ${padding} ${color} ${hoverColor} text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                currentTech === tech 
-                  ? "ring-4 ring-offset-2 ring-offset-gray-100 ring-opacity-50" 
-                  : ""
-              }`}
-              onClick={() => onTechChange(tech)}
-            >
-              <img src={logo} alt={alt} className="w-[24px] h-[24px]" />
-              <span className="font-medium">{title.split(" ")[0]}</span>
-            </button>
-          ))}
-        </div>
+          {/* Tech Buttons */}
+          <div className="flex flex-wrap gap-4 mb-8 items-center justify-center">
+            {techButtons.map(({ title, tech, color, hoverColor, logo, alt, padding }, index) => (
+              <button
+                key={index}
+                className={`flex items-center gap-3 ${padding} ${color} ${hoverColor} text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                  currentTech === tech 
+                    ? "ring-4 ring-offset-2 ring-offset-gray-100 ring-opacity-50" 
+                    : ""
+                }`}
+                onClick={() => onTechChange(tech)}
+              >
+                <img src={logo} alt={alt} className="w-6 h-6" />
+                <span className="font-medium">{title.split(" ")[0]}</span>
+              </button>
+            ))}
+          </div>
 
-        {/* Search Bar */}
-        <div className="mb-12">
-          <div className="max-w-2xl mx-auto">
-            <div className="relative group">
-              <input
-                type="text"
-                placeholder="Buscar função ou método..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full p-4 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-all duration-300 group-hover:shadow-md"
-              />
-              <Search className="absolute right-4 top-4 text-gray-400" size={20} />
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="relative group">
+                <input
+                  type="text"
+                  placeholder="Buscar função ou método..."
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="w-full p-4 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-all duration-300 group-hover:shadow-md"
+                />
+                <Search className="absolute right-4 top-4 text-gray-400" size={20} />
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Content Section with top padding to account for fixed header */}
+      <div className="max-w-6xl mx-auto p-6 pt-[360px]">
         {/* Topics Grid */}
         {filteredTopics.map((topic, index) => (
           <div key={index} className="mb-12">
