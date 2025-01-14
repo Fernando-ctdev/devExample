@@ -612,31 +612,61 @@ fmt.Println(<-ch)`,
     explanation:
       "Canais com buffer têm uma capacidade limitada para armazenar valores, permitindo que uma Go routine envie dados sem que a outra precise estar imediatamente disponível para recebê-los.",
   },
-  Select: {
-    title: "Select",
-    description: "Multiplexação de canais em Go",
-    code: `// Usando select
-ch1 := make(chan string)
-ch2 := make(chan string)
-
-go func() {
-    ch1 <- "Mensagem de ch1"
-}()
-
-go func() {
-    ch2 <- "Mensagem de ch2"
-}()
-
-select {
-case msg1 := <-ch1:
-    fmt.Println(msg1)
-case msg2 := <-ch2:
-    fmt.Println(msg2)
-}`,
-
-    explanation:
-      "A instrução select permite esperar em múltiplos canais simultaneamente, retornando o primeiro canal que recebe um valor.",
-  },
+    Select: {
+      title: "Select em Go",
+      description: "Controlando múltiplos canais com select",
+      code: `// Exemplo de select com timeout e canal default
+  func main() {
+      canal1 := make(chan string)
+      canal2 := make(chan string)
+      done := make(chan bool)
+  
+      // Goroutine que envia dados após 2 segundos
+      go func() {
+          time.Sleep(2 * time.Second)
+          canal1 <- "Mensagem do canal 1"
+      }()
+  
+      // Goroutine que envia dados após 1 segundo
+      go func() {
+          time.Sleep(1 * time.Second)
+          canal2 <- "Mensagem do canal 2"
+      }()
+  
+      // Select com timeout
+      for i := 0; i < 2; i++ {
+          select {
+          case msg1 := <-canal1:
+              fmt.Println(msg1)
+              // retorno: "Mensagem do canal 1"
+  
+          case msg2 := <-canal2:
+              fmt.Println(msg2)
+              // retorno: "Mensagem do canal 2"
+  
+          case <-time.After(3 * time.Second):
+              fmt.Println("Timeout!")
+              return
+  
+          default:
+              fmt.Println("Nenhuma mensagem disponível")
+              time.Sleep(500 * time.Millisecond)
+          }
+      }
+  }`,
+      explanation: `Select permite trabalhar com múltiplos canais:
+  
+  - Espera por múltiplos canais simultaneamente
+  - Escolhe o primeiro canal que estiver pronto/com dados
+  - case default: executa quando nenhum canal está pronto
+  - time.After(): adiciona timeout para evitar espera infinita
+  
+  Casos de uso comuns:
+  1. Timeout em operações
+  2. Processamento de múltiplas fontes de dados
+  3. Cancelamento de operações
+  4. Controle de concorrência`,
+    },
   "Worker pools": {
     title: "Worker pools",
     description: "Padrão de concorrência worker pool para distribuir tarefas",
@@ -893,17 +923,182 @@ Scan/Scanf
 - Scanf quando formato é importante`,
   },
   string: {
-    title: "Pacote string",
-    description: "Manipulação de strings com o pacote string",
-    code: `// Exemplo de uso do pacote string
-import "strings"
+    title: "Pacote strings em Go",
+    description: "Manipulação e processamento de strings com o pacote strings",
+    code: `// Importando o pacote
+import (
+    "fmt"
+    "strings"
+)
 
 func main() {
-    frase := "Olá, Mundo!"
-    fraseMaiuscula := strings.ToUpper(frase)
-    fmt.Println(fraseMaiuscula) // Saída: "OLÁ, MUNDO!"
-}`,
-    explanation: `O pacote strings oferece várias funções úteis para manipulação de strings. A função ToUpper converte todos os caracteres de uma string para maiúsculas.`,
+    // Texto base para exemplos
+    texto := "Go é uma linguagem de programação incrível!"
+    palavras := "maçã,banana,laranja,uva"
+
+    // Transformações básicas
+    maiusculas := strings.ToUpper(texto)
+    // retorno: "GO É UMA LINGUAGEM DE PROGRAMAÇÃO INCRÍVEL!"
+
+    minusculas := strings.ToLower(texto)
+    // retorno: "go é uma linguagem de programação incrível!"
+
+    titulo := strings.Title("bem vindo ao go")
+    // retorno: "Bem Vindo Ao Go"
+
+    // Busca e substituição
+    contemGo := strings.Contains(texto, "Go")
+    // retorno: true
+
+    comecaCom := strings.HasPrefix(texto, "Go")
+    // retorno: true
+
+    terminaCom := strings.HasSuffix(texto, "!")
+    // retorno: true
+
+    posicao := strings.Index(texto, "linguagem")
+    // retorno: 11
+
+    ultimaPosicao := strings.LastIndex(texto, "a")
+    // retorno: 35
+
+    substituido := strings.Replace(texto, "incrível", "fantástica", 1)
+    // retorno: "Go é uma linguagem de programação fantástica!"
+
+    todosSubstituidos := strings.ReplaceAll(texto, "a", "@")
+    // retorno: "Go é um@ lingu@gem de progr@m@ção incrível!"
+
+    // Divisão e união
+    partes := strings.Split(palavras, ",")
+    // retorno: []string{"maçã", "banana", "laranja", "uva"}
+
+    linhas := strings.Split("linha1\\nlinha2\\nlinha3", "\\n")
+    // retorno: []string{"linha1", "linha2", "linha3"}
+
+    unido := strings.Join(partes, " - ")
+    // retorno: "maçã - banana - laranja - uva"
+
+    // Remoção de espaços
+    textoComEspacos := "   texto com espaços   "
+    semEspacos := strings.TrimSpace(textoComEspacos)
+    // retorno: "texto com espaços"
+
+    semPrefixo := strings.TrimPrefix("PrefixoTexto", "Prefixo")
+    // retorno: "Texto"
+
+    semSufixo := strings.TrimSuffix("TextoSufixo", "Sufixo")
+    // retorno: "Texto"
+
+    // Contagem e comparação
+    contador := strings.Count(texto, "a")
+    // retorno: 4
+
+    repetido := strings.Repeat("Go ", 3)
+    // retorno: "Go Go Go "
+
+    // Comparação case-insensitive
+    iguaisInsensitive := strings.EqualFold("go", "Go")
+    // retorno: true
+
+    // Builder para concatenação eficiente
+    var builder strings.Builder
+    builder.WriteString("Primeira")
+    builder.WriteString(" ")
+    builder.WriteString("Segunda")
+    resultado := builder.String()
+    // retorno: "Primeira Segunda"
+
+    // Fields e FieldsFunc
+    campos := strings.Fields("   go  lang   rules   ")
+    // retorno: []string{"go", "lang", "rules"}
+
+    // Exemplo com FieldsFunc
+    numeros := strings.FieldsFunc("1;2,3:4", func(r rune) bool {
+        return r == ';' || r == ',' || r == ':'
+    })
+    // retorno: []string{"1", "2", "3", "4"}
+
+    // Map para transformação de caracteres
+    mapeado := strings.Map(func(r rune) rune {
+        if r == 'a' {
+            return '@'
+        }
+        return r
+    }, "banana")
+    // retorno: "b@n@n@"`,
+    explanation: `// Principais Categorias de Funções
+
+Transformações de Caso
+- ToUpper: Converte para maiúsculas
+- ToLower: Converte para minúsculas
+- Title: Capitaliza palavras
+- ToTitle: Versão especial de capitalização
+
+Busca e Localização
+- Contains: Verifica se contém substring
+- HasPrefix: Verifica início
+- HasSuffix: Verifica final
+- Index: Encontra primeira posição
+- LastIndex: Encontra última posição
+
+Substituição
+- Replace: Substitui n ocorrências
+- ReplaceAll: Substitui todas ocorrências
+- Map: Transforma caracteres com função
+
+Manipulação
+- Split: Divide string em slice
+- Join: Une slice em string
+- Fields: Divide por espaços
+- FieldsFunc: Divide por função
+
+Remoção
+- TrimSpace: Remove espaços
+- TrimPrefix: Remove prefixo
+- TrimSuffix: Remove sufixo
+- Trim: Remove caracteres
+
+// Performance e Boas Práticas
+
+Builder
+- Use para concatenações múltiplas
+- Mais eficiente que += para strings
+- Ideal para loops
+
+Comparações
+- EqualFold: Comparação insensível a caso
+- Compare: Comparação ordenada
+- ContainsAny: Verifica múltiplos caracteres
+
+// Casos de Uso Comuns
+
+1. Processamento de Texto
+- Formatação
+- Limpeza
+- Transformação
+
+2. Parsing
+- Separação de dados
+- Extração de informações
+- Tokenização
+
+3. Validação
+- Verificação de formato
+- Busca de padrões
+- Sanitização
+
+4. Formatação
+- Relatórios
+- Logs
+- Saída para usuário
+
+// Dicas Importantes
+
+1. Use Builder para concatenações em loop
+2. Prefira ReplaceAll a Replace(-1)
+3. Fields é mais robusto que Split(" ")
+4. Strings são imutáveis em Go
+5. Compare performance para grandes volumes`,
   },
   int: {
     title: "Tipo int em Go",
@@ -1262,23 +1457,201 @@ Processos e Sinais
 5. Limpe dados sensíveis`,
   },
   "net/http": {
-    title: "Pacote net/http",
-    description: "Trabalhando com requisições HTTP usando o pacote net/http",
-    code: `// Exemplo de uso do pacote net/http
+    title: "Pacote net/http em Go",
+    description: "Criando servidores HTTP e fazendo requisições HTTP em Go",
+    code: `// Servidor HTTP Básico
+package main
+
 import (
+    "encoding/json"
     "fmt"
+    "log"
     "net/http"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+// Estrutura para JSON
+type User struct {
+    Name  string \`json:"name"\`
+    Email string \`json:"email"\`
+}
+
+// Handler com resposta simples
+func helloHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "Olá, Mundo!")
 }
 
+// Handler com JSON
+func userHandler(w http.ResponseWriter, r *http.Request) {
+    // Configurando header
+    w.Header().Set("Content-Type", "application/json")
+
+    // Verificando método HTTP
+    switch r.Method {
+    case "GET":
+        user := User{Name: "João", Email: "joao@email.com"}
+        json.NewEncoder(w).Encode(user)
+    
+    case "POST":
+        // Decodificando JSON do request
+        var newUser User
+        if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+        // Respondendo com status 201
+        w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(newUser)
+    
+    default:
+        http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+    }
+}
+
+// Middleware de logging
+func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        log.Printf("%s %s", r.Method, r.URL)
+        next(w, r)
+    }
+}
+
 func main() {
-    http.HandleFunc("/", handler)
-    http.ListenAndServe(":8080", nil)
+    // Rotas com middleware
+    http.HandleFunc("/", loggingMiddleware(helloHandler))
+    http.HandleFunc("/user", loggingMiddleware(userHandler))
+
+    // Iniciando servidor
+    fmt.Println("Servidor rodando em http://localhost:8080")
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+// Exemplos de Requisições HTTP
+func makeRequests() {
+    // GET Request
+    resp, err := http.Get("http://api.exemplo.com/users")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer resp.Body.Close()
+
+    // POST Request com JSON
+    user := User{Name: "Maria", Email: "maria@email.com"}
+    jsonData, _ := json.Marshal(user)
+    
+    resp, err = http.Post(
+        "http://api.exemplo.com/users",
+        "application/json",
+        bytes.NewBuffer(jsonData),
+    )
+
+    // Cliente HTTP personalizado
+    client := &http.Client{
+        Timeout: time.Second * 10,
+    }
+
+    // Request personalizado
+    req, err := http.NewRequest("DELETE", "http://api.exemplo.com/users/1", nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Adicionando headers
+    req.Header.Add("Authorization", "Bearer token123")
+    
+    resp, err = client.Do(req)
+}
+
+// Servidor HTTPS
+func startHTTPS() {
+    // Certificado TLS
+    err := http.ListenAndServeTLS(
+        ":443", 
+        "server.crt",
+        "server.key",
+        nil,
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
 }`,
-    explanation: `O pacote net/http é utilizado para criar servidores HTTP e fazer requisições. O exemplo cria um servidor HTTP simples que responde "Olá, Mundo!" para qualquer requisição na raiz ("/").`,
+    explanation: `// Componentes Principais
+
+http.HandleFunc
+- Registra handlers para rotas
+- Processa requisições HTTP
+- Suporta todos métodos HTTP
+
+http.ResponseWriter
+- Interface para enviar resposta
+- Define headers e status
+- Escreve corpo da resposta
+
+http.Request
+- Contém dados da requisição
+- Headers, corpo, método, URL
+- Parâmetros e cookies
+
+// Métodos HTTP Suportados
+
+GET - Recupera recursos
+POST - Cria novos recursos
+PUT - Atualiza recursos existentes
+DELETE - Remove recursos
+PATCH - Atualiza parcialmente
+HEAD - Como GET, sem corpo
+OPTIONS - Info sobre recurso
+
+// Status Codes Comuns
+
+200 OK - Sucesso
+201 Created - Recurso criado
+400 Bad Request - Erro cliente
+401 Unauthorized - Sem autenticação
+403 Forbidden - Sem permissão
+404 Not Found - Não encontrado
+500 Internal Error - Erro servidor
+
+// Boas Práticas
+
+Middleware
+- Logging de requisições
+- Autenticação
+- CORS
+- Recuperação de pânico
+
+Headers
+- Content-Type
+- Authorization
+- Cache-Control
+- CORS headers
+
+Segurança
+- HTTPS/TLS
+- Validação de entrada
+- Autenticação/Autorização
+- Rate limiting
+
+// Casos de Uso
+
+Servidor Web
+- APIs REST
+- Serviços web
+- Proxies
+- Webhooks
+
+Cliente HTTP
+- Chamadas API
+- Scraping
+- Integrações
+- Monitoramento
+
+// Dicas Importantes
+
+1. Sempre feche o Body das respostas
+2. Use timeouts apropriados
+3. Trate erros adequadamente
+4. Valide entradas
+5. Use HTTPS em produção`,
   },
   Verbos: {
     title: "Verbos de Formatação em Go",
