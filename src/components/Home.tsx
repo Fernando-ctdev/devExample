@@ -45,6 +45,22 @@ export function Home({
       alt: "GoLang Logo",
       padding: "px-8 py-3",
     },
+    {
+      title: "NodeJS with example",
+      tech: "nodejs",
+      color: "bg-green-800 hover:bg-green-700",
+      logo: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
+      alt: "NodeJS Logo",
+      padding: "px-8 py-3",
+    },
+    {
+      title: "SQL with example",
+      tech: "sql",
+      color: "bg-orange-500 hover:bg-orange-600",
+      logo: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png",
+      alt: "SQL Logo",
+      padding: "px-12 py-3",
+    },
   ];
 
   const filteredTopics = topics

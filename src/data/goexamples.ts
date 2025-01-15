@@ -295,7 +295,7 @@ func (p Pessoa) saudacao() string {
   },
 
   Interfaces: {
-    title: "rfaces",
+    title: "Interfaces",
     description: "Definindo interfaces em Go",
     code: `// Definindo uma interface
 type Saudavel interface {
@@ -325,7 +325,7 @@ No caso, 'Pessoa' implementa a interface implicitamente, pois define o método '
 },
 
 retornoNomeado: {
-  title: "ões Avançadas",
+  title: "Funções com retorno nomeado",
   description: "Explorando funções avançadas em Go",
   code: `// Funções com retorno nomeado
 func soma(a, b int) (resultado int) {
