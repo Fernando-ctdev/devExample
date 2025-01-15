@@ -29,6 +29,16 @@ const techLogos = {
     src: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
     alt: "GoLang Logo",
     bgColor: "bg-cyan-600"
+  },
+  nodejs: {
+    src: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
+    alt: "Nodejs logo",
+    bgColor: "bg-gradient-to-r from-cyan-600 to-green-700"
+  },
+  sql: {
+    src: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png",
+    alt: "sql logo",
+    bgColor: "bg-cyan-500"
   }
 };
 

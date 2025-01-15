@@ -4,9 +4,13 @@ import { ExampleView } from "./components/ExampleView";
 import { examplesjs } from "./data/jsexamples";
 import { examplesgo } from "./data/goexamples";
 import { examplests } from "./data/tsexamples";
+import { examplesnode } from "./data/nodeexamples";
+import { examplessql } from "./data/sqlexamples";
 import { topics as jsTopics } from "./data/jsexamples";
 import { topics as goTopics } from "./data/goexamples";
 import { topics as tsTopics } from "./data/tsexamples";
+import { topics as nodeTopics } from "./data/nodeexamples"
+import { topics as sqlTopics } from "./data/sqlexamples";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<"home" | string>("home");
@@ -18,6 +22,8 @@ function App() {
     javascript: { examples: examplesjs, topics: jsTopics },
     typescript: { examples: examplests, topics: tsTopics },
     golang: { examples: examplesgo, topics: goTopics },
+    nodejs: { examples: examplesnode, topics: nodeTopics },
+    sql: { examples: examplessql , topics: sqlTopics }
   };
 
   const handleExampleClick = (id: string) => {
