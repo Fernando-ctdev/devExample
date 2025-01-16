@@ -123,6 +123,7 @@ export const topics: ExampleCategory[] = [
   }
 ];
 
+
 export const examplesgo: Record<string, Example> = {
   Pacotes: {
     title: "Tipos em Go",
@@ -220,36 +221,49 @@ var diferente = 10 != 5    // Diferente
 // Operadores lógicos
 var eVerdade = true && false    // E lógico
 var ouVerdade = true || false    // Ou lógico
-var naoVerdade = !true    // Não lógico`,
-    explanation: `Go possui operadores aritméticos, relacionais e lógicos que permitem manipulação de dados e controle de fluxo. 
+var naoVerdade = !true    // Não lógico
+// return: 15
+// return: 5
+// return: 50
+// return: 2
+// return: true
+// return: true
+// return: true
+// return: false
+// return: true
+// return: false`,
+        explanation: `Go possui operadores aritméticos, relacionais e lógicos que permitem manipulação de dados e controle de fluxo. 
 Os operadores aritméticos são usados para realizar operações matemáticas simples. 
 Os operadores relacionais comparam valores, e os operadores lógicos servem para combinar condições booleanas no controle de fluxo de execução.`,
-  },
+    },
 
-  Structs: {
-    title: "Structs em Go",
-    description: "Como usar structs para agrupar dados em Go",
-    code: `// Definindo uma struct
+    Structs: {
+        title: "Structs em Go",
+        description: "Como usar structs para agrupar dados em Go",
+        code: `// Definindo uma struct
 type Pessoa struct {
-    Nome   string
-    Idade  int
-    Endereco string
+        Nome   string
+        Idade  int
+        Endereco string
 }
 
 // Inicializando e acessando valores em structs
 pessoa := Pessoa{"João", 25, "Rua 123"}
 fmt.Println("Nome:", pessoa.Nome)
 fmt.Println("Idade:", pessoa.Idade)
-fmt.Println("Endereço:", pessoa.Endereco)`,
-    explanation: `Structs em Go são tipos compostos que permitem agrupar dados de diferentes tipos sob uma única estrutura. 
+fmt.Println("Endereço:", pessoa.Endereco)
+// return: Nome: João
+// return: Idade: 25
+// return: Endereço: Rua 123`,
+        explanation: `Structs em Go são tipos compostos que permitem agrupar dados de diferentes tipos sob uma única estrutura. 
 No exemplo, a struct 'Pessoa' possui campos de tipo 'string' para o nome e endereço, e um campo de tipo 'int' para a idade. 
 Você pode inicializar uma struct com valores diretamente e acessar seus campos usando a notação de ponto ('.').`,
-  },
+    },
 
-  Arrays: {
-    title: "Arrays e Slices",
-    description: "Arrays e slices em Go",
-    code: `// Arrays em Go com tamanho fixo
+    Arrays: {
+        title: "Arrays e Slices",
+        description: "Arrays e slices em Go",
+        code: `// Arrays em Go com tamanho fixo
 var arr [3]int = [3]int{1, 2, 3}
 
 // Slices em Go com tamanho dinâmico
@@ -257,37 +271,44 @@ var slice []int = []int{1, 2, 3, 4, 5}
 
 // Modificando valores em arrays e slices
 arr[0] = 10
-slice = append(slice, 6)`,
-    explanation: `Arrays em Go possuem tamanho fixo, enquanto slices são mais flexíveis, permitindo crescimento dinâmico. 
+slice = append(slice, 6)
+// return: [1, 2, 3]
+// return: [1, 2, 3, 4, 5]
+// return: [10, 2, 3]
+// return: [1, 2, 3, 4, 5, 6]`,
+        explanation: `Arrays em Go possuem tamanho fixo, enquanto slices são mais flexíveis, permitindo crescimento dinâmico. 
 Arrays são úteis quando você sabe de antemão o número de elementos, enquanto slices são melhores quando o tamanho do conjunto de dados pode mudar durante a execução do programa. 
 O exemplo mostra como modificar valores em arrays e adicionar elementos em slices usando a função 'append'.`,
-  },
+    },
 
-  PonteirosGo: {
-    title: "Ponteiros",
-    description: "Trabalhando com ponteiros em Go",
-    code: `// Ponteiros em Go para manipulação indireta de variáveis
+    PonteirosGo: {
+        title: "Ponteiros",
+        description: "Trabalhando com ponteiros em Go",
+        code: `// Ponteiros em Go para manipulação indireta de variáveis
 var numero int = 10
 var ponteiro *int = &numero  // Obtendo o endereço de memória da variável
 
 fmt.Println("Valor de numero:", numero)
 fmt.Println("Endereço de numero:", ponteiro)
-fmt.Println("Valor apontado pelo ponteiro:", *ponteiro)`,
-    explanation: `Ponteiros são variáveis que armazenam o endereço de memória de outra variável. 
+fmt.Println("Valor apontado pelo ponteiro:", *ponteiro)
+// return: Valor de numero: 10
+// return: Endereço de numero: 0x... (endereço de memória)
+// return: Valor apontado pelo ponteiro: 10`,
+        explanation: `Ponteiros são variáveis que armazenam o endereço de memória de outra variável. 
 O operador '&' é usado para obter o endereço de memória de uma variável, enquanto '*' é usado para acessar o valor armazenado nesse endereço.
 Neste exemplo, mostramos como manipular o valor de uma variável indiretamente através de um ponteiro.`,
-  },
+    },
 
-  Maps: {
-    title: "Maps",
-    description: "Maps (ou dicionários) em Go",
-    code: `// Maps em Go para armazenar pares chave-valor
+    Maps: {
+        title: "Maps",
+        description: "Maps (ou dicionários) em Go",
+        code: `// Maps em Go para armazenar pares chave-valor
 var numeros map[string]int = map[string]int{"um": 1, "dois": 2}
 
 // Criando um map com a notação curta
 pessoas := map[string]string{
-    "João": "Analista",
-    "Maria": "Desenvolvedora",
+        "João": "Analista",
+        "Maria": "Desenvolvedora",
 }
 
 // Adicionando um item a um map
@@ -295,20 +316,22 @@ pessoas["Pedro"] = "Designer"
 
 // Verificando se uma chave existe
 cargo, existe := pessoas["João"]
-fmt.Println("Cargo de João:", cargo, "Existe?", existe)`,
-    explanation: `Maps em Go são coleções de pares chave-valor, onde cada chave é única. 
+fmt.Println("Cargo de João:", cargo, "Existe?", existe)
+// return: Cargo de João: Analista Existe? true`,
+        explanation: `Maps em Go são coleções de pares chave-valor, onde cada chave é única. 
 No exemplo, o mapa 'numeros' associa strings a inteiros, enquanto o mapa 'pessoas' associa nomes a cargos. 
 Você pode verificar se uma chave existe no mapa ao utilizar a segunda variável, como mostrado no exemplo de 'cargo' e 'existe'.`,
-  },
-  "Estruturas de controle": {
-    title: " Estruturas de controle",
-    description: "Estruturas de controle como if, switch, for em Go",
-    code: `// Exemplo de if-else
+    },
+    "Estruturas de controle": {
+        title: " Estruturas de controle",
+        description: "Estruturas de controle como if, switch, for em Go",
+        code: `// Exemplo de if-else
 if idade >= 18 {
-    fmt.Println("Adulto")
+        fmt.Println("Adulto")
 } else {
-    fmt.Println("Menor de idade")
-}`,
+        fmt.Println("Menor de idade")
+}
+// return: Adulto ou Menor de idade`,
 explanation: `Estruturas de controle são mecanismos fundamentais em Go para controlar o fluxo de execução 
 do programa, permitindo tomada de decisões e repetições.
 
@@ -3782,6 +3805,4 @@ func main() {
 
 Isso ajuda a monitorar e depurar o funcionamento da API de forma eficiente.`
 }
-
-
 };

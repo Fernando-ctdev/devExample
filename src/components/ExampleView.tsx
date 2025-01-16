@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Home, Copy, Check, ChevronLeft, ChevronRight} from "lucide-react";
+import { Home, Copy, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Example } from "../data/goexamples";
 import Prism from "prismjs";
 import "prismjs/components/prism-typescript";
@@ -18,28 +18,28 @@ const techLogos = {
   javascript: {
     src: "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
     alt: "JavaScript Logo",
-    bgColor: "bg-yellow-500"
+    bgColor: "bg-yellow-500",
   },
   typescript: {
     src: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
     alt: "TypeScript Logo",
-    bgColor: "bg-blue-500"
+    bgColor: "bg-blue-500",
   },
   golang: {
     src: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
     alt: "GoLang Logo",
-    bgColor: "bg-cyan-600"
+    bgColor: "bg-cyan-600",
   },
   nodejs: {
     src: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
     alt: "Nodejs logo",
-    bgColor: "bg-gradient-to-r from-cyan-600 to-green-700"
+    bgColor: "bg-gradient-to-r from-cyan-600 to-green-700",
   },
   sql: {
     src: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png",
     alt: "sql logo",
-    bgColor: "bg-cyan-500"
-  }
+    bgColor: "bg-cyan-500",
+  },
 };
 
 export function ExampleView({
@@ -47,7 +47,7 @@ export function ExampleView({
   onBackClick,
   onNavigateNext,
   onNavigatePrevious,
-  currentTech
+  currentTech,
 }: ExampleViewProps) {
   const [copied, setCopied] = React.useState(false);
 
@@ -92,7 +92,7 @@ export function ExampleView({
             <Home size={20} />
             <span>Voltar para Home</span>
           </button>
-          
+
           <div className="flex gap-2">
             <button
               onClick={onNavigatePrevious}
@@ -155,9 +155,44 @@ export function ExampleView({
                 </div>
                 <div className="bg-[#1E1E1E] p-6 h-[calc(100%-28px)]">
                   <pre className="h-full overflow-y-auto rounded-lg">
-                    <code className="language-typescript font-['Fira_Code'] text-sm">
-                      {examples.code}
-                    </code>
+                    {examples.code.split("\n").map((line, index) => {
+                      const hasReturn = line.includes("// retorno:") ;
+                      const output = line.includes("// retorno:") 
+                        ? line.split("// retorno:")[1]?.trim()
+                        : null;
+
+                      return (
+                        <React.Fragment key={index}>
+                          {/* Só renderiza a linha se NÃO for um comentário de retorno */}
+                          {!hasReturn && (
+                            <code className="language-typescript font-['Fira_Code'] text-sm block">
+                              {line}
+                            </code>
+                          )}
+                          {/* Se for uma linha de retorno, mostra apenas o terminal */}
+                          {hasReturn && (
+                            <div className="bg-[#012456] border border-[#1B3A6A] rounded-md my-3 overflow-hidden">
+                              <div className="bg-[#0C2850] px-2 py-1 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                </div>
+                                <span className="text-[#FFFFFF80] text-xs">
+                                  Terminal
+                                </span>
+                              </div>
+                              <div className="p-2 font-consolas text-sm">
+                                <span className="text-white">C:(main):</span>
+                                <span className="text-white ml-2">
+                                  {output}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </pre>
                 </div>
               </div>
@@ -167,9 +202,7 @@ export function ExampleView({
             <div className="relative">
               <div className="bg-gray-50 p-6 h-[600px] rounded-xl shadow-lg">
                 <div className="prose prose-slate max-w-none overflow-y-auto h-full">
-                  <div className="space-y-4">
-                    {explanationLines}
-                  </div>
+                  <div className="space-y-4">{explanationLines}</div>
                 </div>
               </div>
             </div>
