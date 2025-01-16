@@ -4179,7 +4179,6 @@ Boas Práticas:
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-
 // Interceptor de Logging
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
