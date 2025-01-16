@@ -14,49 +14,260 @@ export interface ExampleCategory {
 }
 
 export const topics: ExampleCategory[] = [
-  {
-    category: "Fundamentos Typescript",
-    items: [
-    { id: "tiposPrimitivos", title: "Tipos Primitivos" },
-      { id: "tiposCompostos", title: "Tipos Compostos" },
-      { id: "tiposCustomizados", title: "Tipos Customizados" },
-      { id: "enums", title: "Enums" },
-      { id: "typeAssertions", title: "Type Assertions" },
-      { id: "tiposLiterais", title: "Tipos Literais" },
-      { id: "tiposObjeto", title: "Tipos de Objeto" },
-      { id: "variaveis", title: "Variáveis e Escopo" },
-      { id: "operadores", title: "Operadores" },
-    ],
-  },
-  {
-    category: "Estruturas de Dados",
-    items: [
-      { id: "arrays", title: "Arrays e Métodos" },
-      { id: "objetos", title: "Objetos e Métodos" },
-      { id: "strings", title: "Strings e Métodos" },
-    ],
-  },
-  {
-    category: "Controle de Fluxo",
-    items: [
-      { id: "estruturas", title: "Estruturas condicionais" },
-      { id: "loops", title: "Loops e Iterações" },
-      { id: "condicionais", title: "Condicionais type guards" },
-    ],
-  },
-  {
-    category: "Funções",
-    items: [
-      { id: "funcoes-basicas", title: "Funções Básicas" },
-      { id: "funcoes-arrow", title: "Arrow Functions" },
-      { id: "funcoes-recursivas", title: "Funções Recursivas" },
-      { id: "funcoes-anonimas", title: "Funções Anônimas" },
-      { id: "callbacks", title: "Callbacks e Promises" },
-    ],
-  },
-];
+    {
+      category: "Fundamentos TypeScript",
+      items: [
+        { id: "variaveis", title: "Variáveis e Escopo" },
+        { id: "tiposPrimitivos", title: "Tipos Primitivos" },
+        { id: "operadores", title: "Operadores" },
+        { id: "tiposCompostos", title: "Tipos Compostos" },
+        { id: "tiposCustomizados", title: "Tipos Customizados" },
+        { id: "enums", title: "Enums" },
+        { id: "typeAssertions", title: "Type Assertions" },
+        { id: "tiposLiterais", title: "Tipos Literais" },
+        { id: "tiposObjeto", title: "Tipos de Objeto" },
+        { id: "Interseção", title: "Interseção e União de Tipos" },
+        { id: "modificadoresAcesso", title: "Modificadores de Acesso" },
+      ],
+    },
+    {
+      category: "Estruturas de Dados",
+      items: [
+        { id: "arrays", title: "Arrays e Métodos" },
+        { id: "objetos", title: "Objetos e Métodos" },
+        { id: "strings", title: "Strings e Métodos" },
+        { id: "mapSset", title: "Map e Set" },
+        { id: "generics", title: "Introdução a Generics" },
+      ],
+    },
+    {
+      category: "Controle de Fluxo",
+      items: [
+        { id: "estruturas", title: "Estruturas Condicionais" },
+        { id: "loops", title: "Loops e Iterações" },
+        { id: "condicionais", title: "Condicionais Type Guards" },
+      ],
+    },
+    {
+      category: "Funções",
+      items: [
+        { id: "funcoes-basicas", title: "Funções Básicas" },
+        { id: "funcoes-arrow", title: "Arrow Functions" },
+        { id: "funcoes-recursivas", title: "Funções Recursivas" },
+        { id: "funcoes-anonimas", title: "Funções Anônimas" },
+        { id: "callbacks", title: "Callbacks e Promises" },
+        { id: "funcoesGenericas", title: "Funções Genéricas" },
+      ],
+    },
+    {
+      category: "Classes e Orientação a Objetos",
+      items: [
+        { id: "classes", title: "Definição e Uso de Classes" },
+        { id: "heranca", title: "Herança e Sobrescrita" },
+        { id: "interfaces", title: "Interfaces e Implementação" },
+        { id: "abstracao", title: "Classes e Métodos Abstratos" },
+        { id: "polimorfismo", title: "Introdução ao Polimorfismo" },
+      ],
+    },
+    {
+      category: "Avançado TypeScript",
+      items: [
+        { id: "decorators", title: "Uso de Decorators" },
+        { id: "moduleSystems", title: "Módulos e Import/Export" },
+        { id: "namespace", title: "Namespaces" },
+        { id: "advancedTypes", title: "Tipos Avançados" },
+      ],
+    },
+  ];
+  
 
 export const examplests: Record<string, Example> = {
+    variaveis: {
+        title: "Variáveis e Escopo",
+        description: "Declaração e escopo de variáveis em TypeScript",
+        code: `// Declaração de variáveis
+    let contador: number = 1;
+    // retorno: 1
+    
+    const PI: number = 3.14159;
+    // retorno: 3.14159
+    
+    var antiga: string = "evitar usar var";
+    // retorno: "evitar usar var"
+    
+    
+    // Inferência de tipos
+    let nome = "João";              // TypeScript infere como string
+    // retorno: "João"
+    
+    let idade = 25;                 // TypeScript infere como number
+    // retorno: 25
+    
+    let ativo = true;               // TypeScript infere como boolean
+    // retorno: true
+    
+    let nums = [1, 2, 3];          // TypeScript infere como number[]
+    // retorno: [1, 2, 3]
+    
+    
+    // Escopo de bloco
+    {
+        let escopo = "local";       // Só existe neste bloco
+        // retorno: "local"
+        const PI = 3.14;           // Diferente do PI externo
+        // retorno: 3.14
+    }
+    // console.log(escopo);        // Erro: escopo não existe aqui
+    
+    
+    // Hoisting com var (evitar)
+    console.log(x);                // undefined (hoisting)
+    var x = 10;
+    // retorno: undefined, depois 10
+    
+    // console.log(y);             // Erro com let
+    let y = 20;
+    
+    
+    // Destructuring de objetos
+    const pessoa = { 
+        nome: "Maria", 
+        idade: 30, 
+        cidade: "SP" 
+    };
+    
+    const { nome: nomeCompleto, idade: anos } = pessoa;
+    // retorno para nomeCompleto: "Maria"
+    // retorno para anos: 30
+    
+    const { cidade, ...resto } = pessoa;
+    // retorno para cidade: "SP"
+    // retorno para resto: { nome: "Maria", idade: 30 }
+    
+    
+    // Destructuring de arrays
+    const numeros = [1, 2, 3, 4, 5];
+    
+    const [primeiro, segundo, ...restantes] = numeros;
+    // retorno para primeiro: 1
+    // retorno para segundo: 2
+    // retorno para restantes: [3, 4, 5]
+    
+    const [, , terceiro] = numeros;
+    // retorno: 3
+    
+    
+    // Spread operator
+    const array1 = [1, 2, 3];
+    const array2 = [...array1, 4, 5];
+    // retorno: [1, 2, 3, 4, 5]
+    
+    const obj1 = { a: 1, b: 2 };
+    const obj2 = { ...obj1, c: 3 };
+    // retorno: { a: 1, b: 2, c: 3 }
+    
+    
+    // Reatribuição e mutação
+    let mutavel = { valor: 1 };
+    mutavel.valor = 2;             // OK - mudando propriedade
+    // retorno: { valor: 2 }
+    
+    const imutavel = { valor: 1 };
+    imutavel.valor = 2;            // OK - mudando propriedade
+    // retorno: { valor: 2 }
+    // imutavel = { valor: 3 };    // Erro - não pode reatribuir const
+    
+    
+    // Template literals
+    const usuario = "Ana";
+    const msg = \`Bem-vinda \${usuario}!\`;
+    // retorno: "Bem-vinda Ana!"
+    
+    const multi = \`
+      Linha 1
+      Linha 2
+    \`;
+    // retorno: "\n  Linha 1\n  Linha 2\n"`,
+        explanation: `// Declaração de variáveis
+    
+    let - Declara variável que pode ser reatribuída, com escopo de bloco
+    
+    const - Declara constante que não pode ser reatribuída, com escopo de bloco
+    
+    var - Forma antiga de declarar variáveis, com hoisting e escopo de função (evitar)
+    
+    
+    // Inferência de tipos
+    
+    TypeScript pode inferir automaticamente o tipo baseado no valor inicial
+    
+    Não é necessário declarar o tipo explicitamente quando é óbvio
+    
+    A inferência funciona com tipos primitivos e compostos
+    
+    
+    // Escopo de bloco
+    
+    let e const têm escopo de bloco - só existem dentro do bloco onde foram declaradas
+    
+    Blocos podem ter variáveis com mesmo nome de variáveis externas (shadowing)
+    
+    var não respeita escopo de bloco (mais um motivo para evitar)
+    
+    
+    // Hoisting com var
+    
+    var sofre hoisting - declaração é movida para o topo, mas não a inicialização
+    
+    let e const não sofrem hoisting - não podem ser usadas antes da declaração
+    
+    Hoisting pode causar bugs difíceis de encontrar
+    
+    
+    // Destructuring de objetos
+    
+    Extrai propriedades de objetos em variáveis individuais
+    
+    Permite renomear variáveis usando : novo_nome
+    
+    Rest operator (...) coleta propriedades restantes em novo objeto
+    
+    
+    // Destructuring de arrays
+    
+    Extrai elementos de arrays em variáveis individuais
+    
+    Pode pular elementos usando vírgulas
+    
+    Rest operator (...) coleta elementos restantes em novo array
+    
+    
+    // Spread operator
+    
+    Em arrays - Copia elementos de um array para outro
+    
+    Em objetos - Copia propriedades de um objeto para outro
+    
+    Cria cópias superficiais (shallow copy)
+    
+    
+    // Reatribuição e mutação
+    
+    let permite reatribuição (mudar a referência)
+    
+    const impede reatribuição mas não impede mutação de objetos/arrays
+    
+    Para imutabilidade total, use Object.freeze()
+    
+    
+    // Template literals
+    
+    Permitem interpolação de expressões usando \${}
+    
+    Suportam strings multilinhas preservando formatação
+    
+    Podem incluir expressões complexas dentro de \${}`,
+      },
     tiposPrimitivos: {
         title: "Tipos Primitivos em TypeScript",
         description: "Os tipos básicos fundamentais do TypeScript",
@@ -100,6 +311,160 @@ export const examplests: Record<string, Example> = {
     
     bigint - Representa números inteiros muito grandes`
       },
+      operadores: {
+        title: "Operadores do TypeScript",
+        description:
+          "Operadores e expressões específicos ou comumente usados em TypeScript",
+        code: `// Operadores de tipo
+    let valor: unknown;
+    let texto = valor as string;
+    // retorno: valor convertido para string
+    
+    let numero = <number>valor;
+    // retorno: valor convertido para number
+    
+    
+    // Operador de coalescência nula (??)
+    let nome: string | null = null;
+    let nomeExibicao = nome ?? "Anônimo";
+    // retorno: "Anônimo"
+    
+    
+    // Operador de encadeamento opcional (?.)
+    interface Usuario {
+        endereco?: {
+            rua?: string;
+        };
+    }
+    
+    let usuario: Usuario = {};
+    let rua = usuario?.endereco?.rua;
+    // retorno: undefined
+    
+    
+    // Operadores de verificação de tipo
+    let tipo = typeof valor;
+    // retorno: "string", "number", etc.
+    
+    function isString(x: any): x is string {
+        return typeof x === "string";
+    }
+    // retorno: true/false
+    
+    
+    // Operador keyof
+    interface Pessoa {
+        nome: string;
+        idade: number;
+    }
+    
+    type ChavesPessoa = keyof Pessoa;
+    // retorno: "nome" | "idade"
+    
+    function getProp(obj: Pessoa, key: keyof Pessoa) {
+        return obj[key];
+    }
+    
+    
+    // Operador in
+    interface Animal {
+        nome: string;
+    }
+    
+    interface Cachorro extends Animal {
+        latir: () => void;
+    }
+    
+    function isDog(animal: Animal): animal is Cachorro {
+        return 'latir' in animal;
+    }
+    // retorno: true/false
+    
+    
+    // Operadores de união e interseção
+    type StringOuNumero = string | number;
+    // união de tipos
+    
+    type ObjetoComNome = { nome: string };
+    type ObjetoComIdade = { idade: number };
+    type Pessoa = ObjetoComNome & ObjetoComIdade;
+    // interseção de tipos
+    
+    
+    // Operador satisfies
+    type RGB = [number, number, number];
+    const cor = [255, 128, 0] satisfies RGB;
+    // verifica se o valor corresponde ao tipo
+    
+    
+    // Operador instanceof com type guards
+    class Erro1 extends Error {}
+    class Erro2 extends Error {}
+    
+    function trataErro(erro: Error) {
+        if (erro instanceof Erro1) {
+            // TypeScript sabe que é Erro1
+        }
+    }`,
+        explanation: `// Operadores de tipo
+    
+    as - Operador de asserção de tipo, usado para converter tipos
+    
+    <tipo> - Sintaxe alternativa para asserção de tipo (não usar em JSX)
+    
+    
+    // Operador de coalescência nula
+    
+    ?? - Fornece valor padrão quando null/undefined, específico para esses valores
+    
+    
+    // Operador de encadeamento opcional
+    
+    ?. - Acesso seguro a propriedades, específico do TypeScript/JavaScript moderno
+    
+    
+    // Operadores de verificação de tipo
+    
+    typeof - Verifica o tipo em tempo de execução
+    
+    is - Cria type guard personalizado, recurso do TypeScript
+    
+    
+    // Operador keyof
+    
+    keyof - Obtém as chaves de um tipo como union type
+    
+    Útil para trabalhar com tipos de forma genérica
+    
+    
+    // Operador in
+    
+    in - Verifica se propriedade existe em objeto
+    
+    Útil para type narrowing em TypeScript
+    
+    
+    // Operadores de união e interseção
+    
+    | - Cria um tipo que pode ser um OU outro
+    
+    & - Combina múltiplos tipos em um só
+    
+    
+    // Operador satisfies
+    
+    satisfies - Verifica se um valor corresponde a um tipo
+    
+    Mantém a inferência literal de tipo
+    
+    
+    // instanceof com type guards
+    
+    Combina instanceof com type guards do TypeScript
+    
+    Permite narrowing de tipos em verificações de instância`,
+      },
+    
     
       tiposCompostos: {
         title: "Tipos Compostos em TypeScript",
@@ -309,348 +674,180 @@ export const examplests: Record<string, Example> = {
     - Pode incluir propriedades opcionais
     - Mais específico e seguro`
       },
-
-  variaveis: {
-    title: "Variáveis e Escopo",
-    description: "Declaração e escopo de variáveis em TypeScript",
-    code: `// Declaração de variáveis
-let contador: number = 1;
-// retorno: 1
-
-const PI: number = 3.14159;
-// retorno: 3.14159
-
-var antiga: string = "evitar usar var";
-// retorno: "evitar usar var"
-
-
-// Inferência de tipos
-let nome = "João";              // TypeScript infere como string
-// retorno: "João"
-
-let idade = 25;                 // TypeScript infere como number
-// retorno: 25
-
-let ativo = true;               // TypeScript infere como boolean
-// retorno: true
-
-let nums = [1, 2, 3];          // TypeScript infere como number[]
-// retorno: [1, 2, 3]
-
-
-// Escopo de bloco
-{
-    let escopo = "local";       // Só existe neste bloco
-    // retorno: "local"
-    const PI = 3.14;           // Diferente do PI externo
-    // retorno: 3.14
-}
-// console.log(escopo);        // Erro: escopo não existe aqui
-
-
-// Hoisting com var (evitar)
-console.log(x);                // undefined (hoisting)
-var x = 10;
-// retorno: undefined, depois 10
-
-// console.log(y);             // Erro com let
-let y = 20;
-
-
-// Destructuring de objetos
-const pessoa = { 
-    nome: "Maria", 
-    idade: 30, 
-    cidade: "SP" 
-};
-
-const { nome: nomeCompleto, idade: anos } = pessoa;
-// retorno para nomeCompleto: "Maria"
-// retorno para anos: 30
-
-const { cidade, ...resto } = pessoa;
-// retorno para cidade: "SP"
-// retorno para resto: { nome: "Maria", idade: 30 }
-
-
-// Destructuring de arrays
-const numeros = [1, 2, 3, 4, 5];
-
-const [primeiro, segundo, ...restantes] = numeros;
-// retorno para primeiro: 1
-// retorno para segundo: 2
-// retorno para restantes: [3, 4, 5]
-
-const [, , terceiro] = numeros;
-// retorno: 3
-
-
-// Spread operator
-const array1 = [1, 2, 3];
-const array2 = [...array1, 4, 5];
-// retorno: [1, 2, 3, 4, 5]
-
-const obj1 = { a: 1, b: 2 };
-const obj2 = { ...obj1, c: 3 };
-// retorno: { a: 1, b: 2, c: 3 }
-
-
-// Reatribuição e mutação
-let mutavel = { valor: 1 };
-mutavel.valor = 2;             // OK - mudando propriedade
-// retorno: { valor: 2 }
-
-const imutavel = { valor: 1 };
-imutavel.valor = 2;            // OK - mudando propriedade
-// retorno: { valor: 2 }
-// imutavel = { valor: 3 };    // Erro - não pode reatribuir const
-
-
-// Template literals
-const usuario = "Ana";
-const msg = \`Bem-vinda \${usuario}!\`;
-// retorno: "Bem-vinda Ana!"
-
-const multi = \`
-  Linha 1
-  Linha 2
-\`;
-// retorno: "\n  Linha 1\n  Linha 2\n"`,
-    explanation: `// Declaração de variáveis
-
-let - Declara variável que pode ser reatribuída, com escopo de bloco
-
-const - Declara constante que não pode ser reatribuída, com escopo de bloco
-
-var - Forma antiga de declarar variáveis, com hoisting e escopo de função (evitar)
-
-
-// Inferência de tipos
-
-TypeScript pode inferir automaticamente o tipo baseado no valor inicial
-
-Não é necessário declarar o tipo explicitamente quando é óbvio
-
-A inferência funciona com tipos primitivos e compostos
-
-
-// Escopo de bloco
-
-let e const têm escopo de bloco - só existem dentro do bloco onde foram declaradas
-
-Blocos podem ter variáveis com mesmo nome de variáveis externas (shadowing)
-
-var não respeita escopo de bloco (mais um motivo para evitar)
-
-
-// Hoisting com var
-
-var sofre hoisting - declaração é movida para o topo, mas não a inicialização
-
-let e const não sofrem hoisting - não podem ser usadas antes da declaração
-
-Hoisting pode causar bugs difíceis de encontrar
-
-
-// Destructuring de objetos
-
-Extrai propriedades de objetos em variáveis individuais
-
-Permite renomear variáveis usando : novo_nome
-
-Rest operator (...) coleta propriedades restantes em novo objeto
-
-
-// Destructuring de arrays
-
-Extrai elementos de arrays em variáveis individuais
-
-Pode pular elementos usando vírgulas
-
-Rest operator (...) coleta elementos restantes em novo array
-
-
-// Spread operator
-
-Em arrays - Copia elementos de um array para outro
-
-Em objetos - Copia propriedades de um objeto para outro
-
-Cria cópias superficiais (shallow copy)
-
-
-// Reatribuição e mutação
-
-let permite reatribuição (mudar a referência)
-
-const impede reatribuição mas não impede mutação de objetos/arrays
-
-Para imutabilidade total, use Object.freeze()
-
-
-// Template literals
-
-Permitem interpolação de expressões usando \${}
-
-Suportam strings multilinhas preservando formatação
-
-Podem incluir expressões complexas dentro de \${}`,
-  },
-
-  operadores: {
-    title: "Operadores do TypeScript",
-    description:
-      "Operadores e expressões específicos ou comumente usados em TypeScript",
-    code: `// Operadores de tipo
-let valor: unknown;
-let texto = valor as string;
-// retorno: valor convertido para string
-
-let numero = <number>valor;
-// retorno: valor convertido para number
-
-
-// Operador de coalescência nula (??)
-let nome: string | null = null;
-let nomeExibicao = nome ?? "Anônimo";
-// retorno: "Anônimo"
-
-
-// Operador de encadeamento opcional (?.)
-interface Usuario {
-    endereco?: {
-        rua?: string;
-    };
-}
-
-let usuario: Usuario = {};
-let rua = usuario?.endereco?.rua;
-// retorno: undefined
-
-
-// Operadores de verificação de tipo
-let tipo = typeof valor;
-// retorno: "string", "number", etc.
-
-function isString(x: any): x is string {
-    return typeof x === "string";
-}
-// retorno: true/false
-
-
-// Operador keyof
-interface Pessoa {
-    nome: string;
-    idade: number;
-}
-
-type ChavesPessoa = keyof Pessoa;
-// retorno: "nome" | "idade"
-
-function getProp(obj: Pessoa, key: keyof Pessoa) {
-    return obj[key];
-}
-
-
-// Operador in
-interface Animal {
-    nome: string;
-}
-
-interface Cachorro extends Animal {
-    latir: () => void;
-}
-
-function isDog(animal: Animal): animal is Cachorro {
-    return 'latir' in animal;
-}
-// retorno: true/false
-
-
-// Operadores de união e interseção
-type StringOuNumero = string | number;
-// união de tipos
-
-type ObjetoComNome = { nome: string };
-type ObjetoComIdade = { idade: number };
-type Pessoa = ObjetoComNome & ObjetoComIdade;
-// interseção de tipos
-
-
-// Operador satisfies
-type RGB = [number, number, number];
-const cor = [255, 128, 0] satisfies RGB;
-// verifica se o valor corresponde ao tipo
-
-
-// Operador instanceof com type guards
-class Erro1 extends Error {}
-class Erro2 extends Error {}
-
-function trataErro(erro: Error) {
-    if (erro instanceof Erro1) {
-        // TypeScript sabe que é Erro1
+      Interseção: {
+        title: "Interseção e União de Tipos",
+        description: "Combinando tipos com interseção (&) e união (|) em TypeScript",
+        code: `// União de Tipos (|)
+     type StringOuNumero = string | number;
+     let valor: StringOuNumero = "texto";
+     valor = 42; // válido também
+     
+     // Union com múltiplos tipos
+     type Resultado = string | number | boolean;
+     let resultado: Resultado = "sucesso";
+     resultado = 200;    // válido
+     resultado = true;   // válido
+     
+     // Union em funções
+     function processarValor(valor: number | string) {
+        if (typeof valor === "string") {
+            return valor.toUpperCase();
+        }
+        return valor * 2;
+     }
+     
+     // Interseção de Tipos (&)
+     type Nome = { nome: string };
+     type Idade = { idade: number };
+     type Pessoa = Nome & Idade;
+     
+     const pessoa: Pessoa = {
+        nome: "João",
+        idade: 25
+     }; // precisa ter ambas propriedades
+     
+     // Exemplo mais complexo de interseção
+     type Endereco = {
+        rua: string;
+        numero: number;
+        cidade: string;
+     };
+     
+     type Contato = {
+        email: string;
+        telefone: string;
+     };
+     
+     type Cliente = Pessoa & Endereco & Contato;
+     
+     const cliente: Cliente = {
+        nome: "Maria",
+        idade: 30,
+        rua: "Rua Principal",
+        numero: 123,
+        cidade: "São Paulo",
+        email: "maria@email.com",
+        telefone: "(11) 99999-9999"
+     };
+     
+     // Union com tipos literais
+     type Status = "ativo" | "inativo" | "pendente";
+     let statusAtual: Status = "ativo";
+     // statusAtual = "outro"; // erro!
+     
+     // Usando com interfaces
+     interface Carro {
+        modelo: string;
+        ano: number;
+     }
+     
+     interface Eletrico {
+        bateria: number;
+     }
+     
+     type CarroEletrico = Carro & Eletrico;
+     
+     const tesla: CarroEletrico = {
+        modelo: "Model S",
+        ano: 2023,
+        bateria: 100
+     };`,
+        explanation: `Interseção e União de tipos são recursos poderosos do TypeScript para combinar tipos 
+     de diferentes formas. União (|) permite que um valor seja de um dos tipos especificados, 
+     enquanto Interseção (&) requer que o valor tenha todos os tipos combinados.
+     
+     Elementos principais:
+     - União (|): Permite múltiplos tipos possíveis
+     - Interseção (&): Combina múltiplos tipos
+     - Type Guards: Verifica tipo em unions
+     - Tipos Literais: Valores específicos
+     - Interfaces: Podem ser combinadas
+     - Type Narrowing: Reduz tipo em unions`
+     },
+
+     modificadoresAcesso: {
+        title: "Modificadores de Acesso",
+        description: "Controle de visibilidade de propriedades e métodos em classes TypeScript",
+        code: `// Exemplo de classe com modificadores de acesso
+    class Pessoa {
+        public nome: string; // Pode ser acessado de qualquer lugar
+        private idade: number; // Somente acessível dentro da própria classe
+        protected cpf: string; // Acessível dentro da classe e subclasses
+    
+        constructor(nome: string, idade: number, cpf: string) {
+            this.nome = nome;
+            this.idade = idade;
+            this.cpf = cpf;
+        }
+    
+        public apresentar(): string {
+            return \`Olá, meu nome é \${this.nome}.\`;
+        }
+    
+        private calcularAnoNascimento(): number {
+            return new Date().getFullYear() - this.idade;
+        }
+    
+        protected exibirCpf(): string {
+            return \`CPF: \${this.cpf}\`;
+        }
     }
-}`,
-    explanation: `// Operadores de tipo
-
-as - Operador de asserção de tipo, usado para converter tipos
-
-<tipo> - Sintaxe alternativa para asserção de tipo (não usar em JSX)
-
-
-// Operador de coalescência nula
-
-?? - Fornece valor padrão quando null/undefined, específico para esses valores
-
-
-// Operador de encadeamento opcional
-
-?. - Acesso seguro a propriedades, específico do TypeScript/JavaScript moderno
-
-
-// Operadores de verificação de tipo
-
-typeof - Verifica o tipo em tempo de execução
-
-is - Cria type guard personalizado, recurso do TypeScript
-
-
-// Operador keyof
-
-keyof - Obtém as chaves de um tipo como union type
-
-Útil para trabalhar com tipos de forma genérica
-
-
-// Operador in
-
-in - Verifica se propriedade existe em objeto
-
-Útil para type narrowing em TypeScript
-
-
-// Operadores de união e interseção
-
-| - Cria um tipo que pode ser um OU outro
-
-& - Combina múltiplos tipos em um só
-
-
-// Operador satisfies
-
-satisfies - Verifica se um valor corresponde a um tipo
-
-Mantém a inferência literal de tipo
-
-
-// instanceof com type guards
-
-Combina instanceof com type guards do TypeScript
-
-Permite narrowing de tipos em verificações de instância`,
-  },
-
+    
+    // Classe que herda de Pessoa
+    class Funcionario extends Pessoa {
+        private cargo: string;
+    
+        constructor(nome: string, idade: number, cpf: string, cargo: string) {
+            super(nome, idade, cpf);
+            this.cargo = cargo;
+        }
+    
+        public detalhes(): string {
+            return \`\${this.apresentar()} Eu trabalho como \${this.cargo}.\`;
+        }
+    
+        public mostrarCpf(): string {
+            return this.exibirCpf(); // Permitido pois exibirCpf() é protected
+        }
+    }
+    
+    const funcionario = new Funcionario("Carlos", 30, "123.456.789-00", "Desenvolvedor");
+    
+    console.log(funcionario.nome); // Válido: public
+    console.log(funcionario.apresentar()); // Válido: public
+    // console.log(funcionario.idade); // Erro: private
+    // console.log(funcionario.cpf); // Erro: protected
+    console.log(funcionario.detalhes()); // Válido
+    console.log(funcionario.mostrarCpf()); // Válido
+    `,
+        explanation: `No TypeScript, os Modificadores de Acesso controlam a visibilidade de propriedades e métodos dentro de uma classe:
+    
+    - public: Acessível de qualquer lugar.
+    - private: Acessível apenas dentro da própria classe.
+    - protected: Acessível dentro da classe e em subclasses.
+    
+    🔹 Uso do private  
+      - Protege dados sensíveis, evitando acesso externo direto.
+      - Exemplo: private idade, método calcularAnoNascimento().
+    
+    🔹 Uso do protected  
+      - Permite que subclasses acessem propriedades/métodos da classe pai.
+      - Exemplo: protected cpf, método exibirCpf().
+    
+    🔹 Uso do public  
+      - Permite acesso irrestrito de qualquer parte do código.
+      - Exemplo: public nome, método apresentar().
+    
+    ⚠️ Importante:  
+    - private impede o acesso até mesmo em classes filhas.  
+    - protected permite acesso em herança, mas não diretamente fora da classe.  
+    - public não tem restrições e deve ser usado quando necessário.
+    
+    💡 Boas práticas:  
+    - Use private para encapsular dados e evitar alterações indevidas.  
+    - Use protected quando precisar expor algo apenas para heranças.  
+    - Use public para métodos que precisam ser acessíveis externamente.`  
+    },  
   arrays: {
     title: "Arrays e Métodos",
     description: "Manipulação de arrays em TypeScript",
@@ -1182,6 +1379,78 @@ Union com template - Combinam múltiplos padrões tipados
 
 .repeat() - Repete string com verificação de tipo`,
   },
+
+mapSset: {
+    title: "Map e Set",
+    description: "Map e Set em TypeScript",
+    code: `// Criando um Map e adicionando valores
+const usuarios = new Map<number, string>();
+usuarios.set(1, "Alice");
+usuarios.set(2, "Bob");
+
+// Obtendo um valor
+console.log(usuarios.get(1)); // saída: Alice
+
+// Verificando se uma chave existe
+console.log(usuarios.has(2)); // saída: true
+
+// Iterando sobre um Map
+usuarios.forEach((nome, id) => {
+    console.log(\`ID: \${id}, Nome: \${nome}\`);
+});
+
+// Criando um Set e adicionando valores únicos
+const numeros = new Set([1, 2, 3, 3, 4, 5]);
+console.log(numeros); // saída: Set { 1, 2, 3, 4, 5 }
+
+// Adicionando e removendo elementos
+numeros.add(6);
+numeros.delete(2);
+
+console.log(numeros); // saída: Set { 1, 3, 4, 5, 6 }`,
+
+    explanation: `O Map é uma estrutura de dados que armazena pares chave-valor, permitindo acesso eficiente aos elementos. 
+Diferente de um objeto, as chaves podem ser de qualquer tipo. 
+
+O Set é uma coleção de valores únicos, útil quando não queremos elementos duplicados. 
+Ambas as estruturas são usadas para manipulação de dados em TypeScript e JavaScript, sendo úteis para buscas rápidas e remoção de duplicatas.`
+},
+
+generics: {
+    title: "Introdução a Generics",
+    description: "Uso de Generics para tornar funções e classes mais flexíveis",
+    code: `// Função genérica que retorna qualquer tipo de valor
+function identidade<T>(valor: T): T {
+    return valor;
+}
+console.log(identidade<string>("Olá TypeScript")); // saída: Olá TypeScript
+console.log(identidade<number>(42)); // saída: 42
+
+// Classe genérica
+class Caixa<T> {
+    private conteudo: T;
+    
+    constructor(valor: T) {
+        this.conteudo = valor;
+    }
+
+    obterConteudo(): T {
+        return this.conteudo;
+    }
+}
+
+const caixaNumeros = new Caixa<number>(100);
+console.log(caixaNumeros.obterConteudo()); // saída: 100
+
+const caixaTexto = new Caixa<string>("Texto aqui");
+console.log(caixaTexto.obterConteudo()); // saída: Texto aqui`,
+
+    explanation: `Generics permitem a criação de código reutilizável e flexível ao trabalhar com diferentes tipos. 
+Isso evita duplicação de código ao tornar funções e classes mais dinâmicas.
+
+A função identidade<T> aceita qualquer tipo como entrada e retorna o mesmo tipo. 
+Já a classe Caixa<T> pode armazenar qualquer tipo de dado, garantindo que a manipulação seja feita de forma segura.`
+},
   estruturas: {
     title: "Estruturas condicionais",
     description: "Estruturas condicionais de fluxo em TypeScript",
@@ -2637,4 +2906,400 @@ Yield com tipo específico
 
 For await...of para consumir iterador`,
   },
+
+  funcoesGenericas: {
+    title: "Funções Genéricas",
+    description: "Como criar e utilizar funções genéricas em TypeScript",
+    code: `// Função genérica simples
+function retornarElemento<T>(elemento: T): T {
+    return elemento;
+}
+console.log(retornarElemento<string>("Olá")); // saída: Olá
+console.log(retornarElemento<number>(10)); // saída: 10
+
+// Função genérica com arrays
+function primeiroElemento<T>(array: T[]): T | undefined {
+    return array[0];
+}
+console.log(primeiroElemento([1, 2, 3])); // saída: 1
+console.log(primeiroElemento(["A", "B", "C"])); // saída: A
+
+// Função genérica com múltiplos tipos
+function combinar<T, U>(valor1: T, valor2: U): [T, U] {
+    return [valor1, valor2];
+}
+console.log(combinar<string, number>("Idade", 30)); // saída: ["Idade", 30]
+
+// Restrições em funções genéricas
+interface TemNome {
+    nome: string;
+}
+
+function exibirNome<T extends TemNome>(obj: T): string {
+    return obj.nome;
+}
+
+console.log(exibirNome({ nome: "Carlos", idade: 25 })); // saída: Carlos
+
+// Uso de generics com funções de array
+function mapearArray<T, U>(array: T[], callback: (item: T) => U): U[] {
+    return array.map(callback);
+}
+
+const numeros = [1, 2, 3, 4];
+const dobrados = mapearArray(numeros, (num) => num * 2);
+console.log(dobrados); // saída: [2, 4, 6, 8]`,
+
+    explanation: `Funções genéricas permitem criar código reutilizável que pode trabalhar com diferentes tipos sem perder segurança de tipo. 
+
+- A função retornarElemento<T> pode aceitar qualquer tipo de entrada e retornar o mesmo tipo.
+- A função primeiroElemento<T> trabalha com arrays genéricos e retorna o primeiro elemento.
+- A função combinar<T, U> demonstra o uso de múltiplos parâmetros genéricos.
+- Restrições (<T extends TemNome>) garantem que o tipo fornecido possua determinadas propriedades.
+- O uso de generics com funções de array, como map, permite transformar valores de maneira flexível e tipada.`
+},
+classes: {
+    title: "Definição e Uso de Classes",
+    description: "Como criar e utilizar classes em TypeScript",
+    code: `// Definição de uma classe básica
+class Pessoa {
+    nome: string;
+    idade: number;
+
+    constructor(nome: string, idade: number) {
+        this.nome = nome;
+        this.idade = idade;
+    }
+
+    apresentar(): string {
+        return \`Olá, meu nome é \${this.nome} e tenho \${this.idade} anos.\`;
+    }
+}
+
+const pessoa1 = new Pessoa("Carlos", 30);
+console.log(pessoa1.apresentar()); // saída: Olá, meu nome é Carlos e tenho 30 anos.
+`,
+
+    explanation: `Em TypeScript, classes permitem definir modelos para criar objetos com atributos e métodos.
+
+- A classe Pessoa possui dois atributos: nome e idade.
+- O construtor inicializa os atributos ao instanciar a classe.
+- O método apresentar retorna uma string com as informações da pessoa.
+- Criamos um objeto do tipo Pessoa e chamamos seu método.`
+},
+
+heranca: {
+    title: "Herança e Sobrescrita",
+    description: "Como utilizar herança e sobrescrita de métodos em TypeScript",
+    code: `// Classe base
+class Animal {
+    nome: string;
+
+    constructor(nome: string) {
+        this.nome = nome;
+    }
+
+    emitirSom(): string {
+        return "Som genérico de um animal";
+    }
+}
+
+// Classe derivada
+class Cachorro extends Animal {
+    constructor(nome: string) {
+        super(nome);
+    }
+
+    emitirSom(): string {
+        return "Au Au!";
+    }
+}
+
+const animal = new Animal("Criatura");
+console.log(animal.emitirSom()); // saída: Som genérico de um animal
+
+const dog = new Cachorro("Rex");
+console.log(dog.emitirSom()); // saída: Au Au!
+`,
+
+    explanation: `A herança permite que uma classe derive de outra, reutilizando seu comportamento.
+
+- A classe Animal possui um método emitirSom.
+- A classe Cachorro estende Animal e sobrescreve o método emitirSom.
+- Utilizamos super(nome) para chamar o construtor da classe base.
+- Criamos instâncias e chamamos os métodos, demonstrando a substituição do comportamento.`
+},
+interfaces: {
+    title: "Interfaces e Implementação",
+    description: "Uso de interfaces para definir contratos em TypeScript",
+    code: `// Definição de uma interface
+interface Veiculo {
+    marca: string;
+    modelo: string;
+    acelerar(): void;
+}
+
+// Implementação da interface
+class Carro implements Veiculo {
+    marca: string;
+    modelo: string;
+
+    constructor(marca: string, modelo: string) {
+        this.marca = marca;
+        this.modelo = modelo;
+    }
+
+    acelerar(): void {
+        console.log(\`\${this.marca} \${this.modelo} está acelerando!\`);
+    }
+}
+
+const carro = new Carro("Toyota", "Corolla");
+carro.acelerar(); // saída: Toyota Corolla está acelerando!
+`,
+
+    explanation: `Interfaces definem contratos que classes devem seguir.
+
+- A interface Veiculo exige os atributos marca, modelo e o método acelerar.
+- A classe Carro implementa Veiculo e define os atributos e métodos exigidos.
+- Criamos uma instância da classe Carro e chamamos seu método acelerar.`
+},
+abstracao: {
+    title: "Classes e Métodos Abstratos",
+    description: "Como trabalhar com classes abstratas em TypeScript",
+    code: `// Classe abstrata
+abstract class Forma {
+    abstract calcularArea(): number;
+}
+
+// Classe concreta
+class Circulo extends Forma {
+    raio: number;
+
+    constructor(raio: number) {
+        super();
+        this.raio = raio;
+    }
+
+    calcularArea(): number {
+        return Math.PI * this.raio * this.raio;
+    }
+}
+
+const circulo = new Circulo(5);
+console.log(circulo.calcularArea()); // saída: 78.53981633974483
+`,
+
+    explanation: `Classes abstratas servem como modelos para outras classes.
+
+- A classe Forma é abstrata e define um método abstrato calcularArea.
+- A classe Circulo estende Forma e implementa calcularArea.
+- Criamos uma instância de Circulo e calculamos sua área.`
+},
+polimorfismo: {
+    title: "Introdução ao Polimorfismo",
+    description: "Como aplicar polimorfismo em TypeScript",
+    code: `// Classe base
+class Funcionario {
+    nome: string;
+
+    constructor(nome: string) {
+        this.nome = nome;
+    }
+
+    calcularSalario(): number {
+        return 2000;
+    }
+}
+
+// Subclasses
+class Desenvolvedor extends Funcionario {
+    calcularSalario(): number {
+        return 5000;
+    }
+}
+
+class Designer extends Funcionario {
+    calcularSalario(): number {
+        return 4000;
+    }
+}
+
+// Uso do polimorfismo
+const funcionarios: Funcionario[] = [
+    new Desenvolvedor("Alice"),
+    new Designer("Bob"),
+    new Funcionario("Carlos"),
+];
+
+funcionarios.forEach(func => {
+    console.log(\`\${func.nome}: R$\${func.calcularSalario()}\`);
+});
+
+// saída:
+// Alice: R$5000
+// Bob: R$4000
+// Carlos: R$2000
+`,
+
+    explanation: `O polimorfismo permite tratar objetos de diferentes classes de forma unificada.
+
+- A classe Funcionario define um método calcularSalario.
+- As subclasses Desenvolvedor e Designer sobrescrevem calcularSalario.
+- Criamos um array de funcionários e chamamos calcularSalario para cada um.
+- Mesmo usando o tipo base Funcionario, cada objeto executa seu próprio método sobrescrito.`
+},
+
+decorators: {
+    title: "Uso de Decorators",
+    description: "Como utilizar decorators em TypeScript",
+    code: `// Habilitando decorators no tsconfig.json:
+// "experimentalDecorators": true
+
+// Criando um decorator de classe
+function LogClass(constructor: Function) {
+    console.log("Classe criada:", constructor.name);
+}
+
+@LogClass
+class Usuario {
+    constructor(public nome: string) {}
+}
+
+// Criando um decorator de método
+function LogMethod(target: any, key: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+    
+    descriptor.value = function (...args: any[]) {
+        console.log(\`Chamando o método \${key} com argumentos:\`, args);
+        return originalMethod.apply(this, args);
+    };
+}
+
+class Produto {
+    constructor(public nome: string, public preco: number) {}
+
+    @LogMethod
+    calcularDesconto(porcentagem: number): number {
+        return this.preco - (this.preco * porcentagem) / 100;
+    }
+}
+
+const produto = new Produto("Notebook", 3000);
+console.log(produto.calcularDesconto(10)); // saída: Chamando o método calcularDesconto com argumentos: [10]
+`,
+
+    explanation: `Decorators são uma funcionalidade avançada do TypeScript usada para modificar classes, métodos, propriedades e parâmetros.
+
+- Para usá-los, é necessário ativar \`"experimentalDecorators": true\` no \`tsconfig.json\`.
+- O decorator \`@LogClass\` exibe no console o nome da classe sempre que ela for criada.
+- O decorator \`@LogMethod\` intercepta chamadas de métodos, registrando os argumentos passados antes da execução real.
+- Essa abordagem é útil para logging, validações, injeção de dependências e outras funcionalidades avançadas.`
+},
+moduleSystems: {
+    title: "Módulos e Import/Export",
+    description: "Como dividir e organizar código usando módulos em TypeScript",
+    code: `// Arquivo: mathUtils.ts
+export function somar(a: number, b: number): number {
+    return a + b;
+}
+
+export function multiplicar(a: number, b: number): number {
+    return a * b;
+}
+
+// Arquivo: app.ts
+import { somar, multiplicar } from "./mathUtils";
+
+console.log(somar(5, 3)); // saída: 8
+console.log(multiplicar(4, 2)); // saída: 8
+`,
+
+    explanation: `Os módulos no TypeScript permitem organizar e reutilizar código de forma eficiente.
+
+- O arquivo \`mathUtils.ts\` define e exporta funções usando \`export\`.
+- No arquivo \`app.ts\`, usamos \`import { somar, multiplicar }\` para trazer as funções para o escopo do arquivo.
+- Essa abordagem melhora a modularidade do código, reduz duplicação e facilita a manutenção.
+- Podemos usar \`export default\` para exportar um único valor por módulo.
+- Em aplicações maiores, o uso de módulos é essencial para manter o código organizado e escalável.`
+},
+namespace: {
+    title: "Namespaces",
+    description: "Uso de Namespaces para organização de código em TypeScript",
+    code: `namespace Utils {
+    export function log(msg: string): void {
+        console.log("[Log]:", msg);
+    }
+
+    export function erro(msg: string): void {
+        console.error("[Erro]:", msg);
+    }
+}
+
+// Acessando funções do namespace
+Utils.log("Iniciando aplicação...");
+Utils.erro("Ocorreu um problema!");
+`,
+
+    explanation: `Namespaces são usados para organizar código dentro de um único arquivo ou em múltiplos arquivos.
+
+- O namespace \`Utils\` agrupa funções relacionadas à exibição de mensagens no console.
+- Para tornar funções acessíveis fora do namespace, usamos \`export\`.
+- A sintaxe \`Utils.log("Mensagem")\` permite acessar métodos dentro do namespace.
+- Namespaces eram amplamente utilizados antes da introdução dos módulos ES6, mas ainda podem ser úteis em projetos legados ou quando módulos não são uma opção viável.
+- Em projetos modernos, recomenda-se o uso de módulos para uma melhor organização do código.`
+},
+advancedTypes: {
+    title: "Tipos Avançados",
+    description: "Exploração de tipos avançados em TypeScript",
+    code: `// União de tipos (Union Types)
+function exibirId(id: string | number): void {
+    console.log("ID:", id);
+}
+exibirId(123);
+exibirId("ABC");
+
+// Interseção de tipos (Intersection Types)
+interface Pessoa {
+    nome: string;
+}
+
+interface Empregado {
+    salario: number;
+}
+
+type Trabalhador = Pessoa & Empregado;
+
+const funcionario: Trabalhador = { nome: "Carlos", salario: 5000 };
+console.log(funcionario);
+
+// Tipagem condicional
+type Resposta<T> = T extends string ? "Texto" : "Outro Tipo";
+
+const resultado1: Resposta<string> = "Texto";
+const resultado2: Resposta<number> = "Outro Tipo";
+
+// Tipos mapeados
+type Usuario = {
+    nome: string;
+    idade: number;
+};
+
+type UsuarioOpcional = {
+    [K in keyof Usuario]?: Usuario[K];
+};
+
+const usuarioParcial: UsuarioOpcional = { nome: "Ana" };
+`,
+
+    explanation: `Os tipos avançados do TypeScript fornecem maior flexibilidade na definição de tipos.
+
+- Union Types (\`string | number\`) permitem que uma variável aceite múltiplos tipos.
+- Intersection Types (\`Pessoa & Empregado\`) combinam múltiplas interfaces, criando um novo tipo.
+- Tipos Condicionais (\`T extends string ? "Texto" : "Outro Tipo"\`) permitem definir tipos com base em regras.
+- Tipos Mapeados (\`[K in keyof T]?\`) transformam tipos existentes, criando versões mais flexíveis, como objetos opcionais.
+- Esses recursos são úteis para garantir segurança de tipos em cenários mais complexos, como API dinâmicas, bibliotecas e grandes aplicações empresariais.`
+}
+
+
 };
