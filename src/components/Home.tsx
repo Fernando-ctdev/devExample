@@ -1,5 +1,5 @@
 import { Search, ChevronRight, Code2, BookOpen, Moon, Sun } from "lucide-react";
-//import { useEffect } from "react";
+import { useEffect } from "react";
 
 interface HomeProps {
   searchTerm: string;
@@ -93,6 +93,19 @@ export function Home({
     localStorage.setItem("scrollPosition", window.scrollY.toString());
     onExampleClick(id);
   };
+
+  // Restaura a posição do scroll quando o componente é montado
+  useEffect(() => {
+    const savedPosition = localStorage.getItem("scrollPosition");
+    if (savedPosition) {
+      window.scrollTo({
+        top: parseInt(savedPosition),
+        behavior: "auto"
+      });
+      // Limpa a posição salva após restaurar
+      localStorage.removeItem("scrollPosition");
+    }
+  }, []);
 
   // Função para mudar de tecnologia e voltar ao topo
   const handleTechChange = (tech: string) => {

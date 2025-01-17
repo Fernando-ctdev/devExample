@@ -119,7 +119,7 @@ export function ExampleView({
       }`}
     >
       {/* Botão de alternância de tema */}
-      <div
+      {/*<div
         onClick={toggleTheme}
         className={`fixed top-4 right-4 z-20 w-16 h-8 rounded-full cursor-pointer transition-all duration-300 
     ${
@@ -142,7 +142,7 @@ export function ExampleView({
             <Moon size={16} className="text-gray-800" />
           )}
         </div>
-      </div>
+      </div>*/}
 
       <div className="max-w-[90rem] mx-auto p-4">
         {/* Navigation Bar */}
