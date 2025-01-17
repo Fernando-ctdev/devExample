@@ -147,7 +147,7 @@ export function ExampleView({
       <div className="max-w-[90rem] mx-auto p-4">
         {/* Navigation Bar */}
         <div
-          className={`mb-8 flex items-center justify-between rounded-xl shadow-sm p-4 
+          className={`mb-4 flex items-center justify-between rounded-xl shadow-sm p-4 
           ${isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white"}`}
         >
           <button
@@ -197,7 +197,7 @@ export function ExampleView({
         >
           {/* Header com Logo */}
           <div
-            className={`relative p-6 ${
+            className={`relative p-4 ${
               isDarkMode
                 ? "bg-gradient-to-r from-gray-800 to-gray-900"
                 : "bg-gradient-to-r from-blue-600 to-indigo-600"
@@ -230,10 +230,10 @@ export function ExampleView({
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 p-6">
+          <div className="grid md:grid-cols-2 gap-4 p-4">
             {/* Code Section */}
             <div className="relative">
-              <div className="absolute right-4 top-4 z-10">
+              <div className="absolute right-2 top-2 z-10">
                 <button
                   onClick={handleCopy}
                   className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-105
@@ -259,21 +259,32 @@ export function ExampleView({
                   </div>
                 </div>
                 <div
-                  className={`p-6 h-[calc(100%-28px)] 
-                  ${isDarkMode ? "bg-[#121212]" : "bg-[#1E1E1E]"}`}
+                  className={`p-4 h-[calc(100%-28px)] 
+                  ${"bg-[#1E1E1E]"}`}
                 >
-                  <pre className="h-full overflow-y-auto rounded-lg">
+                  <pre
+                    className="h-full overflow-y-auto rounded-lg">
                     {examples.code.split("\n").map((line, index) => {
-                      const hasReturn = line.includes("// retorno:");
+                      const hasReturn =
+                        line.includes("// retorno:") ||
+                        line.includes("// return:");
                       const output = line.includes("// retorno:")
                         ? line.split("// retorno:")[1]?.trim()
+                        : line.includes("// return:")
+                        ? line.split("// return:")[1]?.trim()
                         : null;
 
                       return (
                         <React.Fragment key={index}>
                           {/* Só renderiza a linha se NÃO for um comentário de retorno */}
                           {!hasReturn && (
-                            <code className="language-typescript font-['Fira_Code'] text-sm block">
+                            <code
+                              className="language-typescript font-['Fira_Code'] text-sm block"
+                              style={{ 
+                                display: "block" ,
+                                lineHeight: "1.9",
+                              }}
+                            >
                               {line}
                             </code>
                           )}
@@ -335,7 +346,7 @@ export function ExampleView({
                 ${
                   isDarkMode
                     ? "bg-gray-900 text-gray-300"
-                    : "bg-gray-50 text-gray-900"
+                    : "bg-gray-510 text-gray-900"
                 }`}
               >
                 <div className="prose prose-slate max-w-none overflow-y-auto h-full">
@@ -345,6 +356,38 @@ export function ExampleView({
             </div>
           </div>
         </div>
+      </div>
+      <div className="text-center py-2">
+        <a
+          href="https://github.com/Fernando-ctdev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center gap-2 text-sm hover:opacity-75 transition-opacity ${
+            isDarkMode ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
+          <span>Desenvolvido por</span>
+          <span
+            className={`font-semibold ${
+              isDarkMode
+                ? "text-blue-400 hover:text-blue-300"
+                : "text-blue-600 hover:text-blue-500"
+            }`}
+          >
+            Maicon Fernando
+          </span>
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-5 w-5 fill-current"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0112 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48C19.137 20.107 22 16.373 22 11.969 22 6.463 17.522 2 12 2z"
+            ></path>
+          </svg>
+        </a>
       </div>
     </div>
   );
