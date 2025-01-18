@@ -1104,8 +1104,8 @@ func main() {
 Transformações de Caso
 - ToUpper: Converte para maiúsculas
 - ToLower: Converte para minúsculas
-- Title: Capitaliza palavras
-- ToTitle: Versão especial de capitalização
+- Title: Converte a primeira letra da ou das palavras para maiúscula
+- ToTitle: Converte todas as letras para maiúsculas
 
 Busca e Localização
 - Contains: Verifica se contém substring
