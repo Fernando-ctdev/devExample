@@ -1931,11 +1931,13 @@ Mostra número em base 2
  individuais. São fundamentais para garantir a qualidade do código e facilitar
  manutenções futuras.
  
- Funções e métodos principais:
+ //Funções e métodos principais:
  - TestNomeFuncao(): Função de teste que verifica um comportamento específico
  - t.Run(): Executa subtestes, permitindo organizar testes relacionados
  - t.Error/Errorf(): Reporta falhas encontradas durante o teste
+ - t.Parallel() : Sinaliza para que os testes rodem em paralelo.
  - go test: Comando para executar os testes
+ - go test ./... : executa os testes em todos os pacotes do projeto de uma só vez
  - go test -v: Executa testes com saída detalhada`,
   },
 
