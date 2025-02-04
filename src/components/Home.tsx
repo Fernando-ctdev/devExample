@@ -1,5 +1,6 @@
 import { Search, ChevronRight, Code2, BookOpen, Moon, Sun, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import toast, { Toaster } from 'react-hot-toast'; // Adicionar este import
 
 interface TopicItem {
   id: string;
@@ -36,7 +37,53 @@ interface HomeProps {
     title: string;
     categoryId: string;
   }) => Promise<boolean>;
+  technologies: any[]; // Adicionar esta prop aqui
 }
+
+// Substituir a função getRandomColor por esta versão otimizada
+const getRandomColor = () => {
+  const gradients = [
+    {
+      color: 'bg-gradient-to-r from-blue-400 to-blue-600',
+      hoverColor: 'hover:from-blue-500 hover:to-blue-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-purple-400 to-purple-600',
+      hoverColor: 'hover:from-purple-500 hover:to-purple-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-red-400 to-red-600',
+      hoverColor: 'hover:from-red-500 hover:to-red-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-green-400 to-green-600',
+      hoverColor: 'hover:from-green-500 hover:to-green-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
+      hoverColor: 'hover:from-yellow-500 hover:to-yellow-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-pink-400 to-pink-600',
+      hoverColor: 'hover:from-pink-500 hover:to-pink-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-indigo-400 to-indigo-600',
+      hoverColor: 'hover:from-indigo-500 hover:to-indigo-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-cyan-400 to-cyan-600',
+      hoverColor: 'hover:from-cyan-500 hover:to-cyan-700'
+    },
+    {
+      color: 'bg-gradient-to-r from-teal-400 to-teal-600',
+      hoverColor: 'hover:from-teal-500 hover:to-teal-700'
+    }
+  ];
+
+  const currentGradient = gradients[Math.floor(Math.random() * gradients.length)];
+  return currentGradient;
+};
 
 export function Home({
   searchTerm,
@@ -47,7 +94,10 @@ export function Home({
   topics,
   isDarkMode,
   toggleTheme,
-  onCreateNewTechnology
+  onCreateNewTechnology,
+  onCreateCategory,
+  onCreateItem,  // Adicionar esta prop aqui
+  technologies // Adicionar esta prop aqui
 }: HomeProps) {
   // Add console log to debug topics
   useEffect(() => {
@@ -55,14 +105,17 @@ export function Home({
   }, [topics]);
 
   const [showNewTechModal, setShowNewTechModal] = useState(false);
-  const [newTech, setNewTech] = useState({
-    name: '',
-    title: '',
-    color: 'bg-gradient-to-r from-purple-500 to-purple-700',
-    hoverColor: 'hover:from-purple-600 hover:to-purple-800',
-    logo: '',
-    alt: '',
-    padding: 'px-8 py-3'
+  const [newTech, setNewTech] = useState(() => {
+    const gradient = getRandomColor();
+    return {
+      name: '',
+      title: '',
+      color: gradient.color,
+      hoverColor: gradient.hoverColor,
+      logo: '',
+      alt: '',
+      padding: 'px-8 py-3'
+    };
   });
 
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
@@ -76,7 +129,8 @@ export function Home({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [newItem, setNewItem] = useState({
     id: '',
-    title: ''
+    title: '',
+    categoryId: '' // Adicionado categoryId ao estado
   });
 
   const techButtons = [
@@ -145,6 +199,25 @@ export function Home({
     },
   ];
 
+  // Antes do return, adicione esta lógica para filtrar as tecnologias
+  const staticTechNames = techButtons.map(btn => btn.tech);
+
+  // Filtrar apenas as tecnologias que não estão nos botões estáticos
+  const dynamicTechButtons = technologies
+    ?.filter(tech => !staticTechNames.includes(tech.name))
+    .map(tech => ({
+      title: tech.title,
+      tech: tech.name,
+      color: tech.color,
+      hoverColor: tech.hoverColor,
+      logo: tech.logo,
+      alt: tech.alt,
+      padding: tech.padding
+    })) || [];
+
+  // Combinar os botões estáticos com as tecnologias dinâmicas filtradas
+  const allTechButtons = [...techButtons, ...dynamicTechButtons];
+
   const AddNewTechButton = (
     <button
       onClick={() => setShowNewTechModal(true)}
@@ -161,12 +234,13 @@ export function Home({
   const AddNewTopicButton = (
     <button
       onClick={() => setShowNewTopicModal(true)}
-      className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group flex items-center justify-center
+      className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group flex items-center justify-center gap-2
         ${isDarkMode 
           ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
           : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
     >
       <Plus size={24} />
+      <span className="font-medium">Nova Categoria</span>
     </button>
   );
 
@@ -199,12 +273,15 @@ export function Home({
   const filteredTopics = topics && topics.length > 0 
     ? topics.map((topic) => ({
         ...topic,
-        items: topic.items.filter(
+        items: topic.items?.filter(
           (item) =>
             item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             topic.category.toLowerCase().includes(searchTerm.toLowerCase())
-        ),
-      })).filter((topic) => topic.items.length > 0)
+        ) || [] // Garante que items seja sempre um array, mesmo que vazio
+      })).filter(topic => 
+        // Remove o filtro de items.length para mostrar todas as categorias
+        searchTerm ? topic.items.length > 0 || topic.category.toLowerCase().includes(searchTerm.toLowerCase()) : true
+      )
     : [];
 
   console.log('Filtered topics:', filteredTopics);
@@ -234,12 +311,24 @@ export function Home({
   const handleCancelItemModal = () => {
     setNewItem({
       id: '',
-      title: ''
+      title: '',
+      categoryId: '' // Limpar também o categoryId
     });
     setSelectedCategory('');
     setShowNewItemModal(false);
   };
 
+  // Adicionar função para gerar novo gradiente
+  const generateNewGradient = () => {
+    const gradient = getRandomColor();
+    setNewTech(prev => ({
+      ...prev,
+      color: gradient.color,
+      hoverColor: gradient.hoverColor
+    }));
+  };
+
+  // Modificar o NewTechModal para usar toast
   const NewTechModal = (
     <>
       {showNewTechModal && (
@@ -256,6 +345,7 @@ export function Home({
             <form onSubmit={async (e) => {
               e.preventDefault();
               try {
+                console.log('Dados da nova tecnologia:', newTech); // Debug
                 await onCreateNewTechnology(newTech);
                 setShowNewTechModal(false);
                 // Limpar form
@@ -268,8 +358,19 @@ export function Home({
                   alt: '',
                   padding: 'px-8 py-3'
                 });
+                toast.success('Tecnologia criada com sucesso!', {
+                  style: {
+                    background: isDarkMode ? '#333' : '#fff',
+                    color: isDarkMode ? '#fff' : '#333',
+                  },
+                });
               } catch (error) {
-                alert('Erro ao criar tecnologia: ' + error.message);
+                toast.error('Erro ao criar tecnologia: ' + error.message, {
+                  style: {
+                    background: isDarkMode ? '#333' : '#fff',
+                    color: isDarkMode ? '#fff' : '#333',
+                  },
+                });
               }
             }}>
               <div className="space-y-4">
@@ -312,6 +413,20 @@ export function Home({
                   required
                 />
                 
+                {/* Adicionar preview do botão e botão de gerar nova cor */}
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    className={`flex items-center justify-center gap-3 px-8 py-3 ${newTech.color} ${newTech.hoverColor} text-white rounded-xl transition-all duration-300`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      generateNewGradient();
+                    }}
+                  >
+                    Clique para gerar nova cor
+                  </button>
+                </div>
+
                 <div className="flex gap-2">
                   <button
                     type="submit"
@@ -335,6 +450,7 @@ export function Home({
     </>
   );
 
+  // Modificar o NewTopicModal para usar toast
   const NewTopicModal = (
     <>
       {showNewTopicModal && (
@@ -345,23 +461,58 @@ export function Home({
             <h2 className={`text-xl font-bold mb-4 ${
               isDarkMode ? 'text-gray-100' : 'text-gray-800'
             }`}>
-              Adicionar Nova Categoria
+              Adicionar Nova Categoria em {currentTech}
             </h2>
             
             <form onSubmit={async (e) => {
               e.preventDefault();
+              const categoryName = newTopic.category.trim();
+              
+              if (!categoryName) {
+                toast.error('Nome da categoria é obrigatório', {
+                  style: {
+                    background: isDarkMode ? '#333' : '#fff',
+                    color: isDarkMode ? '#fff' : '#333',
+                  },
+                });
+                return;
+              }
+
               try {
-                // TODO: Implementar lógica de criação de tópico
-                setShowNewTopicModal(false);
-                setNewTopic({ category: '', items: [] });
+                console.log('Enviando requisição para criar categoria:', {
+                  category: categoryName,
+                  technologyId: currentTech
+                });
+
+                const success = await onCreateCategory(categoryName);
+                
+                if (success) {
+                  toast.success('Categoria criada com sucesso!', {
+                    style: {
+                      background: isDarkMode ? '#333' : '#fff',
+                      color: isDarkMode ? '#fff' : '#333',
+                    },
+                  });
+                  setShowNewTopicModal(false);
+                  setNewTopic({ category: '', items: [] });
+                  window.location.reload(); // Recarrega para mostrar a nova categoria
+                } else {
+                  throw new Error('Erro ao criar categoria');
+                }
               } catch (error) {
-                alert('Erro ao criar tópico: ' + error.message);
+                console.error('Erro ao criar categoria:', error);
+                toast.error(`Erro ao criar categoria: ${error.message}`, {
+                  style: {
+                    background: isDarkMode ? '#333' : '#fff',
+                    color: isDarkMode ? '#fff' : '#333',
+                  },
+                });
               }
             }}>
               <div className="space-y-4">
                 <input
                   type="text"
-                  placeholder="Nome da categoria"
+                  placeholder="Nome da categoria (ex: Arrays)"
                   value={newTopic.category}
                   onChange={(e) => setNewTopic({...newTopic, category: e.target.value})}
                   className={`w-full p-2 rounded border ${
@@ -395,7 +546,7 @@ export function Home({
     </>
   );
 
-  // Adicione o modal para criar novo item
+  // Modificar o NewItemModal para usar toast
   const NewItemModal = (
     <>
       {showNewItemModal && (
@@ -412,11 +563,34 @@ export function Home({
             <form onSubmit={async (e) => {
               e.preventDefault();
               try {
-                // TODO: Implementar lógica de criação de item
-                setShowNewItemModal(false);
-                setNewItem({ id: '', title: '' });
+                const itemData = {
+                  itemId: newItem.id,
+                  title: newItem.title,
+                  categoryId: newItem.categoryId // Usando o categoryId que já está no estado
+                };
+
+                console.log('Dados do novo item:', itemData); // Debug
+
+                const success = await onCreateItem(itemData);
+                if (success) {
+                  toast.success('Tópico criado com sucesso!', {
+                    style: {
+                      background: isDarkMode ? '#333' : '#fff',
+                      color: isDarkMode ? '#fff' : '#333',
+                    },
+                  });
+                  setShowNewItemModal(false);
+                  setNewItem({ id: '', title: '', categoryId: '' }); // Limpar também o categoryId
+                  window.location.reload();
+                }
               } catch (error) {
-                alert('Erro ao criar tópico: ' + error.message);
+                console.error('Erro ao criar tópico:', error);
+                toast.error('Erro ao criar tópico: ' + error.message, {
+                  style: {
+                    background: isDarkMode ? '#333' : '#fff',
+                    color: isDarkMode ? '#fff' : '#333',
+                  },
+                });
               }
             }}>
               <div className="space-y-4">
@@ -479,10 +653,13 @@ export function Home({
       );
     }
 
+    // Inverte a ordem das categorias antes de renderizar
+    const reversedTopics = [...filteredTopics].reverse();
+
     return (
       <>
-        {filteredTopics.map((topic, index) => (
-          <div key={index} className="mb-12">
+        {reversedTopics.map((topic) => (
+          <div key={topic.id} className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <BookOpen
                 className={isDarkMode ? "text-gray-400" : "text-gray-600"}
@@ -495,77 +672,65 @@ export function Home({
               </h2>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {topic.items.length === 0 ? (
-                // Mostrar apenas o botão de adicionar item se não houver itens
+              {/* Renderizar os items existentes */}
+              {topic.items?.map((item) => (
                 <button
-                  onClick={() => {
-                    setSelectedCategory(topic.category);
-                    setShowNewItemModal(true);
-                  }}
+                  key={item.id}
+                  onClick={() => handleExampleClick(item.id)}
                   className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
-                    flex items-center justify-center
                     ${isDarkMode 
-                      ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
-                      : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
+                      ? "bg-gray-800 hover:bg-gray-700"
+                      : "bg-white hover:bg-gray-50"}`}
                 >
-                  <Plus size={24} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Code2
+                        className={`${
+                          isDarkMode
+                            ? "text-gray-500 group-hover:text-blue-400"
+                            : "text-gray-400 group-hover:text-blue-500"
+                        } transition-colors`}
+                        size={20}
+                      />
+                      <h3 className={`text-lg font-medium transition-colors 
+                        ${isDarkMode
+                          ? "text-gray-300 group-hover:text-blue-400"
+                          : "text-gray-800 group-hover:text-blue-500"}`}>
+                        {item.title}
+                      </h3>
+                    </div>
+                    <ChevronRight
+                      className={`${
+                        isDarkMode
+                          ? "text-gray-500 group-hover:text-blue-400"
+                          : "text-gray-400 group-hover:text-blue-500"
+                      } transition-colors`}
+                      size={20}
+                    />
+                  </div>
                 </button>
-              ) : (
-                <>
-                  {/* Existing items mapping */}
-                  {topic.items.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handleExampleClick(item.id)}
-                      className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
-                        ${isDarkMode 
-                          ? "bg-gray-800 hover:bg-gray-700"
-                          : "bg-white hover:bg-gray-50"}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Code2
-                            className={`${
-                              isDarkMode
-                                ? "text-gray-500 group-hover:text-blue-400"
-                                : "text-gray-400 group-hover:text-blue-500"
-                            } transition-colors`}
-                            size={20}
-                          />
-                          <h3 className={`text-lg font-medium transition-colors 
-                            ${isDarkMode
-                              ? "text-gray-300 group-hover:text-blue-400"
-                              : "text-gray-800 group-hover:text-blue-500"}`}>
-                            {item.title}
-                          </h3>
-                        </div>
-                        <ChevronRight
-                          className={`${
-                            isDarkMode
-                              ? "text-gray-500 group-hover:text-blue-400"
-                              : "text-gray-400 group-hover:text-blue-500"
-                          } transition-colors`}
-                          size={20}
-                        />
-                      </div>
-                    </button>
-                  ))}
-                  {/* Add new item button */}
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(topic.category);
-                      setShowNewItemModal(true);
-                    }}
-                    className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
-                      flex items-center justify-center
-                      ${isDarkMode 
-                        ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
-                        : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
-                  >
-                    <Plus size={24} />
-                  </button>
-                </>
-              )}
+              ))}
+              {/* Botão de adicionar item */}
+              <button
+                onClick={() => {
+                  console.log('Categoria selecionada:', topic);
+                  setSelectedCategory(topic.category); // Use topic.category em vez de topic.name
+                  setNewItem({
+                    id: `${topic.category.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+                    title: '',
+                    categoryId: topic.id
+                  });
+                  setShowNewItemModal(true);
+                }}
+                className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
+                  flex items-center justify-center gap-2
+                  ${isDarkMode 
+                    ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
+                    : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
+              >
+                <Plus size={24} />
+                <span className="font-medium">Novo Tópico</span>
+              </button>
             </div>
           </div>
         ))}
@@ -581,6 +746,7 @@ export function Home({
       ${isDarkMode 
         ? "bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100"
         : "bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900"}`}>
+      <Toaster position="top-right" /> {/* Adicionar este componente */}
       {/* Botão de alternância de tema */}
       <div
         onClick={toggleTheme}
@@ -628,7 +794,7 @@ export function Home({
                  : "bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent"
              }`}
             >
-              {techButtons.find((btn) => btn.tech === currentTech)?.title ||
+              {allTechButtons.find((btn) => btn.tech === currentTech)?.title ||
                 "Select a technology"}
             </h1>
             <p
@@ -642,7 +808,7 @@ export function Home({
 
           {/* Tech Buttons */}
           <div className="flex flex-wrap gap-4 mb-8 items-center justify-center">
-            {techButtons.map((button, index) => (
+            {allTechButtons.map((button, index) => (
               <button
                 key={index}
                 className={`flex items-center gap-3 ${button.padding} ${button.color} ${button.hoverColor} 

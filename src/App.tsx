@@ -77,12 +77,12 @@ function App() {
         const data = await response.json();
         console.log("Tecnologias carregadas:", data);
 
-        if (data.success) {
-          setTechnologies(data.data);
-          // Atualizar tecnologia atual
-          const tech = data.data.find(
-            (t: Technology) => t.name === currentTech
-          );
+        // Atualizar o estado com as tecnologias do banco
+        setTechnologies(data);
+        
+        // Atualizar tecnologia atual se necessário
+        if (data.length > 0) {
+          const tech = data.find((t: Technology) => t.name === currentTech);
           if (tech) {
             setCurrentTechnology(tech);
           }
@@ -290,6 +290,12 @@ function App() {
       console.log("Resposta do servidor:", data);
 
       if (data.success) {
+        // Atualizar a lista de tecnologias
+        const techResponse = await fetch(`/api/technologies`);
+        const techData = await techResponse.json();
+        setTechnologies(techData);
+        
+        // Mudar para a nova tecnologia
         setCurrentTech(newTech.name.toLowerCase());
         return true;
       } else {
@@ -303,10 +309,12 @@ function App() {
 
   const handleCreateCategory = async (category: string) => {
     try {
-      const response = await fetch(`/api/categories`, {
-        method: "POST",
+      console.log('Criando categoria:', { category, technologyId: currentTech });
+      
+      const response = await fetch('/api/categories', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           category,
@@ -314,15 +322,21 @@ function App() {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
       const data = await response.json();
-
+      console.log('Resposta do servidor:', data);
+  
       if (data.success) {
+        // Recarregar os tópicos após criar a categoria
         await fetchTopics(currentTech);
         return true;
       }
-      throw new Error(data.message || "Erro ao criar categoria");
+      throw new Error(data.error || 'Erro ao criar categoria');
     } catch (error) {
-      console.error("Erro ao criar categoria:", error);
+      console.error('Erro ao criar categoria:', error);
       throw error;
     }
   };
@@ -333,18 +347,18 @@ function App() {
     categoryId: string;
   }) => {
     try {
+      console.log('Enviando requisição para criar item:', itemData);
+      
       const response = await fetch(`/api/items`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...itemData,
-          technologyId: currentTech,
-        }),
+        body: JSON.stringify(itemData) // Removi o spread e o technologyId
       });
 
       const data = await response.json();
+      console.log('Resposta do servidor:', data);
 
       if (data.success) {
         await Promise.all([
@@ -353,7 +367,7 @@ function App() {
         ]);
         return true;
       }
-      throw new Error(data.message || "Erro ao criar item");
+      throw new Error(data.error || "Erro ao criar item");
     } catch (error) {
       console.error("Erro ao criar item:", error);
       throw error;
@@ -375,7 +389,7 @@ function App() {
           toggleTheme={toggleTheme}
           onCreateNewTechnology={handleCreateNewTechnology}
           onCreateCategory={handleCreateCategory}
-          onCreateItem={handleCreateItem}
+          onCreateItem={handleCreateItem}  // Certifique-se que esta linha existe
           technologies={technologies}
         />
       ) : (

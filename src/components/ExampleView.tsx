@@ -197,71 +197,71 @@ export function ExampleView({
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-8 md:px-12 lg:px-16 py-6 flex-1"> {/* Aumentado o padding-x */}
+      <main className="container mx-auto px-8 md:px-12 lg:px-16 py-6 flex-1"> 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Code Card - VSCode Dracula Style */}
-          <div className="group bg-[#282a36] rounded-lg overflow-hidden
-                       border border-[#44475a]
-                       shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.2)]
-                       transition-all duration-300">
+            <div className="group bg-[#282a36] rounded-2xl overflow-hidden
+                   border border-[#44475a]
+                   shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.2)]
+                   transition-all duration-300">
             <div className="flex items-center justify-between px-4 py-3 
-                          bg-[#21222c] 
-                          border-b border-[#44475a]">
+                    bg-[#21222c] 
+                    border-b border-[#44475a]">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#ff5555] opacity-90" />
-                <div className="w-3 h-3 rounded-full bg-[#f1fa8c] opacity-90" />
-                <div className="w-3 h-3 rounded-full bg-[#50fa7b] opacity-90" />
+              <div className="w-3 h-3 rounded-full bg-[#ff5555] opacity-90" />
+              <div className="w-3 h-3 rounded-full bg-[#f1fa8c] opacity-90" />
+              <div className="w-3 h-3 rounded-full bg-[#50fa7b] opacity-90" />
               </div>
               <span className="text-sm font-medium text-[#f8f8f2]">
-                Código
+              Código exemplo
               </span>
               <div className="flex gap-2">
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
-                           bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
-                           transition-all duration-200 ease-in-out
-                           shadow-sm hover:shadow-md active:scale-95"
-                  title="Copiar código"
-                >
-                  <Copy size={14} />
-                </button>
-                <button
-                  onClick={() => isEditingCode ? handleSave('code') : setIsEditingCode(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
-                           bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
-                           transition-all duration-200 ease-in-out
-                           shadow-sm hover:shadow-md active:scale-95"
-                  title={isEditingCode ? "Salvar" : "Editar"}
-                >
-                  {isEditingCode ? <Save size={14} /> : <Edit2 size={14} />}
-                </button>
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
+                     bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
+                     transition-all duration-200 ease-in-out
+                     shadow-sm hover:shadow-md active:scale-95"
+                title="Copiar código"
+              >
+                <Copy size={14} />
+              </button>
+              <button
+                onClick={() => isEditingCode ? handleSave('code') : setIsEditingCode(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
+                     bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
+                     transition-all duration-200 ease-in-out
+                     shadow-sm hover:shadow-md active:scale-95"
+                title={isEditingCode ? "Salvar" : "Editar"}
+              >
+                {isEditingCode ? <Save size={14} /> : <Edit2 size={14} />}
+              </button>
               </div>
             </div>
             <div className="bg-[#282a36] p-6">
               <div className="h-[600px] overflow-auto custom-scrollbar">
-                {isEditingCode ? (
-                  <textarea
-                    value={editedCode}
-                    onChange={(e) => setEditedCode(e.target.value)}
-                    className="w-full h-full bg-transparent 
-                             font-mono text-sm resize-none focus:outline-none
-                             text-[#f8f8f2]"
-                    style={{ 
-                      fontFamily: "'JetBrains Mono', monospace",
-                      lineHeight: "1.6",
-                    }}
-                  />
-                ) : (
-                  <pre className="text-[#f8f8f2]">
-                    <code className="language-typescript">{example.code}</code>
-                  </pre>
-                )}
+              {isEditingCode ? (
+                <textarea
+                value={editedCode}
+                onChange={(e) => setEditedCode(e.target.value)}
+                className="w-full h-full bg-transparent 
+                     font-mono text-sm resize-none focus:outline-none
+                     text-[#f8f8f2]"
+                style={{ 
+                  fontFamily: "'JetBrains Mono', monospace",
+                  lineHeight: "1.6",
+                }}
+                />
+              ) : (
+                <pre className="text-[#f8f8f2]">
+                <code className="language-typescript">{example.code}</code>
+                </pre>
+              )}
               </div>
             </div>
-          </div>
+            </div>
           {/* Explanation Card */}
-          <div className="group bg-white dark:bg-slate-900 rounded-lg overflow-hidden
+          <div className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden
                        border border-slate-200 dark:border-slate-800
                        shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between px-4 py-3 
