@@ -123,8 +123,13 @@ export function ExampleView({
 
   return (
     <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#3b82f6] text-white shadow-lg">
+      {/* Header com gradiente adaptativo */}
+      <header className={`sticky top-0 z-50 text-white shadow-lg
+        ${isDarkMode 
+          ? 'bg-gradient-to-r from-blue-900 to-blue-700' // Gradiente escuro
+          : 'bg-gradient-to-r from-blue-600 to-blue-400'  // Gradiente claro
+        }`}
+      >
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between relative">
             <div className="flex items-center gap-4">
@@ -262,11 +267,7 @@ export function ExampleView({
             <div className="flex items-center justify-between px-4 py-3 
                           bg-slate-100 dark:bg-slate-800/50 
                           border-b border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/90" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/90" />
-                <div className="w-3 h-3 rounded-full bg-green-500/90" />
-              </div>
+              <div className="flex items-center gap-2"></div>
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 Explicação
               </span>
