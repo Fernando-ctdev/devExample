@@ -1,64 +1,158 @@
 import { useState, useEffect } from "react";
 import { Home } from "./components/Home";
 import { ExampleView } from "./components/ExampleView";
-import { examplesjs } from "./data/jsexamples";
-import { examplesgo } from "./data/goexamples";
-import { examplests } from "./data/tsexamples";
-import { examplesnode } from "./data/nodeexamples";
-import { examplessql } from "./data/sqlexamples";
-import { examplesgin } from "./data/ginexamples";
-import { examplesnest } from "./data/nestexamples";
-import { topics as jsTopics } from "./data/jsexamples";
-import { topics as goTopics } from "./data/goexamples";
-import { topics as tsTopics } from "./data/tsexamples";
-import { topics as nodeTopics } from "./data/nodeexamples"
-import { topics as sqlTopics } from "./data/sqlexamples";
-import { topics as ginTopics } from "./data/ginexamples";
-import { topics as nestTopics } from "./data/nestexamples";
+
+interface Technology {
+  id: string;
+  name: string;
+  title: string;
+  color: string;
+  hoverColor: string;
+  logo: string;
+  alt: string;
+  padding: string;
+}
 
 function App() {
   const [currentPage, setCurrentPage] = useState<"home" | string>("home");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentTech, setCurrentTech] = useState("javascript");
-  
-  // estado para dark mode
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [topics, setTopics] = useState([]);
+  const [examples, setExamples] = useState({});
+  const [technologies, setTechnologies] = useState<Technology[]>([]);
+  const [currentExample, setCurrentExample] = useState<any>(null);
+  const [currentTechnology, setCurrentTechnology] = useState<Technology | null>(
+    null
+  );
 
-  // Efeito para carregar preferência de tema na montagem do componente
+  // Carregar tema
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
       setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     }
   }, []);
 
-  // Função para alternar o tema
+  // Modifique o useEffect que carrega os dados
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        console.log('Carregando dados para tecnologia:', currentTech);
+        const [topicsResponse, examplesResponse] = await Promise.all([
+          fetch(`/api/topics/${currentTech}`),
+          fetch(`/api/examples/${currentTech}`)
+        ]);
+
+        const topicsData = await topicsResponse.json();
+        const examplesData = await examplesResponse.json();
+
+        if (topicsData.success) {
+          setTopics(topicsData.data);
+        }
+
+        if (examplesData.success) {
+          console.log('Exemplos carregados:', examplesData.data);
+          setExamples(examplesData.data);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      }
+    };
+
+    if (currentTech) {
+      loadData();
+    }
+  }, [currentTech]);
+
+  // Carregar tecnologias do banco
+  useEffect(() => {
+    const loadTechnologies = async () => {
+      try {
+        const response = await fetch(`/api/technologies`);
+        if (!response.ok) {
+          throw new Error("Falha ao carregar tecnologias");
+        }
+        const data = await response.json();
+        console.log("Tecnologias carregadas:", data);
+
+        if (data.success) {
+          setTechnologies(data.data);
+          // Atualizar tecnologia atual
+          const tech = data.data.find(
+            (t: Technology) => t.name === currentTech
+          );
+          if (tech) {
+            setCurrentTechnology(tech);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar tecnologias:", error);
+      }
+    };
+
+    loadTechnologies();
+  }, []);
+
+  // Modifique o useEffect que atualiza o exemplo atual
+  useEffect(() => {
+    if (currentPage !== 'home' && examples && Object.keys(examples).length > 0) {
+      console.log('Atualizando exemplo atual:', examples[currentPage]);
+      setCurrentExample(examples[currentPage]);
+    }
+  }, [currentPage, examples]);
+
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-    
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+
     if (newTheme) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   };
 
-  // Objeto que mapeia a tecnologia para seus exemplos e tópicos
-  const techData = {
-    javascript: { examples: examplesjs, topics: jsTopics },
-    typescript: { examples: examplests, topics: tsTopics },
-    golang: { examples: examplesgo, topics: goTopics },
-    nodejs: { examples: examplesnode, topics: nodeTopics },
-    sql: { examples: examplessql , topics: sqlTopics },
-    gin: { examples : examplesgin, topics: ginTopics },
-    nestjs: { examples : examplesnest, topics: nestTopics }
+  const fetchTopics = async (tech: string) => {
+    try {
+      console.log("Fetching topics for tech:", tech);
+      const response = await fetch(`/api/topics/${tech}`);
+      const data = await response.json();
+      console.log("API Response:", data);
+
+      if (data.success) {
+        setTopics(data.data);
+      } else {
+        console.error("API returned success: false");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar tópicos:", error);
+    }
   };
 
+  const fetchExamples = async (tech: string) => {
+    try {
+      const response = await fetch(`/api/examples/${tech}`);
+      const data = await response.json();
+      if (data.success) {
+        setExamples(data.data);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar exemplos:", error);
+    }
+  };
+
+  // O currentPage está sendo usado como ID, mas deveria ser o itemId
   const handleExampleClick = (id: string) => {
-    setCurrentPage(id);
+    console.log('Debug - ID recebido:', id);
+    setCurrentPage(id); // Aqui está guardando o itemId
+    if (examples && examples[id]) {
+      const example = examples[id];
+      console.log('Debug - Exemplo selecionado:', example);
+      setCurrentExample(example); // Este exemplo já deve conter o itemId
+    }
   };
 
   const handleBackClick = () => {
@@ -67,11 +161,18 @@ function App() {
   };
 
   const handleTechChange = (tech: string) => {
+    console.log("Mudando para tecnologia:", tech);
     setCurrentTech(tech.toLowerCase());
+
+    // Atualizar a tecnologia atual
+    const currentTech = technologies.find((t) => t.name === tech.toLowerCase());
+    if (currentTech) {
+      setCurrentTechnology(currentTech);
+    }
   };
 
   const handleNextTopic = () => {
-    const currentExamples = techData[currentTech].examples;
+    const currentExamples = examples;
     const keys = Object.keys(currentExamples);
     const currentIndex = keys.indexOf(currentPage);
     if (currentIndex >= 0 && currentIndex < keys.length - 1) {
@@ -80,7 +181,7 @@ function App() {
   };
 
   const handlePreviousTopic = () => {
-    const currentExamples = techData[currentTech].examples;
+    const currentExamples = examples;
     const keys = Object.keys(currentExamples);
     const currentIndex = keys.indexOf(currentPage);
     if (currentIndex > 0) {
@@ -88,12 +189,180 @@ function App() {
     }
   };
 
+  const handleSaveCode = async (newCode: string) => {
+    try {
+      console.log('Tentativa de salvamento de código:', {
+        id: currentExample?.itemId,
+        code: newCode
+      });
+  
+      if (!currentExample?.itemId) {
+        throw new Error('ID do exemplo não encontrado');
+      }
+  
+      const payload = {
+        id: currentExample.itemId,
+        code: newCode
+      };
+  
+      const response = await fetch(`/api/save-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Falha ao salvar');
+      }
+  
+      console.log('Código salvo com sucesso!');
+      await fetchExamples(currentTech);
+      return true;
+  
+    } catch (error) {
+      console.error('Erro ao salvar código:', error);
+      throw error;
+    }
+  };
+  
+  const handleSaveExplanation = async (newExplanation: string) => {
+    try {
+      if (!currentExample || !currentExample.itemId) {
+        throw new Error('Exemplo inválido ou sem itemId');
+      }
+  
+      const response = await fetch(`/api/save-explanation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tech: currentTech,
+          id: currentExample.itemId,
+          explanation: newExplanation,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao salvar explicação');
+      }
+  
+      // Recarregar exemplos após salvar
+      await fetchExamples(currentTech);
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar explicação:", error);
+      throw error;
+    }
+  };
+
+  const handleCreateNewTechnology = async (newTech: {
+    name: string;
+    title: string;
+    color: string;
+    hoverColor: string;
+    logo: string;
+    alt: string;
+    padding: string;
+  }) => {
+    try {
+      console.log("Enviando dados para criar tecnologia:", newTech);
+
+      const response = await fetch(`/api/technologies`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(newTech),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Resposta de erro completa:", errorText);
+        throw new Error(errorText);
+      }
+
+      const data = await response.json();
+      console.log("Resposta do servidor:", data);
+
+      if (data.success) {
+        setCurrentTech(newTech.name.toLowerCase());
+        return true;
+      } else {
+        throw new Error(data.error || "Erro ao criar tecnologia");
+      }
+    } catch (error) {
+      console.error("Erro ao criar tecnologia:", error);
+      throw error;
+    }
+  };
+
+  const handleCreateCategory = async (category: string) => {
+    try {
+      const response = await fetch(`/api/categories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          category,
+          technologyId: currentTech,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchTopics(currentTech);
+        return true;
+      }
+      throw new Error(data.message || "Erro ao criar categoria");
+    } catch (error) {
+      console.error("Erro ao criar categoria:", error);
+      throw error;
+    }
+  };
+
+  const handleCreateItem = async (itemData: {
+    itemId: string;
+    title: string;
+    categoryId: string;
+  }) => {
+    try {
+      const response = await fetch(`/api/items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...itemData,
+          technologyId: currentTech,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await Promise.all([
+          fetchTopics(currentTech),
+          fetchExamples(currentTech),
+        ]);
+        return true;
+      }
+      throw new Error(data.message || "Erro ao criar item");
+    } catch (error) {
+      console.error("Erro ao criar item:", error);
+      throw error;
+    }
+  };
+
+  // Na renderização do ExampleView, passe o currentExample
   return (
-    <div className={`min-h-screen transition-colors duration-300 
-      ${isDarkMode 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100' 
-        : 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900'
-      }`}>
+    <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
       {currentPage === "home" ? (
         <Home
           searchTerm={searchTerm}
@@ -101,19 +370,25 @@ function App() {
           onExampleClick={handleExampleClick}
           currentTech={currentTech}
           onTechChange={handleTechChange}
-          topics={techData[currentTech].topics}
+          topics={topics}
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
+          onCreateNewTechnology={handleCreateNewTechnology}
+          onCreateCategory={handleCreateCategory}
+          onCreateItem={handleCreateItem}
+          technologies={technologies}
         />
       ) : (
         <ExampleView
-          examples={techData[currentTech].examples[currentPage]}
+          example={currentExample} // Modificado para usar currentExample
+          technology={currentTechnology}
+          currentTech={currentTech} // Garanta que esta prop está sendo passada
           onBackClick={handleBackClick}
           onNavigateNext={handleNextTopic}
           onNavigatePrevious={handlePreviousTopic}
-          currentTech={currentTech}
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
+          onSave={(type, content) => type === 'code' ? handleSaveCode(content) : handleSaveExplanation(content)}
         />
       )}
     </div>
@@ -121,3 +396,4 @@ function App() {
 }
 
 export default App;
+

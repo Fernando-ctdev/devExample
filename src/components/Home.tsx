@@ -1,15 +1,41 @@
-import { Search, ChevronRight, Code2, BookOpen, Moon, Sun } from "lucide-react";
-import { useEffect } from "react";
+import { Search, ChevronRight, Code2, BookOpen, Moon, Sun, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface TopicItem {
+  id: string;
+  itemId: string;
+  title: string;
+}
+
+interface Topic {
+  id: string;
+  name: string;
+  technologyId: string;
+  items: TopicItem[];
+}
 
 interface HomeProps {
   searchTerm: string;
-  onSearchChange: (value: string) => void;
-  onExampleClick: (id: string) => void;
   currentTech: string;
   onTechChange: (tech: string) => void;
-  topics: any[];
+  topics: Topic[];
   isDarkMode: boolean;
   toggleTheme: () => void;
+  onCreateNewTechnology: (newTech: {
+    name: string;
+    title: string;
+    color: string;
+    hoverColor: string;
+    logo: string;
+    alt: string;
+    padding: string;
+  }) => Promise<boolean>;
+  onCreateCategory: (category: string) => Promise<boolean>;
+  onCreateItem: (itemData: {
+    itemId: string;
+    title: string;
+    categoryId: string;
+  }) => Promise<boolean>;
 }
 
 export function Home({
@@ -21,7 +47,38 @@ export function Home({
   topics,
   isDarkMode,
   toggleTheme,
+  onCreateNewTechnology
 }: HomeProps) {
+  // Add console log to debug topics
+  useEffect(() => {
+    console.log('Topics received in Home:', topics);
+  }, [topics]);
+
+  const [showNewTechModal, setShowNewTechModal] = useState(false);
+  const [newTech, setNewTech] = useState({
+    name: '',
+    title: '',
+    color: 'bg-gradient-to-r from-purple-500 to-purple-700',
+    hoverColor: 'hover:from-purple-600 hover:to-purple-800',
+    logo: '',
+    alt: '',
+    padding: 'px-8 py-3'
+  });
+
+  const [showNewTopicModal, setShowNewTopicModal] = useState(false);
+  const [newTopic, setNewTopic] = useState({
+    category: '',
+    items: []
+  });
+
+  // Adicione estado para controlar o modal de novo item e a categoria selecionada
+  const [showNewItemModal, setShowNewItemModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [newItem, setNewItem] = useState({
+    id: '',
+    title: ''
+  });
+
   const techButtons = [
     {
       title: "JavaScript with example",
@@ -88,6 +145,31 @@ export function Home({
     },
   ];
 
+  const AddNewTechButton = (
+    <button
+      onClick={() => setShowNewTechModal(true)}
+      className={`flex items-center gap-3 px-8 py-3 
+        ${isDarkMode 
+          ? "bg-gray-700 hover:bg-gray-600 text-gray-100" 
+          : "bg-gray-200 hover:bg-gray-300 text-gray-800"}
+        rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg`}
+    >
+      <Plus size={24} />
+    </button>
+  );
+
+  const AddNewTopicButton = (
+    <button
+      onClick={() => setShowNewTopicModal(true)}
+      className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group flex items-center justify-center
+        ${isDarkMode 
+          ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
+          : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
+    >
+      <Plus size={24} />
+    </button>
+  );
+
   // Função para salvar posição do scroll antes de navegar
   const handleExampleClick = (id: string) => {
     localStorage.setItem("scrollPosition", window.scrollY.toString());
@@ -113,26 +195,392 @@ export function Home({
     onTechChange(tech);
   };
 
-  const filteredTopics = topics
-    .map((topic) => ({
-      ...topic,
-      items: topic.items.filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          topic.category.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    }))
-    .filter((topic) => topic.items.length > 0);
+  // Função para filtrar tópicos baseado no termo de busca
+  const filteredTopics = topics && topics.length > 0 
+    ? topics.map((topic) => ({
+        ...topic,
+        items: topic.items.filter(
+          (item) =>
+            item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            topic.category.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+      })).filter((topic) => topic.items.length > 0)
+    : [];
+
+  console.log('Filtered topics:', filteredTopics);
+
+  // Adicione estas funções para limpar os formulários
+  const handleCancelTechModal = () => {
+    setNewTech({
+      name: '',
+      title: '',
+      color: 'bg-gradient-to-r from-purple-500 to-purple-700',
+      hoverColor: 'hover:from-purple-600 hover:to-purple-800',
+      logo: '',
+      alt: '',
+      padding: 'px-8 py-3'
+    });
+    setShowNewTechModal(false);
+  };
+
+  const handleCancelTopicModal = () => {
+    setNewTopic({
+      category: '',
+      items: []
+    });
+    setShowNewTopicModal(false);
+  };
+
+  const handleCancelItemModal = () => {
+    setNewItem({
+      id: '',
+      title: ''
+    });
+    setSelectedCategory('');
+    setShowNewItemModal(false);
+  };
+
+  const NewTechModal = (
+    <>
+      {showNewTechModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}>
+            <h2 className={`text-xl font-bold mb-4 ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>
+              Adicionar Nova Tecnologia
+            </h2>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                await onCreateNewTechnology(newTech);
+                setShowNewTechModal(false);
+                // Limpar form
+                setNewTech({
+                  name: '',
+                  title: '',
+                  color: 'bg-gradient-to-r from-purple-500 to-purple-700',
+                  hoverColor: 'hover:from-purple-600 hover:to-purple-800',
+                  logo: '',
+                  alt: '',
+                  padding: 'px-8 py-3'
+                });
+              } catch (error) {
+                alert('Erro ao criar tecnologia: ' + error.message);
+              }
+            }}>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Nome da tecnologia (ex: python)"
+                  value={newTech.name}
+                  onChange={(e) => setNewTech({...newTech, name: e.target.value, alt: `${e.target.value} Logo`})}
+                  className={`w-full p-2 rounded border ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                  required
+                />
+                
+                <input
+                  type="text"
+                  placeholder="Título de exibição (ex: Python with example)"
+                  value={newTech.title}
+                  onChange={(e) => setNewTech({...newTech, title: e.target.value})}
+                  className={`w-full p-2 rounded border ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                  required
+                />
+                
+                <input
+                  type="url"
+                  placeholder="URL do logo"
+                  value={newTech.logo}
+                  onChange={(e) => setNewTech({...newTech, logo: e.target.value})}
+                  className={`w-full p-2 rounded border ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                  required
+                />
+                
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Adicionar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelTechModal}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const NewTopicModal = (
+    <>
+      {showNewTopicModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}>
+            <h2 className={`text-xl font-bold mb-4 ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>
+              Adicionar Nova Categoria
+            </h2>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                // TODO: Implementar lógica de criação de tópico
+                setShowNewTopicModal(false);
+                setNewTopic({ category: '', items: [] });
+              } catch (error) {
+                alert('Erro ao criar tópico: ' + error.message);
+              }
+            }}>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Nome da categoria"
+                  value={newTopic.category}
+                  onChange={(e) => setNewTopic({...newTopic, category: e.target.value})}
+                  className={`w-full p-2 rounded border ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                  required
+                />
+                
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Adicionar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelTopicModal}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // Adicione o modal para criar novo item
+  const NewItemModal = (
+    <>
+      {showNewItemModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}>
+            <h2 className={`text-xl font-bold mb-4 ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>
+              Adicionar Novo Tópico em {selectedCategory}
+            </h2>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                // TODO: Implementar lógica de criação de item
+                setShowNewItemModal(false);
+                setNewItem({ id: '', title: '' });
+              } catch (error) {
+                alert('Erro ao criar tópico: ' + error.message);
+              }
+            }}>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="ID do tópico (ex: arrays-map)"
+                  value={newItem.id}
+                  onChange={(e) => setNewItem({...newItem, id: e.target.value})}
+                  className={`w-full p-2 rounded border ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                  required
+                />
+                
+                <input
+                  type="text"
+                  placeholder="Título do tópico"
+                  value={newItem.title}
+                  onChange={(e) => setNewItem({...newItem, title: e.target.value})}
+                  className={`w-full p-2 rounded border ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                  required
+                />
+                
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Adicionar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelItemModal}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // Renderização condicional dos botões
+  const renderTopicSection = () => {
+    if (filteredTopics.length === 0) {
+      return (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+          {AddNewTopicButton}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {filteredTopics.map((topic, index) => (
+          <div key={index} className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <BookOpen
+                className={isDarkMode ? "text-gray-400" : "text-gray-600"}
+                size={24}
+              />
+              <h2 className={`text-2xl font-bold ${
+                isDarkMode ? "text-gray-200" : "text-gray-800"
+              }`}>
+                {topic.category}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {topic.items.length === 0 ? (
+                // Mostrar apenas o botão de adicionar item se não houver itens
+                <button
+                  onClick={() => {
+                    setSelectedCategory(topic.category);
+                    setShowNewItemModal(true);
+                  }}
+                  className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
+                    flex items-center justify-center
+                    ${isDarkMode 
+                      ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
+                      : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
+                >
+                  <Plus size={24} />
+                </button>
+              ) : (
+                <>
+                  {/* Existing items mapping */}
+                  {topic.items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleExampleClick(item.id)}
+                      className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
+                        ${isDarkMode 
+                          ? "bg-gray-800 hover:bg-gray-700"
+                          : "bg-white hover:bg-gray-50"}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Code2
+                            className={`${
+                              isDarkMode
+                                ? "text-gray-500 group-hover:text-blue-400"
+                                : "text-gray-400 group-hover:text-blue-500"
+                            } transition-colors`}
+                            size={20}
+                          />
+                          <h3 className={`text-lg font-medium transition-colors 
+                            ${isDarkMode
+                              ? "text-gray-300 group-hover:text-blue-400"
+                              : "text-gray-800 group-hover:text-blue-500"}`}>
+                            {item.title}
+                          </h3>
+                        </div>
+                        <ChevronRight
+                          className={`${
+                            isDarkMode
+                              ? "text-gray-500 group-hover:text-blue-400"
+                              : "text-gray-400 group-hover:text-blue-500"
+                          } transition-colors`}
+                          size={20}
+                        />
+                      </div>
+                    </button>
+                  ))}
+                  {/* Add new item button */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(topic.category);
+                      setShowNewItemModal(true);
+                    }}
+                    className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
+                      flex items-center justify-center
+                      ${isDarkMode 
+                        ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
+                        : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
+                  >
+                    <Plus size={24} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+          {AddNewTopicButton}
+        </div>
+      </>
+    );
+  };
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 
-     ${
-       isDarkMode
-         ? "bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100"
-         : "bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900"
-     }`}
-    >
+    <div className={`min-h-screen transition-colors duration-300 
+      ${isDarkMode 
+        ? "bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100"
+        : "bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900"}`}>
       {/* Botão de alternância de tema */}
       <div
         onClick={toggleTheme}
@@ -194,30 +642,20 @@ export function Home({
 
           {/* Tech Buttons */}
           <div className="flex flex-wrap gap-4 mb-8 items-center justify-center">
-            {techButtons.map(
-              (
-                { title, tech, color, hoverColor, logo, alt, padding },
-                index
-              ) => (
-                <button
-                  key={index}
-                  className={`flex items-center gap-3 ${padding} ${color} ${hoverColor} 
-                 ${
-                   isDarkMode
-                     ? "text-gray-100 opacity-90 hover:opacity-100"
-                     : "text-white"
-                 } rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                    currentTech === tech
-                      ? "ring-4 ring-offset-2 ring-offset-gray-100 ring-opacity-50"
-                      : ""
-                  }`}
-                  onClick={() => handleTechChange(tech)}
-                >
-                  <img src={logo} alt={alt} className="w-6 h-6" />
-                  <span className="font-medium">{title.split(" ")[0]}</span>
-                </button>
-              )
-            )}
+            {techButtons.map((button, index) => (
+              <button
+                key={index}
+                className={`flex items-center gap-3 ${button.padding} ${button.color} ${button.hoverColor} 
+                  ${isDarkMode ? "text-gray-100 opacity-90 hover:opacity-100" : "text-white"}
+                  rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg 
+                  ${currentTech === button.tech ? "ring-4 ring-offset-2 ring-offset-gray-100 ring-opacity-50" : ""}`}
+                onClick={() => handleTechChange(button.tech)}
+              >
+                <img src={button.logo} alt={button.alt} className="w-6 h-6" />
+                <span className="font-medium">{button.title.split(" ")[0]}</span>
+              </button>
+            ))}
+            {AddNewTechButton}
           </div>
 
           {/* Search Bar */}
@@ -248,95 +686,8 @@ export function Home({
       </div>
 
       {/* Content Section with top padding to account for fixed header */}
-      <div
-        className={`max-w-6xl mx-auto p-6 pt-[420px] 
-       ${isDarkMode ? "text-gray-200" : "text-gray-800"}
-     `}
-      >
-        {/* Topics Grid */}
-        {filteredTopics.map((topic, index) => (
-          <div key={index} className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <BookOpen
-                className={`${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
-                size={24}
-              />
-              <h2
-                className={`text-2xl font-bold ${
-                  isDarkMode ? "text-gray-200" : "text-gray-800"
-                }`}
-              >
-                {topic.category}
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {topic.items.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleExampleClick(item.id)}
-                  className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
-                   ${
-                     isDarkMode
-                       ? "bg-gray-800 hover:bg-gray-700"
-                       : "bg-white hover:bg-gray-50"
-                   }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Code2
-                        className={`${
-                          isDarkMode
-                            ? "text-gray-500 group-hover:text-blue-400"
-                            : "text-gray-400 group-hover:text-blue-500"
-                        } transition-colors`}
-                        size={20}
-                      />
-                      <h3
-                        className={`text-lg font-medium transition-colors 
-                       ${
-                         isDarkMode
-                           ? "text-gray-300 group-hover:text-blue-400"
-                           : "text-gray-800 group-hover:text-blue-500"
-                       }`}
-                      >
-                        {item.title}
-                      </h3>
-                    </div>
-                    <ChevronRight
-                      className={`${
-                        isDarkMode
-                          ? "text-gray-500 group-hover:text-blue-400"
-                          : "text-gray-400 group-hover:text-blue-500"
-                      } transition-colors`}
-                      size={20}
-                    />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        {/* No Results Message */}
-        {filteredTopics.length === 0 && (
-          <div className="text-center py-12">
-            <div className="mb-4">
-              <Search
-                className={`mx-auto ${
-                  isDarkMode ? "text-gray-500" : "text-gray-400"
-                }`}
-                size={48}
-              />
-            </div>
-            <p
-              className={`text-xl ${
-                isDarkMode ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Nenhum resultado encontrado para "{searchTerm}"
-            </p>
-          </div>
-        )}
+      <div className={`max-w-6xl mx-auto p-6 pt-[420px]`}>
+        {renderTopicSection()}
       </div>
       <div className="text-center py-4">
         <a
@@ -366,10 +717,13 @@ export function Home({
               fillRule="evenodd"
               clipRule="evenodd"
               d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0112 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48C19.137 20.107 22 16.373 22 11.969 22 6.463 17.522 2 12 2z"
-            ></path>
+            />
           </svg>
         </a>
       </div>
+      {NewTechModal}
+      {NewTopicModal}
+      {NewItemModal}
     </div>
   );
 }

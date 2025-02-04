@@ -103,3 +103,8 @@ pre::-webkit-scrollbar-thumb {
 pre::-webkit-scrollbar-thumb:hover {
   background: #bbbbbb;
 }
+
+pre[class*="language-"],
+code[class*="language-"] {
+  background: #282A36 !important;
+}

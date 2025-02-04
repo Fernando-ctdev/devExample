@@ -40,3 +40,8 @@
 .read-the-docs {
   color: #888;
 }
+
+pre[class*="language-"],
+code[class*="language-"] {
+  background: #282A36 !important;
+}
