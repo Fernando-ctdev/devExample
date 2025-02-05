@@ -245,7 +245,7 @@ export function ExampleView({
                 <div className="w-3 h-3 rounded-full bg-[#50fa7b] opacity-90" />
               </div>
               <span className="text-sm font-medium text-[#f8f8f2]">
-                Código exemplo
+                Sintaxe e exemplos
               </span>
               <div className="flex gap-2">
                 <button
@@ -307,7 +307,7 @@ export function ExampleView({
                           border-b border-slate-200 dark:border-slate-700"
             >
               <div className="flex items-center gap-2"></div>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-100">
                 Explicação
               </span>
               <button

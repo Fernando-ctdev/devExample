@@ -231,16 +231,15 @@ export function Home({
   const AddNewTechButton = (
     <button
       onClick={() => setShowNewTechModal(true)}
-      className={`flex items-center gap-3 px-8 py-3 hover:text-blue-400
-        ${
-          isDarkMode
-            ? "bg-gray-700 hover:bg-gray-600 text-gray-400"
-            : "bg-gray-200 hover:bg-gray-300 text-gray-400"
-        }
-        rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg`}
+      className={`flex items-center gap-2 px-6 py-3 
+        ${isDarkMode 
+          ? "bg-gray-700 hover:bg-gray-600 text-gray-400" 
+          : "bg-gray-200 hover:bg-gray-300 text-gray-400"}
+        rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg
+        hover:text-blue-400 group`}
     >
-      <Plus size={24} /> 
-      <span className="hover:text-blue-400 font-medium text-gray-400" >Nova Tech</span>
+      <Plus size={24} className="transition-colors duration-200" />
+      <span className="font-medium transition-colors duration-200">Nova Tech</span>
     </button>
   );
 
@@ -926,7 +925,7 @@ export function Home({
                    } focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-300 group-hover:shadow-md`}
                 />
                 <Search
-                  className={`absolute right-4 top-3   
+                  className={`absolute right-4 top-4     
                  ${isDarkMode ? "text-gray-400" : "text-gray-400"}`}
                   size={20}
                 />
