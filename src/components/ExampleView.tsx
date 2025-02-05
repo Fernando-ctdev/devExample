@@ -1,20 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Copy, Save, Edit2, ArrowLeft, Sun, Moon, Check } from 'lucide-react';
-import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-go';
-import 'prismjs/components/prism-sql';
-import 'prismjs/themes/prism-tomorrow.css';
+import React, { useState, useEffect } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Save,
+  Edit2,
+  ArrowLeft,
+  Sun,
+  Moon,
+  Check,
+} from "lucide-react";
+import Prism from "prismjs";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-go";
+import "prismjs/components/prism-sql";
+import "prismjs/themes/prism-tomorrow.css";
 
 const TECH_LOGOS = {
-  javascript: "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
-  typescript: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
-  golang: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
-  gin: "https://seeklogo.com/images/G/gin-logo-BD71D14076-seeklogo.com.png",
-  nodejs: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
-  nestjs: "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
-  sql: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png"
+  javascript:
+    "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
+  typescript:
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
+  golang:
+    "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
+  gin: "https://avatars.githubusercontent.com/u/7894478?v=4",
+  nodejs:
+    "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
+  nestjs:
+    "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
+  sql: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png",
 };
 
 export function ExampleView({
@@ -26,13 +41,15 @@ export function ExampleView({
   currentTech,
   isDarkMode,
   toggleTheme,
-  onSave
+  onSave,
 }) {
   const [copied, setCopied] = useState(false);
   const [isEditingCode, setIsEditingCode] = useState(false);
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [editedCode, setEditedCode] = useState(example.code);
-  const [editedExplanation, setEditedExplanation] = useState(example.explanation);
+  const [editedExplanation, setEditedExplanation] = useState(
+    example.explanation
+  );
   const [showCopyAlert, setShowCopyAlert] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -60,11 +77,11 @@ export function ExampleView({
         setCopied(false);
       }, 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      console.error("Failed to copy text: ", err);
     }
   };
 
-  console.log('Debug - Objeto example:', example); // Adicione este log
+  console.log("Debug - Objeto example:", example); // Adicione este log
 
   const handleSave = async (type) => {
     try {
@@ -72,34 +89,34 @@ export function ExampleView({
       setSaveError(null);
 
       // Correção: Adicionar /api/ no início da rota
-      const endpoint = `/api/save-${type}`; 
-      const content = type === 'code' ? editedCode : editedExplanation;
+      const endpoint = `/api/save-${type}`;
+      const content = type === "code" ? editedCode : editedExplanation;
 
-      console.log('Debug - Enviando para:', {
+      console.log("Debug - Enviando para:", {
         endpoint,
         id: example.id,
-        contentLength: content.length
+        contentLength: content.length,
       });
 
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           id: example.id,
-          [type]: content
-        })
+          [type]: content,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Erro ao salvar');
+        throw new Error(data.error || "Erro ao salvar");
       }
 
       // Atualizar estado local
-      if (type === 'code') {
+      if (type === "code") {
         setIsEditingCode(false);
         example.code = content;
       } else {
@@ -112,9 +129,8 @@ export function ExampleView({
       // Aqui está a correção - mensagem diferente para cada ação
       setCopied(false); // Não é uma cópia, é um salvamento
       setTimeout(() => setShowCopyAlert(false), 2000);
-
     } catch (error) {
-      console.error('Erro detalhado:', error);
+      console.error("Erro detalhado:", error);
       setSaveError(error.message);
     } finally {
       setIsSaving(false);
@@ -122,12 +138,18 @@ export function ExampleView({
   };
 
   return (
-    <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+    <div
+      className={`flex flex-col min-h-screen ${
+        isDarkMode ? "bg-slate-950" : "bg-slate-50"
+      }`}
+    >
       {/* Header com gradiente adaptativo */}
-      <header className={`sticky top-0 z-50 text-white shadow-lg
-        ${isDarkMode 
-          ? 'bg-gradient-to-r from-blue-900 to-blue-700' // Gradiente escuro
-          : 'bg-gradient-to-r from-blue-600 to-blue-400'  // Gradiente claro
+      <header
+        className={`sticky top-0 z-50 text-white shadow-lg
+        ${
+          isDarkMode
+            ? "bg-gradient-to-r from-blue-900 to-blue-700" // Gradiente escuro
+            : "bg-gradient-to-r from-blue-600 to-blue-400" // Gradiente claro
         }`}
       >
         <div className="container mx-auto px-4 py-3">
@@ -143,22 +165,28 @@ export function ExampleView({
                 <ArrowLeft size={18} />
                 <span className="font-medium">Voltar</span>
               </button>
-              <h1 className="text-xl font-bold tracking-tight">{example.title}</h1>
+              <h1 className="text-xl font-bold tracking-tight">
+                {example.title}
+              </h1>
             </div>
 
             {/* Badge de tecnologia */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 
+            <div
+              className="absolute left-1/2 transform -translate-x-1/2 
                           flex items-center gap-2 px-4 py-1.5 rounded-lg
                           bg-white/10 backdrop-blur-sm
-                          shadow-sm transition-all duration-200 hover:bg-white/20">
+                          shadow-sm transition-all duration-200 hover:bg-white/20"
+            >
               {TECH_LOGOS[currentTech] && (
-                <img 
-                  src={TECH_LOGOS[currentTech]} 
-                  alt={`${currentTech} Logo`} 
+                <img
+                  src={TECH_LOGOS[currentTech]}
+                  alt={`${currentTech} Logo`}
                   className="w-5 h-5"
                 />
               )}
-              <span className="font-medium capitalize text-sm">{currentTech}</span>
+              <span className="font-medium capitalize text-sm">
+                {currentTech}
+              </span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -197,89 +225,108 @@ export function ExampleView({
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-8 md:px-12 lg:px-16 py-6 flex-1"> 
+      <main className="container mx-auto px-8 md:px-12 lg:px-16 py-6 flex-1">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Code Card - VSCode Dracula Style */}
-            <div className="group bg-[#282a36] rounded-2xl overflow-hidden
+          <div
+            className="group bg-[#282a36] rounded-2xl overflow-hidden
                    border border-[#44475a]
-                   shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.2)]
-                   transition-all duration-300">
-            <div className="flex items-center justify-between px-4 py-3 
+                   shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)]
+                   transition-all duration-300"
+          >
+            <div
+              className="flex items-center justify-between px-4 py-3 
                     bg-[#21222c] 
-                    border-b border-[#44475a]">
+                    border-b border-[#44475a]"
+            >
               <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#ff5555] opacity-90" />
-              <div className="w-3 h-3 rounded-full bg-[#f1fa8c] opacity-90" />
-              <div className="w-3 h-3 rounded-full bg-[#50fa7b] opacity-90" />
+                <div className="w-3 h-3 rounded-full bg-[#ff5555] opacity-90" />
+                <div className="w-3 h-3 rounded-full bg-[#f1fa8c] opacity-90" />
+                <div className="w-3 h-3 rounded-full bg-[#50fa7b] opacity-90" />
               </div>
               <span className="text-sm font-medium text-[#f8f8f2]">
-              Código exemplo
+                Código exemplo
               </span>
               <div className="flex gap-2">
-              <button
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
                      bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
                      transition-all duration-200 ease-in-out
                      shadow-sm hover:shadow-md active:scale-95"
-                title="Copiar código"
-              >
-                <Copy size={14} />
-              </button>
-              <button
-                onClick={() => isEditingCode ? handleSave('code') : setIsEditingCode(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
+                  title="Copiar código"
+                >
+                  <Copy size={14} />
+                </button>
+                <button
+                  onClick={() =>
+                    isEditingCode ? handleSave("code") : setIsEditingCode(true)
+                  }
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
                      bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
                      transition-all duration-200 ease-in-out
                      shadow-sm hover:shadow-md active:scale-95"
-                title={isEditingCode ? "Salvar" : "Editar"}
-              >
-                {isEditingCode ? <Save size={14} /> : <Edit2 size={14} />}
-              </button>
+                  title={isEditingCode ? "Salvar" : "Editar"}
+                >
+                  {isEditingCode ? <Save size={14} /> : <Edit2 size={14} />}
+                </button>
               </div>
             </div>
             <div className="bg-[#282a36] p-6">
               <div className="h-[600px] overflow-auto custom-scrollbar">
-              {isEditingCode ? (
-                <textarea
-                value={editedCode}
-                onChange={(e) => setEditedCode(e.target.value)}
-                className="w-full h-full bg-transparent 
+                {isEditingCode ? (
+                  <textarea
+                    value={editedCode}
+                    onChange={(e) => setEditedCode(e.target.value)}
+                    className="w-full h-full bg-transparent 
                      font-mono text-sm resize-none focus:outline-none
                      text-[#f8f8f2]"
-                style={{ 
-                  fontFamily: "'JetBrains Mono', monospace",
-                  lineHeight: "1.6",
-                }}
-                />
-              ) : (
-                <pre className="text-[#f8f8f2]">
-                <code className="language-typescript">{example.code}</code>
-                </pre>
-              )}
+                    style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      lineHeight: "1.6",
+                    }}
+                  />
+                ) : (
+                  <pre className="text-[#f8f8f2]">
+                    <code className="language-typescript">{example.code}</code>
+                  </pre>
+                )}
               </div>
             </div>
-            </div>
+          </div>
           {/* Explanation Card */}
-          <div className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden
-                       border border-slate-200 dark:border-slate-800
-                       shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between px-4 py-3 
+          <div
+            className="group bg-[#282a36] rounded-2xl overflow-hidden
+                   border border-[#44475a]
+                   shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)]
+                   transition-all duration-300"
+          >
+            <div
+              className="flex items-center justify-between px-4 py-3 
                           bg-slate-100 dark:bg-slate-800/50 
-                          border-b border-slate-200 dark:border-slate-700">
+                          border-b border-slate-200 dark:border-slate-700"
+            >
               <div className="flex items-center gap-2"></div>
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 Explicação
               </span>
               <button
-                onClick={() => isEditingExplanation ? handleSave('explanation') : setIsEditingExplanation(true)}
+                onClick={() =>
+                  isEditingExplanation
+                    ? handleSave("explanation")
+                    : setIsEditingExplanation(true)
+                }
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
                          bg-slate-700/50 hover:bg-slate-600/50 text-slate-300
                          transition-all duration-200 ease-in-out
                          shadow-sm hover:shadow-md active:scale-95"
                 title={isEditingExplanation ? "Salvar" : "Editar"}
               >
-                {isEditingExplanation ? <Save size={14} /> : <Edit2 size={14} />}
+                {isEditingExplanation ? (
+                  <Save size={14} />
+                ) : (
+                  <Edit2 size={14} />
+                )}
               </button>
             </div>
             <div className="bg-slate-50 dark:bg-slate-900 p-6">
@@ -294,8 +341,10 @@ export function ExampleView({
                   />
                 ) : (
                   <div className="prose dark:prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed
-                                 text-slate-800 dark:text-slate-300">
+                    <pre
+                      className="whitespace-pre-wrap font-sans text-base leading-relaxed
+                                 text-slate-800 dark:text-slate-300"
+                    >
                       {editedExplanation}
                     </pre>
                   </div>
@@ -308,11 +357,13 @@ export function ExampleView({
 
       {/* Copy Alert - Dracula Style */}
       {showCopyAlert && (
-        <div className="fixed bottom-4 right-4 
+        <div
+          className="fixed bottom-4 right-4 
                      bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
                      rounded-lg border border-[#6272a4]
                      shadow-lg shadow-[#282a36]/50
-                     flex items-center gap-2 animate-slide-up">
+                     flex items-center gap-2 animate-slide-up"
+        >
           <Check size={16} className="text-[#50fa7b]" />
           <span className="font-medium">
             {copied ? "Código copiado!" : "Alterações salvas!"}
@@ -322,22 +373,26 @@ export function ExampleView({
 
       {/* Feedback Messages */}
       {isSaving && (
-        <div className="fixed bottom-4 right-4 
+        <div
+          className="fixed bottom-4 right-4 
                      bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
                      rounded-lg border border-[#6272a4]
                      shadow-lg shadow-[#282a36]/50
-                     flex items-center gap-2">
+                     flex items-center gap-2"
+        >
           <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#50fa7b]" />
           <span className="font-medium">Salvando...</span>
         </div>
       )}
 
       {saveError && (
-        <div className="fixed bottom-4 right-4 
+        <div
+          className="fixed bottom-4 right-4 
                      bg-[#ff5555] text-white px-4 py-2.5
                      rounded-lg border border-[#ff6e6e]
                      shadow-lg
-                     flex items-center gap-2">
+                     flex items-center gap-2"
+        >
           <span className="font-medium">Erro ao salvar: {saveError}</span>
         </div>
       )}
@@ -348,18 +403,18 @@ export function ExampleView({
           width: 14px;
           height: 14px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
           background: #282a36;
           border-left: 1px solid #44475a;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: #44475a;
           border: 3px solid #282a36;
           border-radius: 7px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #6272a4;
         }
@@ -384,7 +439,8 @@ export function ExampleView({
         pre[class*="language-"],
         code[class*="language-"] {
           color: #f8f8f2;
-          font-family: 'JetBrains Mono', ui-monospace, 'Fira Code', Monaco, Consolas, monospace;
+          font-family: "JetBrains Mono", ui-monospace, "Fira Code", Monaco,
+            Consolas, monospace;
           font-size: 14px;
           line-height: 1.6;
           direction: ltr;
@@ -512,20 +568,48 @@ export function ExampleView({
           text-shadow: none !important;
         }
 
-        .token.comment { color: #6272A4 !important; }
-        .token.prolog { color: #6272A4 !important; }
-        .token.doctype { color: #6272A4 !important; }
-        .token.cdata { color: #6272A4 !important; }
-        .token.punctuation { color: #F8F8F2 !important; }
-        .token.function { color: #50FA7B !important; }
-        .token.constant { color: #FF79C6 !important; }
-        .token.boolean { color: #BD93F9 !important; }
-        .token.number { color: #BD93F9 !important; }
-        .token.string { color: #F1FA8C !important; }
-        .token.keyword { color: #FF79C6 !important; }
-        .token.operator { color: #FF79C6 !important; }
-        .token.class-name { color: #8BE9FD !important; }
-        .token.property { color: #50FA7B !important; }
+        .token.comment {
+          color: #6272a4 !important;
+        }
+        .token.prolog {
+          color: #6272a4 !important;
+        }
+        .token.doctype {
+          color: #6272a4 !important;
+        }
+        .token.cdata {
+          color: #6272a4 !important;
+        }
+        .token.punctuation {
+          color: #f8f8f2 !important;
+        }
+        .token.function {
+          color: #50fa7b !important;
+        }
+        .token.constant {
+          color: #ff79c6 !important;
+        }
+        .token.boolean {
+          color: #bd93f9 !important;
+        }
+        .token.number {
+          color: #bd93f9 !important;
+        }
+        .token.string {
+          color: #f1fa8c !important;
+        }
+        .token.keyword {
+          color: #ff79c6 !important;
+        }
+        .token.operator {
+          color: #ff79c6 !important;
+        }
+        .token.class-name {
+          color: #8be9fd !important;
+        }
+        .token.property {
+          color: #50fa7b !important;
+        }
       `}</style>
     </div>
   );

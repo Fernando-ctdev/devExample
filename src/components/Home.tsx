@@ -166,7 +166,7 @@ export function Home({
       tech: "gin",
       color: "bg-gradient-to-r from-cyan-500 to-blue-500",
       hoverColor: "hover:from-cyan-600 hover:to-blue-600",
-      logo: "https://seeklogo.com/images/G/gin-logo-BD71D14076-seeklogo.com.png",
+      logo: "https://avatars.githubusercontent.com/u/7894478?v=4",
       alt: "gin Logo",
       padding: "px-12 py-3",
     },
@@ -402,7 +402,7 @@ export function Home({
                 
                 <input
                   type="url"
-                  placeholder="URL do logo"
+                  placeholder="URL do logo com fundo transparente"
                   value={newTech.logo}
                   onChange={(e) => setNewTech({...newTech, logo: e.target.value})}
                   className={`w-full p-2 rounded border ${
