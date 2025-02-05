@@ -1,6 +1,14 @@
-import { Search, ChevronRight, Code2, BookOpen, Moon, Sun, Plus } from "lucide-react";
+import {
+  Search,
+  ChevronRight,
+  Code2,
+  BookOpen,
+  Moon,
+  Sun,
+  Plus,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import toast, { Toaster } from 'react-hot-toast'; // Adicionar este import
+import toast, { Toaster } from "react-hot-toast"; 
 
 interface TopicItem {
   id: string;
@@ -40,48 +48,49 @@ interface HomeProps {
   technologies: any[]; // Adicionar esta prop aqui
 }
 
-// Substituir a função getRandomColor por esta versão otimizada
+
 const getRandomColor = () => {
   const gradients = [
     {
-      color: 'bg-gradient-to-r from-blue-400 to-blue-600',
-      hoverColor: 'hover:from-blue-500 hover:to-blue-700'
+      color: "bg-gradient-to-r from-blue-400 to-blue-600",
+      hoverColor: "hover:from-blue-500 hover:to-blue-700",
     },
     {
-      color: 'bg-gradient-to-r from-purple-400 to-purple-600',
-      hoverColor: 'hover:from-purple-500 hover:to-purple-700'
+      color: "bg-gradient-to-r from-purple-400 to-purple-600",
+      hoverColor: "hover:from-purple-500 hover:to-purple-700",
     },
     {
-      color: 'bg-gradient-to-r from-red-400 to-red-600',
-      hoverColor: 'hover:from-red-500 hover:to-red-700'
+      color: "bg-gradient-to-r from-red-400 to-red-600",
+      hoverColor: "hover:from-red-500 hover:to-red-700",
     },
     {
-      color: 'bg-gradient-to-r from-green-400 to-green-600',
-      hoverColor: 'hover:from-green-500 hover:to-green-700'
+      color: "bg-gradient-to-r from-green-400 to-green-600",
+      hoverColor: "hover:from-green-500 hover:to-green-700",
     },
     {
-      color: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
-      hoverColor: 'hover:from-yellow-500 hover:to-yellow-700'
+      color: "bg-gradient-to-r from-yellow-400 to-yellow-600",
+      hoverColor: "hover:from-yellow-500 hover:to-yellow-700",
     },
     {
-      color: 'bg-gradient-to-r from-pink-400 to-pink-600',
-      hoverColor: 'hover:from-pink-500 hover:to-pink-700'
+      color: "bg-gradient-to-r from-pink-400 to-pink-600",
+      hoverColor: "hover:from-pink-500 hover:to-pink-700",
     },
     {
-      color: 'bg-gradient-to-r from-indigo-400 to-indigo-600',
-      hoverColor: 'hover:from-indigo-500 hover:to-indigo-700'
+      color: "bg-gradient-to-r from-indigo-400 to-indigo-600",
+      hoverColor: "hover:from-indigo-500 hover:to-indigo-700",
     },
     {
-      color: 'bg-gradient-to-r from-cyan-400 to-cyan-600',
-      hoverColor: 'hover:from-cyan-500 hover:to-cyan-700'
+      color: "bg-gradient-to-r from-cyan-400 to-cyan-600",
+      hoverColor: "hover:from-cyan-500 hover:to-cyan-700",
     },
     {
-      color: 'bg-gradient-to-r from-teal-400 to-teal-600',
-      hoverColor: 'hover:from-teal-500 hover:to-teal-700'
-    }
+      color: "bg-gradient-to-r from-teal-400 to-teal-600",
+      hoverColor: "hover:from-teal-500 hover:to-teal-700",
+    },
   ];
 
-  const currentGradient = gradients[Math.floor(Math.random() * gradients.length)];
+  const currentGradient =
+    gradients[Math.floor(Math.random() * gradients.length)];
   return currentGradient;
 };
 
@@ -96,41 +105,41 @@ export function Home({
   toggleTheme,
   onCreateNewTechnology,
   onCreateCategory,
-  onCreateItem,  // Adicionar esta prop aqui
-  technologies // Adicionar esta prop aqui
+  onCreateItem, 
+  technologies, 
 }: HomeProps) {
-  // Add console log to debug topics
+
   useEffect(() => {
-    console.log('Topics received in Home:', topics);
+    console.log("Topics received in Home:", topics);
   }, [topics]);
 
   const [showNewTechModal, setShowNewTechModal] = useState(false);
   const [newTech, setNewTech] = useState(() => {
     const gradient = getRandomColor();
     return {
-      name: '',
-      title: '',
+      name: "",
+      title: "",
       color: gradient.color,
       hoverColor: gradient.hoverColor,
-      logo: '',
-      alt: '',
-      padding: 'px-8 py-3'
+      logo: "",
+      alt: "",
+      padding: "px-8 py-3",
     };
   });
 
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
   const [newTopic, setNewTopic] = useState({
-    category: '',
-    items: []
+    category: "",
+    items: [],
   });
 
-  // Adicione estado para controlar o modal de novo item e a categoria selecionada
+  //modal de novo item e a categoria selecionada
   const [showNewItemModal, setShowNewItemModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [newItem, setNewItem] = useState({
-    id: '',
-    title: '',
-    categoryId: '' // Adicionado categoryId ao estado
+    id: "",
+    title: "",
+    categoryId: "", 
   });
 
   const techButtons = [
@@ -199,21 +208,22 @@ export function Home({
     },
   ];
 
-  // Antes do return, adicione esta lógica para filtrar as tecnologias
-  const staticTechNames = techButtons.map(btn => btn.tech);
+
+  const staticTechNames = techButtons.map((btn) => btn.tech);
 
   // Filtrar apenas as tecnologias que não estão nos botões estáticos
-  const dynamicTechButtons = technologies
-    ?.filter(tech => !staticTechNames.includes(tech.name))
-    .map(tech => ({
-      title: tech.title,
-      tech: tech.name,
-      color: tech.color,
-      hoverColor: tech.hoverColor,
-      logo: tech.logo,
-      alt: tech.alt,
-      padding: tech.padding
-    })) || [];
+  const dynamicTechButtons =
+    technologies
+      ?.filter((tech) => !staticTechNames.includes(tech.name))
+      .map((tech) => ({
+        title: tech.title,
+        tech: tech.name,
+        color: tech.color,
+        hoverColor: tech.hoverColor,
+        logo: tech.logo,
+        alt: tech.alt,
+        padding: tech.padding,
+      })) || [];
 
   // Combinar os botões estáticos com as tecnologias dinâmicas filtradas
   const allTechButtons = [...techButtons, ...dynamicTechButtons];
@@ -221,13 +231,16 @@ export function Home({
   const AddNewTechButton = (
     <button
       onClick={() => setShowNewTechModal(true)}
-      className={`flex items-center gap-3 px-8 py-3 
-        ${isDarkMode 
-          ? "bg-gray-700 hover:bg-gray-600 text-gray-100" 
-          : "bg-gray-200 hover:bg-gray-300 text-gray-800"}
+      className={`flex items-center gap-3 px-8 py-3 hover:text-blue-400
+        ${
+          isDarkMode
+            ? "bg-gray-700 hover:bg-gray-600 text-gray-400"
+            : "bg-gray-200 hover:bg-gray-300 text-gray-400"
+        }
         rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg`}
     >
-      <Plus size={24} />
+      <Plus size={24} /> 
+      <span className="hover:text-blue-400 font-medium text-gray-400" >Nova Tech</span>
     </button>
   );
 
@@ -235,9 +248,11 @@ export function Home({
     <button
       onClick={() => setShowNewTopicModal(true)}
       className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group flex items-center justify-center gap-2
-        ${isDarkMode 
-          ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
-          : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
+        ${
+          isDarkMode
+            ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400"
+            : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"
+        }`}
     >
       <Plus size={24} />
       <span className="font-medium">Nova Categoria</span>
@@ -256,7 +271,7 @@ export function Home({
     if (savedPosition) {
       window.scrollTo({
         top: parseInt(savedPosition),
-        behavior: "auto"
+        behavior: "auto",
       });
       // Limpa a posição salva após restaurar
       localStorage.removeItem("scrollPosition");
@@ -270,61 +285,70 @@ export function Home({
   };
 
   // Função para filtrar tópicos baseado no termo de busca
-  const filteredTopics = topics && topics.length > 0 
-    ? topics.map((topic) => ({
-        ...topic,
-        items: topic.items?.filter(
-          (item) =>
-            item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            topic.category.toLowerCase().includes(searchTerm.toLowerCase())
-        ) || [] // Garante que items seja sempre um array, mesmo que vazio
-      })).filter(topic => 
-        // Remove o filtro de items.length para mostrar todas as categorias
-        searchTerm ? topic.items.length > 0 || topic.category.toLowerCase().includes(searchTerm.toLowerCase()) : true
-      )
-    : [];
+  const filteredTopics =
+    topics && topics.length > 0
+      ? topics
+          .map((topic) => ({
+            ...topic,
+            items:
+              topic.items?.filter(
+                (item) =>
+                  item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  topic.category
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase())
+              ) || [],
+          }))
+          .filter((topic) =>
+            // Remove o filtro de items.length para mostrar todas as categorias
+            searchTerm
+              ? topic.items.length > 0 ||
+                topic.category.toLowerCase().includes(searchTerm.toLowerCase())
+              : true
+          )
+      : [];
 
-  console.log('Filtered topics:', filteredTopics);
+  console.log("Filtered topics:", filteredTopics);
 
-  // Adicione estas funções para limpar os formulários
+
   const handleCancelTechModal = () => {
     setNewTech({
-      name: '',
-      title: '',
-      color: 'bg-gradient-to-r from-purple-500 to-purple-700',
-      hoverColor: 'hover:from-purple-600 hover:to-purple-800',
-      logo: '',
-      alt: '',
-      padding: 'px-8 py-3'
+      name: "",
+      title: "",
+      color: "bg-gradient-to-r from-purple-500 to-purple-700",
+      hoverColor: "hover:from-purple-600 hover:to-purple-800",
+      logo: "",
+      alt: "",
+      padding: "px-8 py-3",
     });
     setShowNewTechModal(false);
   };
 
   const handleCancelTopicModal = () => {
     setNewTopic({
-      category: '',
-      items: []
+      category: "",
+      items: [],
     });
     setShowNewTopicModal(false);
   };
 
   const handleCancelItemModal = () => {
     setNewItem({
-      id: '',
-      title: '',
-      categoryId: '' // Limpar também o categoryId
+      id: "",
+      title: "",
+      categoryId: "",
     });
-    setSelectedCategory('');
+    setSelectedCategory("");
     setShowNewItemModal(false);
   };
 
   // Adicionar função para gerar novo gradiente
   const generateNewGradient = () => {
     const gradient = getRandomColor();
-    setNewTech(prev => ({
+    setNewTech((prev) => ({
       ...prev,
       color: gradient.color,
-      hoverColor: gradient.hoverColor
+      hoverColor: gradient.hoverColor,
     }));
   };
 
@@ -333,86 +357,102 @@ export function Home({
     <>
       {showNewTechModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
-          } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}>
-            <h2 className={`text-xl font-bold mb-4 ${
-              isDarkMode ? 'text-gray-100' : 'text-gray-800'
-            }`}>
+          <div
+            className={`${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}
+          >
+            <h2
+              className={`text-xl font-bold mb-4 ${
+                isDarkMode ? "text-gray-100" : "text-gray-800"
+              }`}
+            >
               Adicionar Nova Tecnologia
             </h2>
-            
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                console.log('Dados da nova tecnologia:', newTech); // Debug
-                await onCreateNewTechnology(newTech);
-                setShowNewTechModal(false);
-                // Limpar form
-                setNewTech({
-                  name: '',
-                  title: '',
-                  color: 'bg-gradient-to-r from-purple-500 to-purple-700',
-                  hoverColor: 'hover:from-purple-600 hover:to-purple-800',
-                  logo: '',
-                  alt: '',
-                  padding: 'px-8 py-3'
-                });
-                toast.success('Tecnologia criada com sucesso!', {
-                  style: {
-                    background: isDarkMode ? '#333' : '#fff',
-                    color: isDarkMode ? '#fff' : '#333',
-                  },
-                });
-              } catch (error) {
-                toast.error('Erro ao criar tecnologia: ' + error.message, {
-                  style: {
-                    background: isDarkMode ? '#333' : '#fff',
-                    color: isDarkMode ? '#fff' : '#333',
-                  },
-                });
-              }
-            }}>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  console.log("Dados da nova tecnologia:", newTech); // Debug
+                  await onCreateNewTechnology(newTech);
+                  setShowNewTechModal(false);
+                  // Limpar form
+                  setNewTech({
+                    name: "",
+                    title: "",
+                    color: "bg-gradient-to-r from-purple-500 to-purple-700",
+                    hoverColor: "hover:from-purple-600 hover:to-purple-800",
+                    logo: "",
+                    alt: "",
+                    padding: "px-8 py-3",
+                  });
+                  toast.success("Tecnologia criada com sucesso!", {
+                    style: {
+                      background: isDarkMode ? "#333" : "#fff",
+                      color: isDarkMode ? "#fff" : "#333",
+                    },
+                  });
+                } catch (error) {
+                  toast.error("Erro ao criar tecnologia: " + error.message, {
+                    style: {
+                      background: isDarkMode ? "#333" : "#fff",
+                      color: isDarkMode ? "#fff" : "#333",
+                    },
+                  });
+                }
+              }}
+            >
               <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="Nome da tecnologia (ex: python)"
                   value={newTech.name}
-                  onChange={(e) => setNewTech({...newTech, name: e.target.value, alt: `${e.target.value} Logo`})}
+                  onChange={(e) =>
+                    setNewTech({
+                      ...newTech,
+                      name: e.target.value,
+                      alt: `${e.target.value} Logo`,
+                    })
+                  }
                   className={`w-full p-2 rounded border ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
-                      : 'bg-white border-gray-300'
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-100"
+                      : "bg-white border-gray-300"
                   }`}
                   required
                 />
-                
+
                 <input
                   type="text"
                   placeholder="Título de exibição (ex: Python with example)"
                   value={newTech.title}
-                  onChange={(e) => setNewTech({...newTech, title: e.target.value})}
+                  onChange={(e) =>
+                    setNewTech({ ...newTech, title: e.target.value })
+                  }
                   className={`w-full p-2 rounded border ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
-                      : 'bg-white border-gray-300'
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-100"
+                      : "bg-white border-gray-300"
                   }`}
                   required
                 />
-                
+
                 <input
                   type="url"
                   placeholder="URL do logo com fundo transparente"
                   value={newTech.logo}
-                  onChange={(e) => setNewTech({...newTech, logo: e.target.value})}
+                  onChange={(e) =>
+                    setNewTech({ ...newTech, logo: e.target.value })
+                  }
                   className={`w-full p-2 rounded border ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
-                      : 'bg-white border-gray-300'
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-100"
+                      : "bg-white border-gray-300"
                   }`}
                   required
                 />
-                
+
                 {/* Adicionar preview do botão e botão de gerar nova cor */}
                 <div className="flex flex-col gap-2">
                   <button
@@ -423,7 +463,7 @@ export function Home({
                       generateNewGradient();
                     }}
                   >
-                    Clique para gerar nova cor
+                    Clique para gerar cor do botão
                   </button>
                 </div>
 
@@ -455,74 +495,82 @@ export function Home({
     <>
       {showNewTopicModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
-          } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}>
-            <h2 className={`text-xl font-bold mb-4 ${
-              isDarkMode ? 'text-gray-100' : 'text-gray-800'
-            }`}>
+          <div
+            className={`${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}
+          >
+            <h2
+              className={`text-xl font-bold mb-4 ${
+                isDarkMode ? "text-gray-100" : "text-gray-800"
+              }`}
+            >
               Adicionar Nova Categoria em {currentTech}
             </h2>
-            
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const categoryName = newTopic.category.trim();
-              
-              if (!categoryName) {
-                toast.error('Nome da categoria é obrigatório', {
-                  style: {
-                    background: isDarkMode ? '#333' : '#fff',
-                    color: isDarkMode ? '#fff' : '#333',
-                  },
-                });
-                return;
-              }
 
-              try {
-                console.log('Enviando requisição para criar categoria:', {
-                  category: categoryName,
-                  technologyId: currentTech
-                });
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const categoryName = newTopic.category.trim();
 
-                const success = await onCreateCategory(categoryName);
-                
-                if (success) {
-                  toast.success('Categoria criada com sucesso!', {
+                if (!categoryName) {
+                  toast.error("Nome da categoria é obrigatório", {
                     style: {
-                      background: isDarkMode ? '#333' : '#fff',
-                      color: isDarkMode ? '#fff' : '#333',
+                      background: isDarkMode ? "#333" : "#fff",
+                      color: isDarkMode ? "#fff" : "#333",
                     },
                   });
-                  setShowNewTopicModal(false);
-                  setNewTopic({ category: '', items: [] });
-                  window.location.reload(); // Recarrega para mostrar a nova categoria
-                } else {
-                  throw new Error('Erro ao criar categoria');
+                  return;
                 }
-              } catch (error) {
-                console.error('Erro ao criar categoria:', error);
-                toast.error(`Erro ao criar categoria: ${error.message}`, {
-                  style: {
-                    background: isDarkMode ? '#333' : '#fff',
-                    color: isDarkMode ? '#fff' : '#333',
-                  },
-                });
-              }
-            }}>
+
+                try {
+                  console.log("Enviando requisição para criar categoria:", {
+                    category: categoryName,
+                    technologyId: currentTech,
+                  });
+
+                  const success = await onCreateCategory(categoryName);
+
+                  if (success) {
+                    toast.success("Categoria criada com sucesso!", {
+                      style: {
+                        background: isDarkMode ? "#333" : "#fff",
+                        color: isDarkMode ? "#fff" : "#333",
+                      },
+                    });
+                    setShowNewTopicModal(false);
+                    setNewTopic({ category: "", items: [] });
+                    window.location.reload(); // Recarrega para mostrar a nova categoria
+                  } else {
+                    throw new Error("Erro ao criar categoria");
+                  }
+                } catch (error) {
+                  console.error("Erro ao criar categoria:", error);
+                  toast.error(`Erro ao criar categoria: ${error.message}`, {
+                    style: {
+                      background: isDarkMode ? "#333" : "#fff",
+                      color: isDarkMode ? "#fff" : "#333",
+                    },
+                  });
+                }
+              }}
+            >
               <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="Nome da categoria (ex: Arrays)"
                   value={newTopic.category}
-                  onChange={(e) => setNewTopic({...newTopic, category: e.target.value})}
+                  onChange={(e) =>
+                    setNewTopic({ ...newTopic, category: e.target.value })
+                  }
                   className={`w-full p-2 rounded border ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
-                      : 'bg-white border-gray-300'
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-100"
+                      : "bg-white border-gray-300"
                   }`}
                   required
                 />
-                
+
                 <div className="flex gap-2">
                   <button
                     type="submit"
@@ -551,75 +599,85 @@ export function Home({
     <>
       {showNewItemModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
-          } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}>
-            <h2 className={`text-xl font-bold mb-4 ${
-              isDarkMode ? 'text-gray-100' : 'text-gray-800'
-            }`}>
+          <div
+            className={`${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}
+          >
+            <h2
+              className={`text-xl font-bold mb-4 ${
+                isDarkMode ? "text-gray-100" : "text-gray-800"
+              }`}
+            >
               Adicionar Novo Tópico em {selectedCategory}
             </h2>
-            
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                const itemData = {
-                  itemId: newItem.id,
-                  title: newItem.title,
-                  categoryId: newItem.categoryId // Usando o categoryId que já está no estado
-                };
 
-                console.log('Dados do novo item:', itemData); // Debug
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const itemData = {
+                    itemId: newItem.id,
+                    title: newItem.title,
+                    categoryId: newItem.categoryId, // Usando o categoryId que já está no estado
+                  };
 
-                const success = await onCreateItem(itemData);
-                if (success) {
-                  toast.success('Tópico criado com sucesso!', {
+                  console.log("Dados do novo item:", itemData); // Debug
+
+                  const success = await onCreateItem(itemData);
+                  if (success) {
+                    toast.success("Tópico criado com sucesso!", {
+                      style: {
+                        background: isDarkMode ? "#333" : "#fff",
+                        color: isDarkMode ? "#fff" : "#333",
+                      },
+                    });
+                    setShowNewItemModal(false);
+                    setNewItem({ id: "", title: "", categoryId: "" }); // Limpar também o categoryId
+                    window.location.reload();
+                  }
+                } catch (error) {
+                  console.error("Erro ao criar tópico:", error);
+                  toast.error("Erro ao criar tópico: " + error.message, {
                     style: {
-                      background: isDarkMode ? '#333' : '#fff',
-                      color: isDarkMode ? '#fff' : '#333',
+                      background: isDarkMode ? "#333" : "#fff",
+                      color: isDarkMode ? "#fff" : "#333",
                     },
                   });
-                  setShowNewItemModal(false);
-                  setNewItem({ id: '', title: '', categoryId: '' }); // Limpar também o categoryId
-                  window.location.reload();
                 }
-              } catch (error) {
-                console.error('Erro ao criar tópico:', error);
-                toast.error('Erro ao criar tópico: ' + error.message, {
-                  style: {
-                    background: isDarkMode ? '#333' : '#fff',
-                    color: isDarkMode ? '#fff' : '#333',
-                  },
-                });
-              }
-            }}>
+              }}
+            >
               <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="ID do tópico (ex: arrays-map)"
                   value={newItem.id}
-                  onChange={(e) => setNewItem({...newItem, id: e.target.value})}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, id: e.target.value })
+                  }
                   className={`w-full p-2 rounded border ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
-                      : 'bg-white border-gray-300'
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-100"
+                      : "bg-white border-gray-300"
                   }`}
                   required
                 />
-                
+
                 <input
                   type="text"
                   placeholder="Título do tópico"
                   value={newItem.title}
-                  onChange={(e) => setNewItem({...newItem, title: e.target.value})}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, title: e.target.value })
+                  }
                   className={`w-full p-2 rounded border ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-gray-100' 
-                      : 'bg-white border-gray-300'
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-gray-100"
+                      : "bg-white border-gray-300"
                   }`}
                   required
                 />
-                
+
                 <div className="flex gap-2">
                   <button
                     type="submit"
@@ -665,9 +723,11 @@ export function Home({
                 className={isDarkMode ? "text-gray-400" : "text-gray-600"}
                 size={24}
               />
-              <h2 className={`text-2xl font-bold ${
-                isDarkMode ? "text-gray-200" : "text-gray-800"
-              }`}>
+              <h2
+                className={`text-2xl font-bold ${
+                  isDarkMode ? "text-gray-200" : "text-gray-800"
+                }`}
+              >
                 {topic.category}
               </h2>
             </div>
@@ -678,9 +738,11 @@ export function Home({
                   key={item.id}
                   onClick={() => handleExampleClick(item.id)}
                   className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
-                    ${isDarkMode 
-                      ? "bg-gray-800 hover:bg-gray-700"
-                      : "bg-white hover:bg-gray-50"}`}
+                    ${
+                      isDarkMode
+                        ? "bg-gray-800 hover:bg-gray-700"
+                        : "bg-white hover:bg-gray-50"
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -692,10 +754,14 @@ export function Home({
                         } transition-colors`}
                         size={20}
                       />
-                      <h3 className={`text-lg font-medium transition-colors 
-                        ${isDarkMode
-                          ? "text-gray-300 group-hover:text-blue-400"
-                          : "text-gray-800 group-hover:text-blue-500"}`}>
+                      <h3
+                        className={`text-lg font-medium transition-colors 
+                        ${
+                          isDarkMode
+                            ? "text-gray-300 group-hover:text-blue-400"
+                            : "text-gray-800 group-hover:text-blue-500"
+                        }`}
+                      >
                         {item.title}
                       </h3>
                     </div>
@@ -713,20 +779,24 @@ export function Home({
               {/* Botão de adicionar item */}
               <button
                 onClick={() => {
-                  console.log('Categoria selecionada:', topic);
+                  console.log("Categoria selecionada:", topic);
                   setSelectedCategory(topic.category); // Use topic.category em vez de topic.name
                   setNewItem({
-                    id: `${topic.category.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
-                    title: '',
-                    categoryId: topic.id
+                    id: `${topic.category
+                      .toLowerCase()
+                      .replace(/\s+/g, "-")}-${Date.now()}`,
+                    title: "",
+                    categoryId: topic.id,
                   });
                   setShowNewItemModal(true);
                 }}
                 className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
                   flex items-center justify-center gap-2
-                  ${isDarkMode 
-                    ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400" 
-                    : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"}`}
+                  ${
+                    isDarkMode
+                      ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400"
+                      : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"
+                  }`}
               >
                 <Plus size={24} />
                 <span className="font-medium">Novo Tópico</span>
@@ -742,10 +812,14 @@ export function Home({
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 
-      ${isDarkMode 
-        ? "bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100"
-        : "bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900"}`}>
+    <div
+      className={`min-h-screen transition-colors duration-300 
+      ${
+        isDarkMode
+          ? "bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100"
+          : "bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900"
+      }`}
+    >
       <Toaster position="top-right" /> {/* Adicionar este componente */}
       {/* Botão de alternância de tema */}
       <div
@@ -772,7 +846,6 @@ export function Home({
           )}
         </div>
       </div>
-
       {/* Fixed Header Section */}
       <div
         className={`fixed top-0 left-0 right-0 z-10 border-b border-none
@@ -783,16 +856,16 @@ export function Home({
        }
      `}
       >
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="max-w-6xl mx-auto p-2">
           {/* Hero Section */}
           <div className="mb-8 text-center">
             <h1
-              className={`text-5xl font-extrabold mb-6 
-             ${
-               isDarkMode
-                 ? "bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent"
-                 : "bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent"
-             }`}
+              className={`text-5xl font-extrabold mb-0 leading-tight
+    ${
+      isDarkMode
+        ? "bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent"
+        : "bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent"
+    }`}
             >
               {allTechButtons.find((btn) => btn.tech === currentTech)?.title ||
                 "Select a technology"}
@@ -802,7 +875,7 @@ export function Home({
                 isDarkMode ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              Explore, aprenda e domine diferentes tecnologias de programação
+              Explore, crie e organize seu conhecimento de programação
             </p>
           </div>
 
@@ -811,14 +884,26 @@ export function Home({
             {allTechButtons.map((button, index) => (
               <button
                 key={index}
-                className={`flex items-center gap-3 ${button.padding} ${button.color} ${button.hoverColor} 
-                  ${isDarkMode ? "text-gray-100 opacity-90 hover:opacity-100" : "text-white"}
+                className={`flex items-center gap-3 ${button.padding} ${
+                  button.color
+                } ${button.hoverColor} 
+                  ${
+                    isDarkMode
+                      ? "text-gray-100 opacity-90 hover:opacity-100"
+                      : "text-white"
+                  }
                   rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg 
-                  ${currentTech === button.tech ? "ring-4 ring-offset-2 ring-offset-gray-100 ring-opacity-50" : ""}`}
+                  ${
+                    currentTech === button.tech
+                      ? "ring-4 ring-offset-2 ring-offset-gray-100 ring-opacity-50"
+                      : ""
+                  }`}
                 onClick={() => handleTechChange(button.tech)}
               >
                 <img src={button.logo} alt={button.alt} className="w-6 h-6" />
-                <span className="font-medium">{button.title.split(" ")[0]}</span>
+                <span className="font-medium">
+                  {button.title.split(" ")[0]}
+                </span>
               </button>
             ))}
             {AddNewTechButton}
@@ -830,10 +915,10 @@ export function Home({
               <div className="relative group">
                 <input
                   type="text"
-                  placeholder="Buscar função ou método..."
+                  placeholder="Buscar tópico ou função..."
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className={`w-full p-4 pr-12 rounded-xl border 
+                  className={`w-full p-3 pr-12 rounded-xl border 
                    ${
                      isDarkMode
                        ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-gray-600"
@@ -841,7 +926,7 @@ export function Home({
                    } focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-300 group-hover:shadow-md`}
                 />
                 <Search
-                  className={`absolute right-4 top-5 
+                  className={`absolute right-4 top-3   
                  ${isDarkMode ? "text-gray-400" : "text-gray-400"}`}
                   size={20}
                 />
@@ -850,9 +935,8 @@ export function Home({
           </div>
         </div>
       </div>
-
       {/* Content Section with top padding to account for fixed header */}
-      <div className={`max-w-6xl mx-auto p-6 pt-[420px]`}>
+      <div className={`max-w-6xl mx-auto p-6 pt-[370px]`}>
         {renderTopicSection()}
       </div>
       <div className="text-center py-4">
