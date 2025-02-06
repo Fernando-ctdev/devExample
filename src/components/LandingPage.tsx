@@ -7,61 +7,74 @@ const LandingPage = () => {
   const [scrollY, setScrollY] = useState(0);
   const [isDark, setIsDark] = useState(true);
   const [typedText, setTypedText] = useState('');
-  const codeExample = 'const learning = "code";\nconst method = "by example";';
+  const codeExample = `// Organize seus exemplos
+const myExamples = {
+  javascript: "Exemplos modernos",
+  typescript: "Código tipado",
+  golang: "Alta performance"
+};
+
+// Personalize sua biblioteca
+console.log("Bem-vindo à sua biblioteca de código!");`;
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
 
-    let index = 0;
-    const typeText = () => {
-      if (index < codeExample.length) {
-        setTypedText(prev => prev + codeExample[index]);
-        index++;
-        setTimeout(typeText, 50);
+    setTypedText('');
+    let timeoutId: NodeJS.Timeout;
+
+    const typeText = (index: number = 0) => {
+      if (index <= codeExample.length) {
+        setTypedText(codeExample.slice(0, index));
+        timeoutId = setTimeout(() => typeText(index + 1), 30);
       }
     };
+
     typeText();
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [codeExample]);
 
   const technologies = [
     {
       name: "JavaScript",
       logo: "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
       color: "from-yellow-400",
-      description: "A linguagem da web moderna"
+      description: "Exemplos práticos para desenvolvimento web moderno"
     },
     {
       name: "TypeScript",
       logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
       color: "from-blue-500",
-      description: "JavaScript com tipagem"
+      description: "Códigos tipados com exemplos de uso real"
     },
     {
       name: "Golang",
       logo: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
       color: "from-cyan-500",
-      description: "Performance e simplicidade"
+      description: "Exemplos de alta performance e concorrência"
     },
     {
       name: "Gin",
       logo:"https://avatars.githubusercontent.com/u/7894478?v=4",
       color: "from-sky-500",
-      description: "Framework web rápido para Go"
+      description: "Casos práticos de APIs REST em Go"
     },
     {
       name: "NodeJS",
       logo: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
       color: "from-green-600",
-      description: "Runtime JavaScript versátil"
+      description: "Exemplos de backend e ferramentas JavaScript"
     },
     {
       name: "NestJS",
       logo: "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
       color: "from-red-700",
-      description: "Framework Node.js escalável"
+      description: "Exemplos escaláveis de arquitetura TypeScript"
     }
   ];
 
@@ -111,16 +124,16 @@ const LandingPage = () => {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="flex-1 space-y-6">
               <h1 className="text-6xl font-bold animate-fade-in">
-                Aprenda programação com exemplos práticos
+                Organize e explore exemplos práticos de programação
               </h1>
               <p className="text-xl text-blue-200 animate-fade-in delay-200">
-                Explore e aprenda diferentes tecnologias de programação através de exemplos práticos e documentação clara.
+                Crie sua biblioteca personalizada de exemplos de código, pesquise soluções práticas e organize seu aprendizado em diferentes tecnologias.
               </p>
               <button 
                 onClick={handleAccessPlatform}
                 className="group px-8 py-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 transition-all flex items-center gap-2 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-fade-in delay-300"
               >
-                Começar agora
+                Criar minha biblioteca
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
@@ -144,7 +157,7 @@ const LandingPage = () => {
       <section className="relative py-32">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16">
-            Tecnologias Disponíveis
+            Explore e Organize por Tecnologia
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {technologies.map((tech, index) => (
@@ -181,23 +194,35 @@ const LandingPage = () => {
       <section className="relative py-32">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16">
-            Como funciona
+            Como organizar seus exemplos
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="backdrop-blur-xl bg-white/10 rounded-xl border border-white/20 p-8 transform hover:scale-105 transition-transform">
               <div className="flex items-center gap-3 mb-6">
                 <Terminal size={24} className="text-blue-400" />
-                <h3 className="text-2xl font-semibold">Exemplos Práticos</h3>
+                <h3 className="text-2xl font-semibold">Exemplos práticos organizados</h3>
               </div>
               <div className="bg-black/30 rounded-lg p-4">
                 <pre className="text-sm">
                   <code>
-                    <span className="text-blue-400">function</span>{" "}
-                    <span className="text-green-400">example</span>() {"{"}
+                    <span className="text-gray-500">// Exemplo de organização</span>
                     <br />
-                    {"  "}console.log(<span className="text-yellow-300">"Hello, World!"</span>);
+                    <span className="text-blue-400">const</span>{" "}
+                    <span className="text-green-400">myLibrary</span> = {"{"}
                     <br />
-                    {"}"}
+                    {"  "}category: <span className="text-yellow-300">"Arrays"</span>,
+                    <br />
+                    {"  "}examples: [<span className="text-yellow-300">"map"</span>, <span className="text-yellow-300">"filter"</span>]
+                    <br />
+                    {"}"};
+                    <br />
+                    <br />
+                    <span className="text-gray-500">{">"} saveExample(myLibrary)</span>
+                    <br />
+                    <span className="text-green-300">Exemplo salvo com sucesso!</span>
+                    <br />
+                    <span className="text-gray-500">{">"} </span>
+                    <span className="animate-pulse">▋</span>
                   </code>
                 </pre>
               </div>
@@ -205,10 +230,10 @@ const LandingPage = () => {
             <div className="backdrop-blur-xl bg-white/10 rounded-xl border border-white/20 p-8 transform hover:scale-105 transition-transform">
               <div className="flex items-center gap-3 mb-6">
                 <BookOpen size={24} className="text-green-400" />
-                <h3 className="text-2xl font-semibold">Explicações Claras</h3>
+                <h3 className="text-2xl font-semibold">Biblioteca Personalizada</h3>
               </div>
               <p className="text-lg leading-relaxed">
-                Cada exemplo vem com explicações detalhadas e casos de uso práticos para melhor compreensão.
+                Organize seus exemplos por tecnologia e categoria, crie sua própria biblioteca de referência e acesse rapidamente quando precisar.
               </p>
             </div>
           </div>
@@ -220,16 +245,16 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="backdrop-blur-xl bg-white/10 rounded-2xl border border-white/20 p-12 hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-shadow">
             <h2 className="text-4xl font-bold mb-6">
-              Pronto para começar sua jornada?
+              Comece a construir sua biblioteca
             </h2>
             <p className="text-xl mb-8 text-blue-200">
-              Acesse agora e explore exemplos práticos das principais tecnologias do mercado.
+              Crie sua própria biblioteca de exemplos práticos, organize por tecnologia e compartilhe seu conhecimento. Comece agora a construir seu acervo personalizado de códigos e soluções.
             </p>
             <button 
               onClick={handleAccessPlatform}
               className="px-8 py-4 rounded-full bg-white text-blue-900 hover:bg-blue-50 transition-colors font-semibold hover:shadow-[0_0_15px_rgba(255,255,255,0.5)]"
             >
-              Acessar plataforma
+              Começar agora
             </button>
           </div>
         </div>

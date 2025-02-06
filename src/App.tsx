@@ -144,14 +144,14 @@ function App() {
     }
   };
 
-  // O currentPage está sendo usado como ID, mas deveria ser o itemId
+
   const handleExampleClick = (id: string) => {
     console.log('Debug - ID recebido:', id);
-    setCurrentPage(id); // Aqui está guardando o itemId
+    setCurrentPage(id); 
     if (examples && examples[id]) {
       const example = examples[id];
       console.log('Debug - Exemplo selecionado:', example);
-      setCurrentExample(example); // Este exemplo já deve conter o itemId
+      setCurrentExample(example); 
     }
   };
 
