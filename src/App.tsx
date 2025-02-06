@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Home } from "./components/Home";
 import { ExampleView } from "./components/ExampleView";
+import LandingPage from "./components/LandingPage";
 
 interface Technology {
   id: string;
@@ -22,9 +24,7 @@ function App() {
   const [examples, setExamples] = useState({});
   const [technologies, setTechnologies] = useState<Technology[]>([]);
   const [currentExample, setCurrentExample] = useState<any>(null);
-  const [currentTechnology, setCurrentTechnology] = useState<Technology | null>(
-    null
-  );
+  const [currentTechnology, setCurrentTechnology] = useState<Technology | null>(null);
 
   // Carregar tema
   useEffect(() => {
@@ -374,8 +374,7 @@ function App() {
     }
   };
 
-  // Na renderização do ExampleView, passe o currentExample
-  return (
+  const MainApp = () => (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
       {currentPage === "home" ? (
         <Home
@@ -389,14 +388,14 @@ function App() {
           toggleTheme={toggleTheme}
           onCreateNewTechnology={handleCreateNewTechnology}
           onCreateCategory={handleCreateCategory}
-          onCreateItem={handleCreateItem}  // Certifique-se que esta linha existe
+          onCreateItem={handleCreateItem}
           technologies={technologies}
         />
       ) : (
         <ExampleView
-          example={currentExample} // Modificado para usar currentExample
+          example={currentExample}
           technology={currentTechnology}
-          currentTech={currentTech} // Garanta que esta prop está sendo passada
+          currentTech={currentTech}
           onBackClick={handleBackClick}
           onNavigateNext={handleNextTopic}
           onNavigatePrevious={handlePreviousTopic}
@@ -407,7 +406,21 @@ function App() {
       )}
     </div>
   );
+
+  return (
+    <Router>
+      <Routes>
+        {/* Rota para a Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+        
+        {/* Rota para a aplicação principal */}
+        <Route path="/platform/*" element={<MainApp />} />
+        
+        {/* Redirecionar outras rotas para a landing page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
-

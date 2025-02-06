@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Code, BookOpen, Library, ArrowRight, Terminal, Moon, Sun } from 'lucide-react';
 
 const LandingPage = () => {
+  const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
   const [isDark, setIsDark] = useState(true);
   const [typedText, setTypedText] = useState('');
@@ -63,6 +65,10 @@ const LandingPage = () => {
     }
   ];
 
+  const handleAccessPlatform = () => {
+    navigate('/platform');
+  };
+
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gradient-to-b from-blue-900 via-blue-800 to-black text-white' : 'bg-gradient-to-b from-blue-50 to-white text-gray-900'} transition-colors duration-500`}>
       {/* Background Grid com Parallax */}
@@ -89,7 +95,10 @@ const LandingPage = () => {
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button className="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 transition-all hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <button 
+              onClick={handleAccessPlatform}
+              className="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 transition-all hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            >
               Acessar Plataforma
             </button>
           </div>
@@ -107,7 +116,10 @@ const LandingPage = () => {
               <p className="text-xl text-blue-200 animate-fade-in delay-200">
                 Explore e aprenda diferentes tecnologias de programação através de exemplos práticos e documentação clara.
               </p>
-              <button className="group px-8 py-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 transition-all flex items-center gap-2 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-fade-in delay-300">
+              <button 
+                onClick={handleAccessPlatform}
+                className="group px-8 py-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 transition-all flex items-center gap-2 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-fade-in delay-300"
+              >
                 Começar agora
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </button>
@@ -213,7 +225,10 @@ const LandingPage = () => {
             <p className="text-xl mb-8 text-blue-200">
               Acesse agora e explore exemplos práticos das principais tecnologias do mercado.
             </p>
-            <button className="px-8 py-4 rounded-full bg-white text-blue-900 hover:bg-blue-50 transition-colors font-semibold hover:shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+            <button 
+              onClick={handleAccessPlatform}
+              className="px-8 py-4 rounded-full bg-white text-blue-900 hover:bg-blue-50 transition-colors font-semibold hover:shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+            >
               Acessar plataforma
             </button>
           </div>
