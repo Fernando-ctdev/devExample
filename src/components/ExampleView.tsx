@@ -349,7 +349,7 @@ export function ExampleView({
       {/* Copy Alert - Dracula Style */}
       {showCopyAlert && (
         <div
-          className="fixed bottom-4 right-4 
+          className="fixed bottom-12 right-4 
                      bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
                      rounded-lg
                      border border-[#6272a4]
@@ -366,7 +366,7 @@ export function ExampleView({
       {/* Feedback Messages */}
       {isSaving && (
         <div
-          className="fixed bottom-4 right-4 
+          className="fixed bottom-12 right-4 
                      bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
                      rounded-lg border border-[#6272a4]
                      shadow-lg shadow-[#282a36]/50
