@@ -81,22 +81,13 @@ export function ExampleView({
     }
   };
 
-  console.log("Debug - Objeto example:", example); // Adicione este log
-
   const handleSave = async (type) => {
     try {
       setIsSaving(true);
       setSaveError(null);
 
-      // Correção: Adicionar /api/ no início da rota
       const endpoint = `/api/save-${type}`;
       const content = type === "code" ? editedCode : editedExplanation;
-
-      console.log("Debug - Enviando para:", {
-        endpoint,
-        id: example.id,
-        contentLength: content.length,
-      });
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -115,7 +106,6 @@ export function ExampleView({
         throw new Error(data.error || "Erro ao salvar");
       }
 
-      // Atualizar estado local
       if (type === "code") {
         setIsEditingCode(false);
         example.code = content;
@@ -124,10 +114,8 @@ export function ExampleView({
         example.explanation = content;
       }
 
-      // Mostrar mensagem de sucesso apropriada
       setShowCopyAlert(true);
-      // Aqui está a correção - mensagem diferente para cada ação
-      setCopied(false); // Não é uma cópia, é um salvamento
+      setCopied(false);
       setTimeout(() => setShowCopyAlert(false), 2000);
     } catch (error) {
       console.error("Erro detalhado:", error);
@@ -139,7 +127,7 @@ export function ExampleView({
 
   return (
     <div
-      className={`flex flex-col min-h-screen ${
+      className={`flex flex-col min-h-screen relative ${
         isDarkMode ? "bg-slate-950" : "bg-slate-50"
       }`}
     >
@@ -148,8 +136,8 @@ export function ExampleView({
         className={`sticky top-0 z-50 text-white shadow-lg
         ${
           isDarkMode
-            ? "bg-gradient-to-r from-blue-900 to-blue-700" // Gradiente escuro
-            : "bg-gradient-to-r from-blue-600 to-blue-400" // Gradiente claro
+            ? "bg-gradient-to-r from-blue-900 to-blue-700"
+            : "bg-gradient-to-r from-blue-600 to-blue-400"
         }`}
       >
         <div className="container mx-auto px-4 py-3">
@@ -225,8 +213,11 @@ export function ExampleView({
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-8 md:px-12 lg:px-16 py-6 flex-1">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <main 
+        className="container mx-auto px-8 md:px-12 lg:px-12 py-6 flex-1 pb-16"
+        style={{ maxHeight: "calc(100vh - 100px)" }}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 grid-rows-[680px]">
           {/* Code Card - VSCode Dracula Style */}
           <div
             className="group bg-[#282a36] rounded-2xl overflow-hidden
@@ -273,7 +264,7 @@ export function ExampleView({
               </div>
             </div>
             <div className="bg-[#282a36] p-6">
-              <div className="h-[600px] overflow-auto custom-scrollbar">
+              <div className="h-[580px] overflow-auto custom-scrollbar">
                 {isEditingCode ? (
                   <textarea
                     value={editedCode}
@@ -330,7 +321,7 @@ export function ExampleView({
               </button>
             </div>
             <div className="bg-slate-50 dark:bg-slate-900 p-6">
-              <div className="h-[600px] overflow-auto custom-scrollbar">
+              <div className="h-[580px] overflow-auto custom-scrollbar">
                 {isEditingExplanation ? (
                   <textarea
                     value={editedExplanation}
@@ -360,7 +351,8 @@ export function ExampleView({
         <div
           className="fixed bottom-4 right-4 
                      bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
-                     rounded-lg border border-[#6272a4]
+                     rounded-lg
+                     border border-[#6272a4]
                      shadow-lg shadow-[#282a36]/50
                      flex items-center gap-2 animate-slide-up"
         >
@@ -396,6 +388,39 @@ export function ExampleView({
           <span className="font-medium">Erro ao salvar: {saveError}</span>
         </div>
       )}
+
+      <footer className="absolute bottom-0 left-0 right-0 py-2 text-center bg-white/10 backdrop-blur-sm">
+        <a
+          href="https://github.com/Fernando-ctdev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center justify-center gap-2 text-sm hover:opacity-75 transition-opacity ${
+            isDarkMode ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
+          <span>Desenvolvido por</span>
+          <span
+            className={`font-semibold ${
+              isDarkMode
+                ? "text-blue-400 hover:text-blue-300"
+                : "text-blue-600 hover:text-blue-500"
+            }`}
+          >
+            Maicon Fernando
+          </span>
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-5 w-5 fill-current"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0112 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48C19.137 20.107 22 16.373 22 11.969 22 6.463 17.522 2 12 2z"
+            />
+          </svg>
+        </a>
+      </footer>
 
       <style jsx global>{`
         /* Scrollbar - Dracula Theme */
@@ -526,89 +551,6 @@ export function ExampleView({
 
         .token.italic {
           font-style: italic;
-        }
-
-        /* Selection Highlighting */
-        ::selection {
-          background: rgba(98, 114, 164, 0.3);
-        }
-
-        code[class*="language-"]::selection,
-        code[class*="language-"] *::selection {
-          background: rgba(98, 114, 164, 0.3);
-        }
-
-        /* Editor Line Numbers and Active Line */
-        .line-numbers .line-numbers-rows {
-          border-right: 1px solid #44475a;
-          padding: 0 0.5em;
-        }
-
-        .line-numbers-rows > span:before {
-          color: #6272a4;
-        }
-
-        /* Active Line Highlight */
-        .editor-line-highlight {
-          background: rgba(68, 71, 90, 0.3);
-        }
-
-        /* VSCode Font Rendering */
-        pre[class*="language-"],
-        code[class*="language-"] {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          text-rendering: optimizeLegibility;
-        }
-
-        /* Dracula Theme Override */
-        .dracula-theme pre[class*="language-"],
-        .dracula-theme code[class*="language-"] {
-          background: transparent !important;
-          text-shadow: none !important;
-        }
-
-        .token.comment {
-          color: #6272a4 !important;
-        }
-        .token.prolog {
-          color: #6272a4 !important;
-        }
-        .token.doctype {
-          color: #6272a4 !important;
-        }
-        .token.cdata {
-          color: #6272a4 !important;
-        }
-        .token.punctuation {
-          color: #f8f8f2 !important;
-        }
-        .token.function {
-          color: #50fa7b !important;
-        }
-        .token.constant {
-          color: #ff79c6 !important;
-        }
-        .token.boolean {
-          color: #bd93f9 !important;
-        }
-        .token.number {
-          color: #bd93f9 !important;
-        }
-        .token.string {
-          color: #f1fa8c !important;
-        }
-        .token.keyword {
-          color: #ff79c6 !important;
-        }
-        .token.operator {
-          color: #ff79c6 !important;
-        }
-        .token.class-name {
-          color: #8be9fd !important;
-        }
-        .token.property {
-          color: #50fa7b !important;
         }
       `}</style>
     </div>
