@@ -15,15 +15,68 @@ interface Technology {
   padding: string;
 }
 
+interface Example {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  explanation: string;
+  itemId: string;
+  categoryId: string;
+}
+
+interface HomeProps {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  onExampleClick: (id: string) => void;
+  currentTech: string;
+  onTechChange: (tech: string) => void;
+  topics: any[]; // Você pode definir uma interface mais específica se desejar
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+  onCreateNewTechnology: (tech: NewTechnologyData) => Promise<boolean>;
+  onCreateCategory: (category: string) => Promise<boolean>;
+  onCreateItem: (item: NewItemData) => Promise<boolean>;
+  technologies: Technology[];
+}
+
+interface NewTechnologyData {
+  name: string;
+  title: string;
+  color: string;
+  hoverColor: string;
+  logo: string;
+  alt: string;
+  padding: string;
+}
+
+interface NewItemData {
+  itemId: string;
+  title: string;
+  categoryId: string;
+}
+
+interface ExampleViewProps {
+  example: Example | null;
+  technology: Technology | null;
+  currentTech: string;
+  onBackClick: () => void;
+  onNavigateNext: () => void;
+  onNavigatePrevious: () => void;
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+  onSave: (type: 'code' | 'explanation', content: string) => Promise<boolean>;
+}
+
 function App() {
   const [currentPage, setCurrentPage] = useState<"home" | string>("home");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentTech, setCurrentTech] = useState("javascript");
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [topics, setTopics] = useState([]);
-  const [examples, setExamples] = useState({});
+  const [topics, setTopics] = useState<any[]>([]);
+  const [examples, setExamples] = useState<Record<string, Example>>({});
   const [technologies, setTechnologies] = useState<Technology[]>([]);
-  const [currentExample, setCurrentExample] = useState<any>(null);
+  const [currentExample, setCurrentExample] = useState<Example | null>(null);
   const [currentTechnology, setCurrentTechnology] = useState<Technology | null>(null);
 
   // Carregar tema
@@ -35,7 +88,7 @@ function App() {
     }
   }, []);
 
-  // Modifique o useEffect que carrega os dados
+  // Carregar dados
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -77,10 +130,8 @@ function App() {
         const data = await response.json();
         console.log("Tecnologias carregadas:", data);
 
-        // Atualizar o estado com as tecnologias do banco
         setTechnologies(data);
         
-        // Atualizar tecnologia atual se necessário
         if (data.length > 0) {
           const tech = data.find((t: Technology) => t.name === currentTech);
           if (tech) {
@@ -95,11 +146,14 @@ function App() {
     loadTechnologies();
   }, []);
 
-  // Modifique o useEffect que atualiza o exemplo atual
+  // Atualizar exemplo atual
   useEffect(() => {
     if (currentPage !== 'home' && examples && Object.keys(examples).length > 0) {
-      console.log('Atualizando exemplo atual:', examples[currentPage]);
-      setCurrentExample(examples[currentPage]);
+      const currentExampleData = examples[currentPage];
+      if (currentExampleData) {
+        console.log('Atualizando exemplo atual:', currentExampleData);
+        setCurrentExample(currentExampleData);
+      }
     }
   }, [currentPage, examples]);
 
@@ -144,14 +198,13 @@ function App() {
     }
   };
 
-
   const handleExampleClick = (id: string) => {
     console.log('Debug - ID recebido:', id);
-    setCurrentPage(id); 
+    setCurrentPage(id);
     if (examples && examples[id]) {
       const example = examples[id];
       console.log('Debug - Exemplo selecionado:', example);
-      setCurrentExample(example); 
+      setCurrentExample(example);
     }
   };
 
@@ -164,7 +217,6 @@ function App() {
     console.log("Mudando para tecnologia:", tech);
     setCurrentTech(tech.toLowerCase());
 
-    // Atualizar a tecnologia atual
     const currentTech = technologies.find((t) => t.name === tech.toLowerCase());
     if (currentTech) {
       setCurrentTechnology(currentTech);
@@ -172,8 +224,7 @@ function App() {
   };
 
   const handleNextTopic = () => {
-    const currentExamples = examples;
-    const keys = Object.keys(currentExamples);
+    const keys = Object.keys(examples);
     const currentIndex = keys.indexOf(currentPage);
     if (currentIndex >= 0 && currentIndex < keys.length - 1) {
       setCurrentPage(keys[currentIndex + 1]);
@@ -181,76 +232,64 @@ function App() {
   };
 
   const handlePreviousTopic = () => {
-    const currentExamples = examples;
-    const keys = Object.keys(currentExamples);
+    const keys = Object.keys(examples);
     const currentIndex = keys.indexOf(currentPage);
     if (currentIndex > 0) {
       setCurrentPage(keys[currentIndex - 1]);
     }
   };
 
-  const handleSaveCode = async (newCode: string) => {
+  const handleSaveCode = async (newCode: string): Promise<boolean> => {
     try {
-      console.log('Tentativa de salvamento de código:', {
-        id: currentExample?.itemId,
-        code: newCode
-      });
-  
       if (!currentExample?.itemId) {
         throw new Error('ID do exemplo não encontrado');
       }
-  
-      const payload = {
-        id: currentExample.itemId,
-        code: newCode
-      };
-  
+
       const response = await fetch(`/api/save-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          id: currentExample.itemId,
+          code: newCode
+        })
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Falha ao salvar');
       }
-  
-      console.log('Código salvo com sucesso!');
+
       await fetchExamples(currentTech);
       return true;
-  
+
     } catch (error) {
       console.error('Erro ao salvar código:', error);
       throw error;
     }
   };
-  
-  const handleSaveExplanation = async (newExplanation: string) => {
+
+  const handleSaveExplanation = async (newExplanation: string): Promise<boolean> => {
     try {
-      if (!currentExample || !currentExample.itemId) {
+      if (!currentExample?.itemId) {
         throw new Error('Exemplo inválido ou sem itemId');
       }
-  
+
       const response = await fetch(`/api/save-explanation`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tech: currentTech,
           id: currentExample.itemId,
           explanation: newExplanation,
-        }),
+        })
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao salvar explicação');
       }
-  
-      // Recarregar exemplos após salvar
+
       await fetchExamples(currentTech);
       return true;
     } catch (error) {
@@ -259,15 +298,7 @@ function App() {
     }
   };
 
-  const handleCreateNewTechnology = async (newTech: {
-    name: string;
-    title: string;
-    color: string;
-    hoverColor: string;
-    logo: string;
-    alt: string;
-    padding: string;
-  }) => {
+  const handleCreateNewTechnology = async (newTech: NewTechnologyData): Promise<boolean> => {
     try {
       console.log("Enviando dados para criar tecnologia:", newTech);
 
@@ -290,12 +321,9 @@ function App() {
       console.log("Resposta do servidor:", data);
 
       if (data.success) {
-        // Atualizar a lista de tecnologias
         const techResponse = await fetch(`/api/technologies`);
         const techData = await techResponse.json();
         setTechnologies(techData);
-        
-        // Mudar para a nova tecnologia
         setCurrentTech(newTech.name.toLowerCase());
         return true;
       } else {
@@ -307,7 +335,7 @@ function App() {
     }
   };
 
-  const handleCreateCategory = async (category: string) => {
+  const handleCreateCategory = async (category: string): Promise<boolean> => {
     try {
       console.log('Criando categoria:', { category, technologyId: currentTech });
       
@@ -330,7 +358,6 @@ function App() {
       console.log('Resposta do servidor:', data);
   
       if (data.success) {
-        // Recarregar os tópicos após criar a categoria
         await fetchTopics(currentTech);
         return true;
       }
@@ -341,11 +368,7 @@ function App() {
     }
   };
 
-  const handleCreateItem = async (itemData: {
-    itemId: string;
-    title: string;
-    categoryId: string;
-  }) => {
+  const handleCreateItem = async (itemData: NewItemData): Promise<boolean> => {
     try {
       console.log('Enviando requisição para criar item:', itemData);
       
@@ -354,7 +377,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(itemData) // Removi o spread e o technologyId
+        body: JSON.stringify(itemData)
       });
 
       const data = await response.json();
@@ -401,7 +424,8 @@ function App() {
           onNavigatePrevious={handlePreviousTopic}
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
-          onSave={(type, content) => type === 'code' ? handleSaveCode(content) : handleSaveExplanation(content)}
+          onSave={(type: 'code' | 'explanation', content: string) => 
+            type === 'code' ? handleSaveCode(content) : handleSaveExplanation(content)}
         />
       )}
     </div>
@@ -410,13 +434,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Rota para a Landing Page */}
         <Route path="/" element={<LandingPage />} />
-        
-        {/* Rota para a aplicação principal */}
         <Route path="/platform/*" element={<MainApp />} />
-        
-        {/* Redirecionar outras rotas para a landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

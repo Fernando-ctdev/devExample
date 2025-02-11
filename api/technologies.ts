@@ -4,7 +4,6 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // GET /api/technologies
   if (req.method === 'GET') {
     try {
       const technologies = await prisma.technology.findMany({
@@ -21,15 +20,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       });
       return res.json(technologies);
-    } catch (error) {
-      return res.status(500).json({ error: 'Erro ao buscar tecnologias' });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      return res.status(500).json({ error: errorMessage });
     }
   }
 
-  // POST /api/technologies
   if (req.method === 'POST') {
     try {
-      const { name, title, color, hoverColor, logo, alt, padding } = req.body;
+      const { name, title, color, hoverColor, logo, alt, padding } = req.body as {
+        name: string;
+        title: string;
+        color: string;
+        hoverColor: string;
+        logo: string;
+        alt: string;
+        padding: string;
+      };
 
       if (!name || !title || !color || !hoverColor || !logo || !alt || !padding) {
         return res.status(400).json({
@@ -54,8 +61,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true, 
         data: technology 
       });
-    } catch (error) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      if (error instanceof Error && error.name === 'PrismaClientKnownRequestError' && (error as any).code === 'P2002') {
         return res.status(400).json({
           success: false,
           error: 'Já existe uma tecnologia com esse nome'
@@ -64,12 +72,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       return res.status(500).json({ 
         success: false, 
-        error: 'Erro ao criar tecnologia',
-        details: error.message 
+        error: errorMessage
       });
     }
   }
 
-  // Método não permitido
   return res.status(405).json({ error: 'Método não permitido' });
 }

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PrismaClient } from '@prisma/client';
+import type { Category, Item } from '../../src/types/types';
 
 const prisma = new PrismaClient();
 
@@ -26,18 +27,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ success: false, error: 'Tecnologia não encontrada' });
       }
 
-      const topics = technology.categories.map(category => ({
+      const topics = technology.categories.map((category: Category) => ({
         id: category.id,
         category: category.name,
-        items: category.items.map(item => ({
+        items: category.items.map((item: Item) => ({
           id: item.itemId,
           title: item.title
         }))
       }));
 
       return res.json({ success: true, data: topics });
-    } catch (error) {
-      return res.status(500).json({ success: false, error: 'Erro ao buscar tópicos' });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      return res.status(500).json({ success: false, error: errorMessage });
     }
   }
 

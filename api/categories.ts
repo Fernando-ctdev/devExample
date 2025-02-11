@@ -38,11 +38,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         data: newCategory 
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,
-        error: 'Erro ao criar categoria',
-        details: error.message
+        error: errorMessage,
+        details: errorMessage
       });
     }
   }

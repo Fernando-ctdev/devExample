@@ -6,7 +6,10 @@ const prisma = new PrismaClient();
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
-      const { categoryId, title } = req.body;
+      const { categoryId, title } = req.body as {
+        categoryId: string;
+        title: string;
+      };
 
       if (!categoryId || !title) {
         return res.status(400).json({
@@ -51,11 +54,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,
-        error: 'Erro ao criar tópico',
-        details: error.message
+        error: errorMessage,
+        details: errorMessage
       });
     }
   }

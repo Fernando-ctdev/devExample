@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
-      const { id, explanation } = req.body;
+      const { id, explanation } = req.body as { id: string; explanation: string };
 
       const example = await prisma.example.findUnique({
         where: { id }
@@ -29,10 +29,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         data: updated
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,
-        error: error.message
+        error: errorMessage
       });
     }
   }
