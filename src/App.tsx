@@ -27,11 +27,11 @@ interface Example {
 
 interface HomeProps {
   searchTerm: string;
-  onSearchChange: (value: string) => void;  // Estava faltando
-  onExampleClick: (id: string) => void;     // Estava faltando
+  onSearchChange: (value: string) => void;
+  onExampleClick: (id: string) => void;
   currentTech: string;
   onTechChange: (tech: string) => void;
-  topics: any[]; 
+  topics: any[];
   isDarkMode: boolean;
   toggleTheme: () => void;
   onCreateNewTechnology: (tech: NewTechnologyData) => Promise<boolean>;
@@ -57,8 +57,8 @@ interface NewItemData {
 }
 
 interface ExampleViewProps {
-  example: Example ;
-  technology: Technology ;
+  example: Example;
+  technology: Technology;
   currentTech: string;
   onBackClick: () => void;
   onNavigateNext: () => void;
@@ -68,6 +68,28 @@ interface ExampleViewProps {
   onSave: (type: 'code' | 'explanation', content: string) => Promise<boolean>;
 }
 
+// Valores padrão para Example e Technology
+const defaultExample: Example = {
+  id: "default",
+  title: "Default Example",
+  description: "This is a default example.",
+  code: "// Default code",
+  explanation: "This is a default explanation.",
+  itemId: "default",
+  categoryId: "default",
+};
+
+const defaultTechnology: Technology = {
+  id: "default",
+  name: "Default Technology",
+  title: "Default Technology",
+  color: "#000000",
+  hoverColor: "#FFFFFF",
+  logo: "default-logo.png",
+  alt: "Default Technology Logo",
+  padding: "0",
+};
+
 function App() {
   const [currentPage, setCurrentPage] = useState<"home" | string>("home");
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,8 +98,8 @@ function App() {
   const [topics, setTopics] = useState<any[]>([]);
   const [examples, setExamples] = useState<Record<string, Example>>({});
   const [technologies, setTechnologies] = useState<Technology[]>([]);
-  const [currentExample, setCurrentExample] = useState<Example>();
-  const [currentTechnology, setCurrentTechnology] = useState<Technology>();
+  const [currentExample, setCurrentExample] = useState<Example>(defaultExample); // Sempre tem um valor padrão
+  const [currentTechnology, setCurrentTechnology] = useState<Technology>(defaultTechnology); // Sempre tem um valor padrão
 
   // Carregar tema
   useEffect(() => {
@@ -131,7 +153,7 @@ function App() {
         console.log("Tecnologias carregadas:", data);
 
         setTechnologies(data);
-        
+
         if (data.length > 0) {
           const tech = data.find((t: Technology) => t.name === currentTech);
           if (tech) {
@@ -241,7 +263,7 @@ function App() {
 
   const handleSaveCode = async (newCode: string): Promise<boolean> => {
     try {
-      if (!currentExample?.itemId) {
+      if (!currentExample.itemId) {
         throw new Error('ID do exemplo não encontrado');
       }
 
@@ -271,7 +293,7 @@ function App() {
 
   const handleSaveExplanation = async (newExplanation: string): Promise<boolean> => {
     try {
-      if (!currentExample?.itemId) {
+      if (!currentExample.itemId) {
         throw new Error('Exemplo inválido ou sem itemId');
       }
 
@@ -338,7 +360,7 @@ function App() {
   const handleCreateCategory = async (category: string): Promise<boolean> => {
     try {
       console.log('Criando categoria:', { category, technologyId: currentTech });
-      
+
       const response = await fetch('/api/categories', {
         method: 'POST',
         headers: {
@@ -353,10 +375,10 @@ function App() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log('Resposta do servidor:', data);
-  
+
       if (data.success) {
         await fetchTopics(currentTech);
         return true;
@@ -371,7 +393,7 @@ function App() {
   const handleCreateItem = async (itemData: NewItemData): Promise<boolean> => {
     try {
       console.log('Enviando requisição para criar item:', itemData);
-      
+
       const response = await fetch(`/api/items`, {
         method: "POST",
         headers: {
@@ -424,7 +446,7 @@ function App() {
           onNavigatePrevious={handlePreviousTopic}
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
-          onSave={(type: 'code' | 'explanation', content: string) => 
+          onSave={(type: 'code' | 'explanation', content: string) =>
             type === 'code' ? handleSaveCode(content) : handleSaveExplanation(content)}
         />
       )}
