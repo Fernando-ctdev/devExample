@@ -57,8 +57,8 @@ interface NewItemData {
 }
 
 interface ExampleViewProps {
-  example: Example | null;
-  technology: Technology | null;
+  example: Example ;
+  technology: Technology ;
   currentTech: string;
   onBackClick: () => void;
   onNavigateNext: () => void;
@@ -76,8 +76,8 @@ function App() {
   const [topics, setTopics] = useState<any[]>([]);
   const [examples, setExamples] = useState<Record<string, Example>>({});
   const [technologies, setTechnologies] = useState<Technology[]>([]);
-  const [currentExample, setCurrentExample] = useState<Example | null>(null);
-  const [currentTechnology, setCurrentTechnology] = useState<Technology | null>(null);
+  const [currentExample, setCurrentExample] = useState<Example>();
+  const [currentTechnology, setCurrentTechnology] = useState<Technology>();
 
   // Carregar tema
   useEffect(() => {
