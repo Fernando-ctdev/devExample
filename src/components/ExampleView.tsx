@@ -213,23 +213,11 @@ export function ExampleView({
       </header>
 
       {/* Main Content */}
-      <main 
-        className="container mx-auto px-8 md:px-12 lg:px-12 py-6 flex-1 pb-16"
-        style={{ maxHeight: "calc(100vh - 100px)" }}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 grid-rows-[680px]">
-          {/* Code Card - VSCode Dracula Style */}
-          <div
-            className="group bg-[#282a36] rounded-2xl overflow-hidden
-                   border border-[#44475a]
-                   shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)]
-                   transition-all duration-300"
-          >
-            <div
-              className="flex items-center justify-between px-4 py-3 
-                    bg-[#21222c] 
-                    border-b border-[#44475a]"
-            >
+      <main className="flex-1 container mx-auto px-8 md:px-12 lg:px-12 py-6 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[min(100vh-12rem,900px)]">
+          {/* Code Card */}
+          <div className="group bg-[#282a36] rounded-2xl overflow-hidden border border-[#44475a] shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)] transition-all duration-300">
+            <div className="flex items-center justify-between px-4 py-3 bg-[#21222c] border-b border-[#44475a]">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#ff5555] opacity-90" />
                 <div className="w-3 h-3 rounded-full bg-[#f1fa8c] opacity-90" />
@@ -241,10 +229,7 @@ export function ExampleView({
               <div className="flex gap-2">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
-                     bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
-                     transition-all duration-200 ease-in-out
-                     shadow-sm hover:shadow-md active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2] transition-all duration-200 ease-in-out shadow-sm hover:shadow-md active:scale-95"
                   title="Copiar código"
                 >
                   <Copy size={14} />
@@ -253,50 +238,35 @@ export function ExampleView({
                   onClick={() =>
                     isEditingCode ? handleSave("code") : setIsEditingCode(true)
                   }
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
-                     bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2]
-                     transition-all duration-200 ease-in-out
-                     shadow-sm hover:shadow-md active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-[#44475a]/50 hover:bg-[#44475a] text-[#f8f8f2] transition-all duration-200 ease-in-out shadow-sm hover:shadow-md active:scale-95"
                   title={isEditingCode ? "Salvar" : "Editar"}
                 >
                   {isEditingCode ? <Save size={14} /> : <Edit2 size={14} />}
                 </button>
               </div>
             </div>
-            <div className="bg-[#282a36] p-6">
-              <div className="h-[580px] overflow-auto custom-scrollbar">
-                {isEditingCode ? (
-                  <textarea
-                    value={editedCode}
-                    onChange={(e) => setEditedCode(e.target.value)}
-                    className="w-full h-full bg-transparent 
-                     font-mono text-sm resize-none focus:outline-none
-                     text-[#f8f8f2]"
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      lineHeight: "1.6",
-                    }}
-                  />
-                ) : (
-                  <pre className="text-[#f8f8f2]">
-                    <code className="language-typescript">{example.code}</code>
-                  </pre>
-                )}
-              </div>
+            <div className="bg-[#282a36] p-6 py-2 h-[calc(100%-3rem)] custom-scrollbar overflow-auto">
+              {isEditingCode ? (
+                <textarea
+                  value={editedCode}
+                  onChange={(e) => setEditedCode(e.target.value)}
+                  className="w-full h-full bg-transparent font-mono text-sm resize-none focus:outline-none text-[#f8f8f2]"
+                  style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    lineHeight: "1.6",
+                  }}
+                />
+              ) : (
+                <pre className="text-[#f8f8f2]">
+                  <code className="language-typescript">{example.code}</code>
+                </pre>
+              )}
             </div>
           </div>
+
           {/* Explanation Card */}
-          <div
-            className="group bg-[#282a36] rounded-2xl overflow-hidden
-                   border border-[#44475a]
-                   shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)]
-                   transition-all duration-300"
-          >
-            <div
-              className="flex items-center justify-between px-4 py-3 
-                          bg-slate-100 dark:bg-slate-800/50 
-                          border-b border-slate-200 dark:border-slate-700"
-            >
+          <div className="group bg-[#282a36] rounded-2xl overflow-hidden border border-[#44475a] shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)] transition-all duration-300">
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-2"></div>
               <span className="text-sm font-medium text-slate-600 dark:text-slate-100">
                 Explicação
@@ -307,10 +277,7 @@ export function ExampleView({
                     ? handleSave("explanation")
                     : setIsEditingExplanation(true)
                 }
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs
-                         bg-slate-700/50 hover:bg-slate-600/50 text-slate-300
-                         transition-all duration-200 ease-in-out
-                         shadow-sm hover:shadow-md active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 transition-all duration-200 ease-in-out shadow-sm hover:shadow-md active:scale-95"
                 title={isEditingExplanation ? "Salvar" : "Editar"}
               >
                 {isEditingExplanation ? (
@@ -320,27 +287,20 @@ export function ExampleView({
                 )}
               </button>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900 p-6">
-              <div className="h-[580px] overflow-auto custom-scrollbar">
-                {isEditingExplanation ? (
-                  <textarea
-                    value={editedExplanation}
-                    onChange={(e) => setEditedExplanation(e.target.value)}
-                    className="w-full h-full bg-transparent 
-                             font-sans text-base resize-none focus:outline-none
-                             text-slate-800 dark:text-slate-300"
-                  />
-                ) : (
-                  <div className="prose dark:prose-invert max-w-none">
-                    <pre
-                      className="whitespace-pre-wrap font-sans text-base leading-relaxed
-                                 text-slate-800 dark:text-slate-300"
-                    >
-                      {editedExplanation}
-                    </pre>
-                  </div>
-                )}
-              </div>
+            <div className="bg-slate-50 dark:bg-slate-900 p-6 h-[calc(100%-3rem)] custom-scrollbar overflow-auto">
+              {isEditingExplanation ? (
+                <textarea
+                  value={editedExplanation}
+                  onChange={(e) => setEditedExplanation(e.target.value)}
+                  className="w-full h-full bg-transparent font-sans text-base resize-none focus:outline-none text-slate-800 dark:text-slate-300"
+                />
+              ) : (
+                <div className="prose dark:prose-invert max-w-none">
+                  <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed text-slate-800 dark:text-slate-300">
+                    {editedExplanation}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         </div>
