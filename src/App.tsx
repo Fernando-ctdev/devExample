@@ -27,11 +27,11 @@ interface Example {
 
 interface HomeProps {
   searchTerm: string;
-  onSearchChange: (value: string) => void;
-  onExampleClick: (id: string) => void;
+  onSearchChange: (value: string) => void;  // Estava faltando
+  onExampleClick: (id: string) => void;     // Estava faltando
   currentTech: string;
   onTechChange: (tech: string) => void;
-  topics: any[]; // Você pode definir uma interface mais específica se desejar
+  topics: any[]; 
   isDarkMode: boolean;
   toggleTheme: () => void;
   onCreateNewTechnology: (tech: NewTechnologyData) => Promise<boolean>;

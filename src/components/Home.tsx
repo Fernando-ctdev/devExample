@@ -20,32 +20,50 @@ interface Topic {
   id: string;
   name: string;
   technologyId: string;
+  category: string; // Adicionado este campo
   items: TopicItem[];
+}
+
+interface Technology {
+  id: string;
+  name: string;
+  title: string;
+  color: string;
+  hoverColor: string;
+  logo: string;
+  alt: string;
+  padding: string;
 }
 
 interface HomeProps {
   searchTerm: string;
+  onSearchChange: (value: string) => void; // Adicionado
+  onExampleClick: (id: string) => void;    // Adicionado
   currentTech: string;
   onTechChange: (tech: string) => void;
   topics: Topic[];
   isDarkMode: boolean;
   toggleTheme: () => void;
-  onCreateNewTechnology: (newTech: {
-    name: string;
-    title: string;
-    color: string;
-    hoverColor: string;
-    logo: string;
-    alt: string;
-    padding: string;
-  }) => Promise<boolean>;
+  onCreateNewTechnology: (tech: NewTechnologyData) => Promise<boolean>;
   onCreateCategory: (category: string) => Promise<boolean>;
-  onCreateItem: (itemData: {
-    itemId: string;
-    title: string;
-    categoryId: string;
-  }) => Promise<boolean>;
-  technologies: any[]; // Adicionar esta prop aqui
+  onCreateItem: (itemData: NewItemData) => Promise<boolean>;
+  technologies: Technology[]; // Atualizado o tipo
+}
+
+interface NewTechnologyData {
+  name: string;
+  title: string;
+  color: string;
+  hoverColor: string;
+  logo: string;
+  alt: string;
+  padding: string;
+}
+
+interface NewItemData {
+  itemId: string;
+  title: string;
+  categoryId: string;
 }
 
 
@@ -284,28 +302,23 @@ export function Home({
   };
 
   // Função para filtrar tópicos baseado no termo de busca
-  const filteredTopics =
-    topics && topics.length > 0
-      ? topics
-          .map((topic) => ({
-            ...topic,
-            items:
-              topic.items?.filter(
-                (item) =>
-                  item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  topic.category
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
-              ) || [],
-          }))
-          .filter((topic) =>
-            // Remove o filtro de items.length para mostrar todas as categorias
-            searchTerm
-              ? topic.items.length > 0 ||
-                topic.category.toLowerCase().includes(searchTerm.toLowerCase())
-              : true
-          )
-      : [];
+  const filteredTopics = topics && topics.length > 0
+  ? topics
+      .map((topic) => ({
+        ...topic,
+        items: topic.items?.filter(
+          (item) =>
+            item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            topic.name.toLowerCase().includes(searchTerm.toLowerCase())
+        ) || [],
+      }))
+      .filter((topic) =>
+        searchTerm
+          ? topic.items.length > 0 ||
+            topic.name.toLowerCase().includes(searchTerm.toLowerCase())
+          : true
+      )
+  : [];
 
   console.log("Filtered topics:", filteredTopics);
 
@@ -392,8 +405,9 @@ export function Home({
                       color: isDarkMode ? "#fff" : "#333",
                     },
                   });
-                } catch (error) {
-                  toast.error("Erro ao criar tecnologia: " + error.message, {
+                } catch (error: unknown) {
+                  const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+                  toast.error("Erro ao criar tecnologia: " + errorMessage, {
                     style: {
                       background: isDarkMode ? "#333" : "#fff",
                       color: isDarkMode ? "#fff" : "#333",
@@ -543,9 +557,9 @@ export function Home({
                   } else {
                     throw new Error("Erro ao criar categoria");
                   }
-                } catch (error) {
-                  console.error("Erro ao criar categoria:", error);
-                  toast.error(`Erro ao criar categoria: ${error.message}`, {
+                } catch (error: unknown) {
+                  const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+                  toast.error("Erro ao criar categoria: " + errorMessage, {
                     style: {
                       background: isDarkMode ? "#333" : "#fff",
                       color: isDarkMode ? "#fff" : "#333",
@@ -635,9 +649,9 @@ export function Home({
                     setNewItem({ id: "", title: "", categoryId: "" }); // Limpar também o categoryId
                     window.location.reload();
                   }
-                } catch (error) {
-                  console.error("Erro ao criar tópico:", error);
-                  toast.error("Erro ao criar tópico: " + error.message, {
+                } catch (error: unknown) {
+                  const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+                  toast.error("Erro ao criar tópico: " + errorMessage, {
                     style: {
                       background: isDarkMode ? "#333" : "#fff",
                       color: isDarkMode ? "#fff" : "#333",

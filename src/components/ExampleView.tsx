@@ -17,19 +17,44 @@ import "prismjs/components/prism-go";
 import "prismjs/components/prism-sql";
 import "prismjs/themes/prism-tomorrow.css";
 
-const TECH_LOGOS = {
-  javascript:
-    "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
-  typescript:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
-  golang:
-    "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
+interface Example {
+  id: string;
+  title: string;
+  code: string;
+  explanation: string;
+}
+
+interface Technology {
+  id: string;
+  name: string;
+  title: string;
+  color: string;
+  hoverColor: string;
+  logo: string;
+  alt: string;
+  padding: string;
+}
+
+interface ExampleViewProps {
+  example: Example;
+  technology: Technology | null;
+  onBackClick: () => void;
+  onNavigateNext: () => void;
+  onNavigatePrevious: () => void;
+  currentTech: string;
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+  onSave: (type: 'code' | 'explanation', content: string) => Promise<boolean>;
+}
+
+const TECH_LOGOS: Record<string, string> = {
+  javascript: "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
+  typescript: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
+  golang: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
   gin: "https://avatars.githubusercontent.com/u/7894478?v=4",
-  nodejs:
-    "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
-  nestjs:
-    "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
-  sql: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png",
+  nodejs: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
+  nestjs: "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
+  sql: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png"
 };
 
 export function ExampleView({
@@ -42,17 +67,15 @@ export function ExampleView({
   isDarkMode,
   toggleTheme,
   onSave,
-}) {
+}: ExampleViewProps) {
   const [copied, setCopied] = useState(false);
   const [isEditingCode, setIsEditingCode] = useState(false);
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [editedCode, setEditedCode] = useState(example.code);
-  const [editedExplanation, setEditedExplanation] = useState(
-    example.explanation
-  );
+  const [editedExplanation, setEditedExplanation] = useState(example.explanation);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     setEditedCode(example.code);
@@ -76,55 +99,41 @@ export function ExampleView({
         setShowCopyAlert(false);
         setCopied(false);
       }, 2000);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
+    } catch (error) {
+      console.error("Failed to copy text: ", error);
     }
   };
 
-  const handleSave = async (type) => {
+  const handleSave = async (type: 'code' | 'explanation') => {
     try {
       setIsSaving(true);
       setSaveError(null);
 
-      const endpoint = `/api/save-${type}`;
-      const content = type === "code" ? editedCode : editedExplanation;
+      const content = type === 'code' ? editedCode : editedExplanation;
+      
+      try {
+        await onSave(type, content);
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: example.id,
-          [type]: content,
-        }),
-      });
+        if (type === 'code') {
+          setIsEditingCode(false);
+          example.code = content;
+        } else {
+          setIsEditingExplanation(false);
+          example.explanation = content;
+        }
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Erro ao salvar");
+        setShowCopyAlert(true);
+        setCopied(false);
+        setTimeout(() => setShowCopyAlert(false), 2000);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        setSaveError(errorMessage);
       }
 
-      if (type === "code") {
-        setIsEditingCode(false);
-        example.code = content;
-      } else {
-        setIsEditingExplanation(false);
-        example.explanation = content;
-      }
-
-      setShowCopyAlert(true);
-      setCopied(false);
-      setTimeout(() => setShowCopyAlert(false), 2000);
-    } catch (error) {
-      console.error("Erro detalhado:", error);
-      setSaveError(error.message);
     } finally {
       setIsSaving(false);
     }
   };
-
   return (
     <div
       className={`flex flex-col min-h-screen relative ${
@@ -263,7 +272,6 @@ export function ExampleView({
               )}
             </div>
           </div>
-
           {/* Explanation Card */}
           <div className="group bg-[#282a36] rounded-2xl overflow-hidden border border-[#44475a] shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)] transition-all duration-300">
             <div className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
@@ -322,7 +330,6 @@ export function ExampleView({
           </span>
         </div>
       )}
-
       {/* Feedback Messages */}
       {isSaving && (
         <div
@@ -349,8 +356,8 @@ export function ExampleView({
         </div>
       )}
 
-      <footer className="absolute bottom-0 left-0 right-0 py-2 text-center bg-white/10 backdrop-blur-sm">
-        <a
+<footer className="absolute bottom-0 left-0 right-0 py-2 text-center bg-white/10 backdrop-blur-sm">
+        <a  // <- Esta tag estava faltando
           href="https://github.com/Fernando-ctdev"
           target="_blank"
           rel="noopener noreferrer"
@@ -381,7 +388,6 @@ export function ExampleView({
           </svg>
         </a>
       </footer>
-
       <style jsx global>{`
         /* Scrollbar - Dracula Theme */
         .custom-scrollbar::-webkit-scrollbar {
