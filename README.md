@@ -9,6 +9,8 @@ Um aplicativo web para explorar exemplos de código em diferentes tecnologias, i
 - Tailwind CSS
 - Prism.js
 - Lucide React
+- nodejs
+- postgresql
 
 ## 📋 Pré-requisitos
 
