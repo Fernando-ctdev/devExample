@@ -116,9 +116,13 @@ router.post('/save-code', async (req, res) => {
     const { id, code } = req.body;
     console.log('Request save-code:', { id, codeLength: code?.length });
 
-    // Aqui está a mudança principal - buscar pelo ID do exemplo diretamente
-    const example = await prisma.example.findUnique({
-      where: { id }
+    // Buscar o exemplo pelo itemId
+    const example = await prisma.example.findFirst({
+      where: { 
+        item: {
+          itemId: id
+        }
+      }
     });
 
     if (!example) {
@@ -129,7 +133,7 @@ router.post('/save-code', async (req, res) => {
     }
 
     const updated = await prisma.example.update({
-      where: { id },
+      where: { id: example.id }, // Usar o id do exemplo encontrado
       data: { code }
     });
 
@@ -153,9 +157,13 @@ router.post('/save-explanation', async (req, res) => {
     const { id, explanation } = req.body;
     console.log('Request save-explanation:', { id, explanationLength: explanation?.length });
 
-    // Buscar e atualizar diretamente pelo ID do exemplo, igual ao save-code
-    const example = await prisma.example.findUnique({
-      where: { id }
+    // Buscar o exemplo pelo itemId
+    const example = await prisma.example.findFirst({
+      where: { 
+        item: {
+          itemId: id
+        }
+      }
     });
 
     if (!example) {
@@ -166,7 +174,7 @@ router.post('/save-explanation', async (req, res) => {
     }
 
     const updated = await prisma.example.update({
-      where: { id },
+      where: { id: example.id }, // Usar o id do exemplo encontrado
       data: { explanation }
     });
 

@@ -317,7 +317,7 @@ export function ExampleView({
       {/* Copy Alert - Dracula Style */}
       {showCopyAlert && (
         <div
-          className="fixed bottom-12 right-4 
+          className="fixed bottom-12 right-12 
                      bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
                      rounded-lg
                      border border-[#6272a4]
@@ -333,7 +333,7 @@ export function ExampleView({
       {/* Feedback Messages */}
       {isSaving && (
         <div
-          className="fixed bottom-12 right-4 
+          className="fixed bottom-12 right-12 
                      bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
                      rounded-lg border border-[#6272a4]
                      shadow-lg shadow-[#282a36]/50
@@ -346,7 +346,7 @@ export function ExampleView({
 
       {saveError && (
         <div
-          className="fixed bottom-4 right-4 
+          className="fixed bottom-12 right-12 
                      bg-[#ff5555] text-white px-4 py-2.5
                      rounded-lg border border-[#ff6e6e]
                      shadow-lg
@@ -357,7 +357,7 @@ export function ExampleView({
       )}
 
 <footer className="absolute bottom-0 left-0 right-0 py-2 text-center bg-white/10 backdrop-blur-sm">
-        <a  // <- Esta tag estava faltando
+        <a  
           href="https://github.com/Fernando-ctdev"
           target="_blank"
           rel="noopener noreferrer"
