@@ -55,8 +55,8 @@ model Example {
   explanation  String
   createdAt    DateTime   @default(now())
   itemId       String     @unique
-  technologyId String
+  technologyId String?
   updatedAt    DateTime   @updatedAt
   item         Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  Technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  Technology   Technology? @relation(fields: [technologyId], references: [id], onDelete: Cascade)
 }

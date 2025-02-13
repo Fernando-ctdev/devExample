@@ -21,13 +21,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const category = await prisma.category.findUnique({
-        where: { id: categoryId }
+        where: { id: categoryId },
+        include: { technology: true } 
       });
 
       if (!category) {
         return res.status(404).json({
           success: false,
           error: 'Categoria não encontrada'
+        });
+      }
+
+      if (!category.technology) {
+        return res.status(400).json({
+          success: false,
+          error: 'A categoria não tem uma tecnologia associada'
         });
       }
 
@@ -46,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           code: '',
           explanation: '',
           itemId: item.id,
-          
+          technologyId: category.technology.id 
         }
       });
 
