@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { Category, Item } from '../../src/types/types';
-import prisma from '../lib/prisma';
+import prisma from '../db';
 
 
 
