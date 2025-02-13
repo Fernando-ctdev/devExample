@@ -1,19 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from './lib/neon';
-
-console.log('🔄 Arquivo technologies.ts carregado.');
+import pool from './lib/neon.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  console.log('🟢 Nova requisição recebida em /api/technologies');
-
   if (req.method === 'GET') {
+    console.log('Requisição recebida em /api/technologies');
     try {
-      console.log('🔍 Tentando conexão com o banco...');
-      const { rows } = await pool.query('SELECT 1');
-      console.log('✅ Conexão com o banco bem-sucedida!');
-
-      console.log('🔍 Buscando tecnologias...');
-      const { rows: technologies } = await pool.query(`
+      const { rows } = await pool.query(`
         SELECT t.*, 
           array_agg(json_build_object(
             'id', c.id,
@@ -41,19 +33,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           )) as categories
         FROM technology t
         LEFT JOIN category c ON c.technologyId = t.id
-        GROUP BY t.id
-      `);
-
-      console.log(`✅ ${technologies.length} tecnologias encontradas.`);
+        GROUP BY t.id`);
       
-      return res.json(technologies);
+      return res.json(rows);
     } catch (error: unknown) {
-      console.error('❌ Erro ao buscar tecnologias:', error);
+      console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({ error: errorMessage });
     }
   }
-
-  console.log('⚠️ Método não permitido');
-  return res.status(405).json({ error: 'Método não permitido' });
 }
