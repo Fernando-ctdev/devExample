@@ -3,6 +3,7 @@ import pool from './lib/neon';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
+    console.log('Requisição recebida em /api/technologies');
     try {
       const { rows } = await pool.query(`
         SELECT t.*, 
