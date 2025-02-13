@@ -10,46 +10,53 @@ datasource db {
 model Technology {
   id         String     @id @default(uuid())
   name       String     @unique
-  title      String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  alt        String
   color      String
   hoverColor String
   logo       String
-  alt        String
   padding    String
+  title      String
   categories Category[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  Example    Example[]
 }
 
 model Category {
   id           String     @id @default(uuid())
   name         String
-  technology   Technology @relation(fields: [technologyId], references: [id])
   technologyId String
-  items        Item[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  items        Item[]
+
+  @@unique([name, technologyId])
 }
 
 model Item {
-  id         String     @id @default(uuid())
-  itemId     String     @unique
+  id         String   @id @default(uuid())
+  itemId     String
   title      String
-  category   Category   @relation(fields: [categoryId], references: [id])
   categoryId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   example    Example?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, categoryId])
 }
 
 model Example {
-  id          String    @id @default(uuid())
-  title       String
-  description String    @default("")
-  code        String    @default("")
-  explanation String    @default("")
-  item        Item      @relation(fields: [itemId], references: [itemId])
-  itemId      String    @unique
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String     @id @default(uuid())
+  title        String
+  description  String
+  code         String
+  explanation  String
+  createdAt    DateTime   @default(now())
+  itemId       String     @unique
+  technologyId String
+  updatedAt    DateTime   @updatedAt
+  item         Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  Technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
 }
