@@ -37,9 +37,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       return res.json(rows);
     } catch (error: unknown) {
-      console.error('Erro detalhado:', error);
+      console.error('❌ Erro ao buscar tecnologias:', error);
+    
+      if (error instanceof Error) {
+        console.error('📌 Mensagem do erro:', error.message);
+        console.error('📌 Stack trace:', error.stack);
+      } else {
+        console.error('📌 Erro desconhecido:', JSON.stringify(error, null, 2));
+      }
+    
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({ error: errorMessage });
-    }
+    }    
   }
 }
