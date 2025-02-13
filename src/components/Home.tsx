@@ -453,7 +453,7 @@ export function Home({
 
                 <input
                   type="url"
-                  placeholder="URL do logo com fundo transparente"
+                  placeholder="URL da logo da tecnologia SEM FUNDO"
                   value={newTech.logo}
                   onChange={(e) =>
                     setNewTech({ ...newTech, logo: e.target.value })

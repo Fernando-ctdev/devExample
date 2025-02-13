@@ -10,7 +10,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "migrate": "ts-node server/src/scripts/migrateAllTechnologies.ts"
+    "migrate": "ts-node server/src/scripts/migrateAllTechnologies.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
