@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Technology {
@@ -48,15 +49,15 @@ model Item {
 }
 
 model Example {
-  id           String     @id @default(uuid())
+  id           String      @id @default(uuid())
   title        String
   description  String
   code         String
   explanation  String
-  createdAt    DateTime   @default(now())
-  itemId       String     @unique
+  createdAt    DateTime    @default(now())
+  itemId       String      @unique
   technologyId String?
-  updatedAt    DateTime   @updatedAt
-  item         Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  updatedAt    DateTime    @updatedAt
+  item         Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
   Technology   Technology? @relation(fields: [technologyId], references: [id], onDelete: Cascade)
 }
