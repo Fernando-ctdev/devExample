@@ -10,13 +10,14 @@
     "outDir": "./dist",
     "rootDir": ".",
     "allowJs": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "*": ["node_modules/*", "src/types/*"]
+      "@utils/*": ["utils/*"]
     },
     "jsx": "react-jsx",
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    
   },
   "include": [
     "src/**/*",
