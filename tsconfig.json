@@ -22,7 +22,7 @@
     "src/**/*",
     "src/data",
     "api/**/*"
-  ],
+, "../utils/neon.ts"  ],
   "exclude": [
     "node_modules"
   ],
