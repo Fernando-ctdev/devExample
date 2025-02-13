@@ -1,13 +1,23 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { Category, Item } from '../../src/types/types';
 import prisma from '../lib/prisma';
 
+interface ExampleOutput {
+  [key: string]: {
+    id: string;
+    title: string;
+    description: string;
+    code: string;
+    explanation: string;
+    itemId: string;
+    categoryId: string;
+  }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     try {
       const tech = req.query.tech as string;
-      const examples: Record<string, any> = {};
+      const examples: ExampleOutput = {};
 
       const technology = await prisma.technology.findUnique({
         where: { name: tech },
@@ -28,8 +38,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ success: false, error: 'Tecnologia não encontrada' });
       }
 
-      technology.categories.forEach((category: Category) => {
-        category.items.forEach((item: Item) => {
+      technology.categories.forEach((category) => {
+        category.items.forEach((item) => {
           if (item.example) {
             examples[item.itemId] = {
               id: item.example.id,
