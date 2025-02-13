@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           code: '',
           explanation: '',
           itemId: item.id,
-          technologyId: category.technologyId
+          
         }
       });
 

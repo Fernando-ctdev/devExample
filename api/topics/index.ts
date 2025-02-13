@@ -30,6 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const item = await prisma.item.create({
         data: {
+          itemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
           title,
           categoryId
         }
