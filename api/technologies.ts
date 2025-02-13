@@ -2,7 +2,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PrismaClient } from '@prisma/client';
 
 // Singleton do PrismaClient
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    },
+  },
+});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log(`[${new Date().toISOString()}] - Nova requisição: ${req.method}`);
