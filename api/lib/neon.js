@@ -1,4 +1,6 @@
-import { Pool } from 'pg';
+import pkg from 'pg';
+
+const { Pool } = pkg;
 
 console.log('🟢 Iniciando conexão com o banco...');
 
