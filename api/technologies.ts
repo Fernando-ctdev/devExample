@@ -5,8 +5,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log(`[${new Date().toISOString()}] - Nova requisição: ${req.method}`);
+
   if (req.method === 'GET') {
     try {
+      console.log('Buscando todas as tecnologias...');
       const technologies = await prisma.technology.findMany({
         include: {
           categories: {
@@ -20,8 +23,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
       });
+      console.log('Tecnologias buscadas com sucesso:', technologies.length);
       return res.json(technologies);
     } catch (error: unknown) {
+      console.error('Erro ao buscar tecnologias:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({ error: errorMessage });
     }
@@ -29,6 +34,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'POST') {
     try {
+      console.log('Recebendo dados do POST:', req.body);
+
       const { name, title, color, hoverColor, logo, alt, padding } = req.body as {
         name: string;
         title: string;
@@ -40,12 +47,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
 
       if (!name || !title || !color || !hoverColor || !logo || !alt || !padding) {
+        console.warn('Dados inválidos recebidos:', req.body);
         return res.status(400).json({
           success: false,
           error: 'Todos os campos são obrigatórios'
         });
       }
 
+      console.log(`Criando tecnologia: ${name}`);
       const technology = await prisma.technology.create({
         data: {
           name: name.toLowerCase(),
@@ -58,12 +67,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       });
 
-      return res.status(200).json({ 
-        success: true, 
-        data: technology 
-      });
+      console.log('Tecnologia criada com sucesso:', technology);
+      return res.status(200).json({ success: true, data: technology });
+
     } catch (error: unknown) {
+      console.error('Erro ao criar tecnologia:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+
       if (error instanceof Error && error.name === 'PrismaClientKnownRequestError' && (error as any).code === 'P2002') {
         return res.status(400).json({
           success: false,
@@ -71,12 +81,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      return res.status(500).json({ 
-        success: false, 
-        error: errorMessage
-      });
+      return res.status(500).json({ success: false, error: errorMessage });
     }
   }
 
+  console.warn('Método não permitido:', req.method);
   return res.status(405).json({ error: 'Método não permitido' });
 }
