@@ -1,14 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { PrismaClient } from '@prisma/client';
-
-// Singleton do PrismaClient
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-    },
-  },
-});
+import pool from './lib/neon';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
@@ -22,30 +13,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const technology = await prisma.technology.findUnique({
-        where: { name: technologyId }
-      });
+      // Verificar se a tecnologia existe
+      const techResult = await pool.query(
+        'SELECT id FROM technology WHERE name = $1',
+        [technologyId]
+      );
 
-      if (!technology) {
+      if (techResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
           error: 'Tecnologia não encontrada'
         });
       }
 
-      const newCategory = await prisma.category.create({
-        data: {
-          name: category,
-          technologyId: technology.id
-        }
-      });
+      // Criar nova categoria
+      const result = await pool.query(
+        'INSERT INTO category (name, technologyId) VALUES ($1, $2) RETURNING *',
+        [category, techResult.rows[0].id]
+      );
 
       return res.status(201).json({ 
         success: true, 
-        data: newCategory 
+        data: result.rows[0]
       });
 
     } catch (error: unknown) {
+      console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,

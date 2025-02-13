@@ -1,70 +1,42 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { PrismaClient } from '@prisma/client';
-
-// Singleton do PrismaClient
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-    },
-  },
-});
-
-interface ExampleOutput {
-  [key: string]: {
-    id: string;
-    title: string;
-    description: string;
-    code: string;
-    explanation: string;
-    itemId: string;
-    categoryId: string;
-  }
-}
+import pool from '../lib/neon';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     try {
       const tech = req.query.tech as string;
-      const examples: ExampleOutput = {};
 
-      const technology = await prisma.technology.findUnique({
-        where: { name: tech },
-        include: {
-          categories: {
-            include: {
-              items: {
-                include: {
-                  example: true
-                }
-              }
-            }
-          }
-        }
-      });
+      const { rows } = await pool.query(`
+        WITH tech_data AS (
+          SELECT id 
+          FROM technology 
+          WHERE name = $1
+        )
+        SELECT 
+          i.itemId,
+          json_build_object(
+            'id', e.id,
+            'title', e.title,
+            'description', e.description,
+            'code', e.code,
+            'explanation', e.explanation,
+            'itemId', e.itemId,
+            'categoryId', c.id
+          ) as example_data
+        FROM tech_data
+        JOIN category c ON c.technologyId = tech_data.id
+        JOIN item i ON i.categoryId = c.id
+        JOIN example e ON e.itemId = i.itemId
+      `, [tech]);
 
-      if (!technology) {
-        return res.status(404).json({ success: false, error: 'Tecnologia não encontrada' });
-      }
-
-      technology.categories.forEach((category) => {
-        category.items.forEach((item) => {
-          if (item.example) {
-            examples[item.itemId] = {
-              id: item.example.id,
-              title: item.example.title,
-              description: item.example.description,
-              code: item.example.code,
-              explanation: item.example.explanation,
-              itemId: item.itemId,
-              categoryId: category.id
-            };
-          }
-        });
-      });
+      const examples = rows.reduce((acc: any, row) => {
+        acc[row.itemid] = row.example_data;
+        return acc;
+      }, {});
 
       return res.json({ success: true, data: examples });
     } catch (error: unknown) {
+      console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({ success: false, error: errorMessage });
     }

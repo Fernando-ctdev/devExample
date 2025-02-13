@@ -1,14 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { PrismaClient } from '@prisma/client';
-
-// Singleton do PrismaClient
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-    },
-  },
-});
+import pool from '../lib/neon';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
@@ -25,44 +16,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId }
-      });
+      // Primeiro verifica se a categoria existe
+      const categoryCheck = await pool.query(
+        'SELECT * FROM category WHERE id = $1',
+        [categoryId]
+      );
 
-      if (!category) {
+      if (categoryCheck.rows.length === 0) {
         return res.status(404).json({
           success: false,
           error: 'Categoria não encontrada'
         });
       }
 
-      const item = await prisma.item.create({
-        data: {
-          itemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
-          title,
-          categoryId
-        }
-      });
+      // Criar o itemId único
+      const itemId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      const example = await prisma.example.create({
-        data: {
-          title: title,
-          description: '',
-          code: '',
-          explanation: '',
-          itemId: item.itemId
-        }
-      });
+      // Criar o item
+      const itemResult = await pool.query(
+        'INSERT INTO item (itemId, title, categoryId) VALUES ($1, $2, $3) RETURNING *',
+        [itemId, title, categoryId]
+      );
+
+      // Criar o exemplo associado
+      const exampleResult = await pool.query(
+        'INSERT INTO example (title, description, code, explanation, itemId) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [title, '', '', '', itemId]
+      );
 
       return res.status(201).json({ 
         success: true, 
         data: {
-          ...item,
-          example
+          ...itemResult.rows[0],
+          example: exampleResult.rows[0]
         }
       });
 
     } catch (error: unknown) {
+      console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,
