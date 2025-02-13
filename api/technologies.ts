@@ -5,7 +5,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     console.log('Requisição recebida em /api/technologies');
     try {
-      const { rows } = await pool.query(`
+      const { rows } = await pool.queryconst { rows } = await pool.query(`
         SELECT t.*, 
           array_agg(json_build_object(
             'id', c.id,
@@ -32,8 +32,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             )
           )) as categories
         FROM technology t
-        LEFT JOIN category c ON c.technologyId = t.id
-        GROUP BY t.id`);
+        LEFT JOIN category c ON c."technologyId" = t.id
+        GROUP BY t.id`);      
       
       return res.json(rows);
     } catch (error: unknown) {
