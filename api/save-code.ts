@@ -4,8 +4,8 @@ import pool from './config/db.js';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
-      const { id, code } = req.body;
-      console.log('Request save-code:', { id, codeLength: code?.length });
+      const { id, code, itemId } = req.body;
+      console.log('Request save-code:', { id, itemId, codeLength: code?.length });
 
       // Buscar o exemplo utilizando "itemId"
       const exampleCheck = await pool.query(`
