@@ -6,9 +6,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { id, explanation } = req.body;
 
-      // Verificar se o exemplo existe
+      // Buscar o exemplo utilizando "itemId"
       const exampleCheck = await pool.query(
-        'SELECT * FROM "example" WHERE "id" = $1',
+        'SELECT * FROM "example" WHERE "itemId" = $1',
         [id]
       );
 
@@ -19,9 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Atualizar o explanation
+      // Atualizar o explanation utilizando "itemId"
       const result = await pool.query(
-        'UPDATE "example" SET "explanation" = $1 WHERE "id" = $2 RETURNING *',
+        'UPDATE "example" SET "explanation" = $1 WHERE "itemId" = $2 RETURNING *',
         [explanation, id]
       );
 
@@ -29,7 +29,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true,
         data: result.rows[0]
       });
-
     } catch (error: unknown) {
       console.error('Erro ao salvar explicação:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -39,6 +38,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
   }
-
   return res.status(405).json({ error: 'Método não permitido' });
 }

@@ -6,25 +6,26 @@ const prisma = new PrismaClient();
 
 // Rota para obter todas as tecnologias com suas categorias e exemplos
 router.get('/technologies', async (req, res) => {
- try {
-   const technologies = await prisma.technology.findMany({
-     include: {
-       categories: {
-         include: {
-           items: {
-             include: {
-               example: true
-             }
-           }
-         }
-       }
-     }
-   });
-   res.json(technologies);
- } catch (error) {
-   res.status(500).json({ error: 'Erro ao buscar tecnologias' });
- }
+  try {
+    const technologies = await prisma.technology.findMany({
+      include: {
+        categories: {
+          include: {
+            items: {
+              include: {
+                example: true
+              }
+            }
+          }
+        }
+      }
+    });
+    res.json(technologies);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar tecnologias' });
+  }
 });
+
 
 // Rota para obter tópicos de uma tecnologia específica 
 router.get('/topics/:tech', async (req, res) => {
@@ -64,51 +65,58 @@ router.get('/topics/:tech', async (req, res) => {
 
 // Rota para obter exemplos de uma tecnologia específica
 router.get('/examples/:tech', async (req, res) => {
- try {
-   const tech = await prisma.technology.findUnique({
-     where: { name: req.params.tech },
-     include: {
-       categories: {
-         include: {
-           items: {
-             include: {
-               example: true
-             }
-           }
-         }
-       }
-     }
-   });
+  try {
+    const tech = await prisma.technology.findFirst({
+      where: { 
+        name: { 
+          equals: req.params.tech, 
+          mode: 'insensitive'
+        }
+      },
+      include: {
+        categories: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            items: {
+              include: {
+                example: true
+              }
+            }
+          }
+        }
+      }
+    });
 
-   if (!tech) {
-     return res.status(404).json({ success: false, error: 'Tecnologia não encontrada' });
-   }
+    if (!tech) {
+      return res.status(404).json({ success: false, error: 'Tecnologia não encontrada' });
+    }
 
-   // Transformar para o formato que o frontend espera
-   const examples = {};
-   tech.categories.forEach(category => {
-     category.items.forEach(item => {
-       if (item.example) {
-         examples[item.itemId] = {
-           id: item.example.id, // Adicionando o ID do exemplo
-           title: item.example.title,
-           description: item.example.description,
-           code: item.example.code,
-           explanation: item.example.explanation,
-           itemId: item.itemId, // Adicionando o itemId também
-           categoryId: category.id // Opcional: também podemos incluir o categoryId se necessário
-         };
-       }
-     });
-   });
+    // Transformar para o formato que o frontend espera
+    const examples: Record<string, any> = {};
+    tech.categories.forEach(category => {
+      category.items.forEach(item => {
+        if (item.example) {
+          examples[item.itemId] = {
+            id: item.example.id, // Adicionando o ID do exemplo
+            title: item.example.title,
+            description: item.example.description,
+            code: item.example.code,
+            explanation: item.example.explanation,
+            itemId: item.itemId, // Adicionando o itemId também
+            categoryId: category.id // Opcional: também podemos incluir o categoryId se necessário
+          };
+        }
+      });
+    });
 
-   console.log('Exemplos sendo enviados:', examples); // Debug
-   res.json({ success: true, data: examples });
- } catch (error) {
-   console.error('Erro ao buscar exemplos:', error);
-   res.status(500).json({ success: false, error: 'Erro ao buscar exemplos' });
- }
+    console.log('Exemplos sendo enviados:', examples); // Debug
+    res.json({ success: true, data: examples });
+  } catch (error) {
+    console.error('Erro ao buscar exemplos:', error);
+    res.status(500).json({ success: false, error: 'Erro ao buscar exemplos' });
+  }
 });
+
 
 // POST /api/save-code
 router.post('/save-code', async (req, res) => {
