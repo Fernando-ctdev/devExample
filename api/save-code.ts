@@ -8,7 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Verificar se o exemplo existe
       const exampleCheck = await pool.query(
-        'SELECT * FROM example WHERE id = $1',
+        'SELECT * FROM "example" WHERE "id" = $1',
         [id]
       );
 
@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Atualizar o código
       const result = await pool.query(
-        'UPDATE example SET code = $1 WHERE id = $2 RETURNING *',
+        'UPDATE "example" SET "code" = $1 WHERE "id" = $2 RETURNING *',
         [code, id]
       );
 

@@ -8,24 +8,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { rows } = await pool.query(`
         WITH tech_data AS (
-          SELECT id 
-          FROM technology 
-          WHERE name = $1
+          SELECT "id" 
+          FROM "technology" 
+          WHERE "name" = $1
         )
         SELECT 
-          c.id,
-          c.name as category,
+          c."id",
+          c."name" as category,
           json_agg(
             json_build_object(
-              'id', i.itemId,
-              'title', i.title
+              'id', i."itemId",
+              'title', i."title"
             )
           ) as items
         FROM tech_data
-        JOIN category c ON c.technologyId = tech_data.id
-        JOIN item i ON i.categoryId = c.id
-        GROUP BY c.id, c.name
-        ORDER BY c.created_at DESC
+        JOIN "Category" c ON c."technologyId" = tech_data.id
+        JOIN "Item" i ON i."categoryId" = c."id"
+        GROUP BY c."id", c."name"
+        ORDER BY c."createdAt" DESC
       `, [tech]);
 
       if (rows.length === 0) {

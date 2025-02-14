@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Verificar se a tecnologia existe
       const techResult = await pool.query(
-        'SELECT id FROM technology WHERE name = $1',
+        'SELECT "id" FROM "technology" WHERE "name" = $1',
         [technologyId]
       );
 
@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Criar nova categoria
       const result = await pool.query(
-        'INSERT INTO category (name, technologyId) VALUES ($1, $2) RETURNING *',
+        'INSERT INTO "category" ("name", "technologyId") VALUES ($1, $2) RETURNING *',
         [category, techResult.rows[0].id]
       );
 

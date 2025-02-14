@@ -8,29 +8,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { rows } = await pool.query(`
         WITH tech_data AS (
-          SELECT id 
-          FROM technology 
-          WHERE name = $1
+          SELECT "id" 
+          FROM "technology" 
+          WHERE "name" = $1
         )
         SELECT 
-          i.itemId,
+          i."itemId" as "itemId",
           json_build_object(
-            'id', e.id,
-            'title', e.title,
-            'description', e.description,
-            'code', e.code,
-            'explanation', e.explanation,
-            'itemId', e.itemId,
-            'categoryId', c.id
+            'id', e."id",
+            'title', e."title",
+            'description', e."description",
+            'code', e."code",
+            'explanation', e."explanation",
+            'itemId', e."itemId",
+            'categoryId', c."id"
           ) as example_data
         FROM tech_data
-        JOIN category c ON c.technologyId = tech_data.id
-        JOIN item i ON i.categoryId = c.id
-        JOIN example e ON e.itemId = i.itemId
+        JOIN "Category" c ON c."technologyId" = tech_data.id
+        JOIN "Item" i ON i."categoryId" = c."id"
+        JOIN "Example" e ON e."itemId" = i."itemId"
       `, [tech]);
 
+      // Usando o alias "itemId" para acessar a chave retornada
       const examples = rows.reduce((acc: any, row) => {
-        acc[row.itemid] = row.example_data;
+        acc[row.itemId] = row.example_data;
         return acc;
       }, {});
 
