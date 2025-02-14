@@ -8,43 +8,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { rows } = await pool.query(`
         SELECT 
-          t.id,
-          t.name,
-          t.title,
-          t.color,
+          t."id",
+          t."name",
+          t."title",
+          t."color",
           t."hoverColor",
-          t.logo,
-          t.alt,
-          t.padding,
+          t."logo",
+          t."alt",
+          t."padding",
           t."createdAt",
           t."updatedAt",
           COALESCE(
             array_agg(
               json_build_object(
-                'id', c.id,
-                'name', c.name,
+                'id', c."id",
+                'name', c."name",
                 'items', COALESCE(
                   (
                     SELECT json_agg(
                       json_build_object(
-                        'id', i.id,
-                        'itemId', i.itemId,
-                        'title', i.title,
+                        'id', i."id",
+                        'itemId', i."itemId",
+                        'title', i."title",
                         'example', (
                           SELECT json_build_object(
-                            'id', e.id,
-                            'title', e.title,
-                            'description', e.description,
-                            'code', e.code,
-                            'explanation', e.explanation
+                            'id', e."id",
+                            'title', e."title",
+                            'description', e."description",
+                            'code', e."code",
+                            'explanation', e."explanation"
                           )
-                          FROM example e
-                          WHERE e.itemId = i.itemId
+                          FROM "example" e
+                          WHERE e."itemId" = i."itemId"
                         )
                       )
                     )
-                    FROM item i
-                    WHERE i.categoryId = c.id
+                    FROM "item" i
+                    WHERE i."categoryId" = c."id"
                   ),
                   '[]'
                 )
@@ -52,11 +52,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ),
             '[]'
           ) as categories
-        FROM technology t
-        LEFT JOIN category c ON c.technologyId = t.id
-        GROUP BY t.id, t.name, t.title, t.color, t."hoverColor", t.logo, t.alt, t.padding, t."createdAt", t."updatedAt"
+        FROM "technology" t
+        LEFT JOIN "category" c ON c."technologyId" = t."id"
+        GROUP BY t."id", t."name", t."title", t."color", t."hoverColor", t."logo", t."alt", t."padding", t."createdAt", t."updatedAt"
         ORDER BY t."createdAt" DESC
-      `);             
+      `);
+                  
       
       return res.json(rows);
     } catch (error: unknown) {
