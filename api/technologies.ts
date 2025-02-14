@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     'explanation', e.explanation
                   )
                   FROM example e
-                  WHERE e.itemId = i."itemId"
+                  WHERE e."itemId" = i."itemId"
                 )
               ))
               FROM item i
