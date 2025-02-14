@@ -1,10 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from './config/db.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
-      const { category, technologyId } = req.body;
+      const { category, technologyId } = req.body as { category: string; technologyId: string };
+
+      console.log('Recebendo requisição para criar categoria:', req.body);
 
       if (!category || !technologyId) {
         return res.status(400).json({
@@ -13,36 +17,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Verificar se a tecnologia existe (aqui assumimos que technologyId é o nome da tecnologia; ajuste conforme seu schema)
-      const techResult = await pool.query(
-        'SELECT id FROM technology WHERE name = $1',
-        [technologyId]
-      );
+      // Buscar a tecnologia pelo nome (technologyId vem como nome)
+      const technology = await prisma.technology.findUnique({
+        where: { name: technologyId }
+      });
 
-      if (techResult.rows.length === 0) {
+      if (!technology) {
         return res.status(404).json({
           success: false,
           error: 'Tecnologia não encontrada'
         });
       }
 
-      // Criar nova categoria
-      const result = await pool.query(
-        'INSERT INTO category (name, "technologyId") VALUES ($1, $2) RETURNING *',
-        [category, techResult.rows[0].id]
-      );
-
-      return res.status(201).json({ 
-        success: true, 
-        data: result.rows[0]
+      // Criar apenas a categoria, sem criar itens
+      const newCategory = await prisma.category.create({
+        data: {
+          name: category,
+          technologyId: technology.id
+        }
       });
-    } catch (error: unknown) {
-      console.error('Erro detalhado:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+
+      console.log('Categoria criada com sucesso:', newCategory);
+      return res.status(201).json({
+        success: true,
+        data: newCategory
+      });
+    } catch (error: any) {
+      console.error('Erro ao criar categoria:', error);
       return res.status(500).json({
         success: false,
-        error: errorMessage,
-        details: errorMessage
+        error: 'Erro ao criar categoria',
+        details: error.message
       });
     }
   }
