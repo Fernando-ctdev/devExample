@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Buscar o exemplo utilizando "itemId"
       const exampleCheck = await pool.query(`
         SELECT * FROM example
-        WHERE "itemId" = $1
+        WHERE "id" = $1
       `, [id]);
 
       if (exampleCheck.rows.length === 0) {
@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const result = await pool.query(`
         UPDATE example
         SET explanation = $1
-        WHERE "itemId" = $2
+        WHERE "id" = $2
         RETURNING *
       `, [explanation, id]);
 
