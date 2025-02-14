@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             'items', (
               SELECT json_agg(json_build_object(
                 'id', i.id,
-                'itemId', i.itemId,
+                'itemId', i."itemId",
                 'title', i.title,
                 'example', (
                   SELECT json_build_object(
@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     'explanation', e.explanation
                   )
                   FROM example e
-                  WHERE e.itemId = i.itemId
+                  WHERE e.itemId = i."itemId"
                 )
               ))
               FROM item i
@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             )
           )) as categories
         FROM technology t
-        LEFT JOIN category c ON c.technologyId = t.id
+        LEFT JOIN category c ON c."technologyId" = t.id
         GROUP BY t.id
       `);
       return res.json(rows);
