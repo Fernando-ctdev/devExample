@@ -20,7 +20,9 @@ model Technology {
   padding    String
   title      String
   categories Category[]
-  Example    Example[]
+  examples   Example[]
+  
+  @@map("technology")
 }
 
 model Category {
@@ -31,8 +33,9 @@ model Category {
   updatedAt    DateTime   @updatedAt
   technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
   items        Item[]
-
+  
   @@unique([name, technologyId])
+  @@map("category")
 }
 
 model Item {
@@ -44,8 +47,9 @@ model Item {
   updatedAt  DateTime @updatedAt
   example    Example?
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
+  
   @@unique([itemId, categoryId])
+  @@map("item")
 }
 
 model Example {
@@ -59,5 +63,7 @@ model Example {
   technologyId String?
   updatedAt    DateTime    @updatedAt
   item         Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  Technology   Technology? @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  technology   Technology? @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  
+  @@map("example")
 }
