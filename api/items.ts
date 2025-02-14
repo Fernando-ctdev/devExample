@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import pool from './config/db.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
@@ -26,16 +27,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Criar o item (usando a tabela "item" conforme mapeada no schema)
+      // Gerar um id para o item
+      const newItemId = uuidv4();
+
+      // Criar o item com o id gerado
       const itemResult = await pool.query(
-        'INSERT INTO item (title, "categoryId") VALUES ($1, $2) RETURNING *',
-        [title, categoryId]
+        'INSERT INTO item (id, title, "categoryId") VALUES ($1, $2, $3) RETURNING *',
+        [newItemId, title, categoryId]
       );
 
-      // Obter o id recém-criado do item
-      const newItemId = itemResult.rows[0].id;
-
-      // Criar o exemplo associado, utilizando o novo id do item
+      // Criar o exemplo associado utilizando o mesmo id do item
       const exampleResult = await pool.query(
         'INSERT INTO example (title, description, code, explanation, "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [title, '', '', '', newItemId]
@@ -48,7 +49,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           example: exampleResult.rows[0]
         }
       });
-
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
