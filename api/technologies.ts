@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 )
               ))
               FROM item i
-              WHERE i.categoryId = c.id
+              WHERE i."categoryId" = c.id
             )
           )) as categories
         FROM technology t
