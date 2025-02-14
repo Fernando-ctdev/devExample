@@ -7,29 +7,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const tech = req.query.tech as string;
 
       const { rows } = await pool.query(`
+        WITH tech_data AS (
+          SELECT "id" 
+          FROM "technology"
+          WHERE "name" = $1
+        )
         SELECT 
-          c.id,
-          c.name as category,
+          c."id",
+          c."name" as category,
           COALESCE(
             json_agg(
               json_build_object(
-                'id', i.itemId,
-                'title', i.title
+                'id', i."itemId",
+                'title', i."title"
               )
-            ) FILTER (WHERE i.id IS NOT NULL),
+            ) FILTER (WHERE i."itemId" IS NOT NULL),
             '[]'
           ) as items
-        FROM technology t
-        JOIN category c ON c.technologyId = t.id
-        LEFT JOIN item i ON i.categoryId = c.id
-        WHERE t.name = $1
-        GROUP BY c.id, c.name
-        ORDER BY c.created_at DESC
+        FROM tech_data
+        JOIN "category" c ON c."technologyId" = tech_data.id
+        LEFT JOIN "item" i ON i."categoryId" = c."id"
+        GROUP BY c."id", c."name"
+        ORDER BY c."createdAt" DESC
       `, [tech]);
 
-      return res.json({ 
-        success: true, 
-        data: rows 
+      if (rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Tecnologia não encontrada'
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: rows
       });
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
