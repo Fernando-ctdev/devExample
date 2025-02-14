@@ -7,29 +7,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const tech = req.query.tech as string;
 
       const { rows } = await pool.query(`
-        WITH tech_data AS (
-          SELECT id 
-          FROM technology 
-          WHERE name = $1
-        )
         SELECT 
           c.id,
           c.name as category,
           COALESCE(
-            (
-              SELECT json_agg(
-                json_build_object(
-                  'id', i.itemId,
-                  'title', i.title
-                )
+            json_agg(
+              json_build_object(
+                'id', i.itemId,
+                'title', i.title
               )
-              FROM item i
-              WHERE i.categoryId = c.id
-            ),
+            ) FILTER (WHERE i.id IS NOT NULL),
             '[]'
           ) as items
-        FROM tech_data
-        JOIN category c ON c.technologyId = tech_data.id
+        FROM technology t
+        JOIN category c ON c.technologyId = t.id
+        LEFT JOIN item i ON i.categoryId = c.id
+        WHERE t.name = $1
+        GROUP BY c.id, c.name
         ORDER BY c.created_at DESC
       `, [tech]);
 
