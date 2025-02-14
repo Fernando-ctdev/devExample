@@ -26,18 +26,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Criar o item (usando a coluna id que é gerada automaticamente)
+      // Criar o item (usando a tabela "item" conforme mapeada no schema)
       const itemResult = await pool.query(
-        'INSERT INTO "Item" (title, "categoryId") VALUES ($1, $2) RETURNING *',
+        'INSERT INTO item (title, "categoryId") VALUES ($1, $2) RETURNING *',
         [title, categoryId]
       );
 
       // Obter o id recém-criado do item
       const newItemId = itemResult.rows[0].id;
 
-      // Criar o exemplo associado, utilizando o id gerado no item
+      // Criar o exemplo associado, utilizando o novo id do item
       const exampleResult = await pool.query(
-        'INSERT INTO "Example" (title, description, code, explanation, "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        'INSERT INTO example (title, description, code, explanation, "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [title, '', '', '', newItemId]
       );
 
