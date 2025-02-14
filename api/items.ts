@@ -16,7 +16,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Verifica se a categoria existe
+      console.log('Recebendo requisição para criar tópico:', req.body);
+
+      // Verificar se a categoria existe e obter o technologyId
       const category = await prisma.category.findUnique({
         where: { id: categoryId }
       });
@@ -27,11 +29,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error: 'Categoria não encontrada'
         });
       }
+      
+      const technologyId = category.technologyId;
 
-      // Gerar um novo valor de id para ser usado em id e itemId
+      // Gerar um novo id para o item, que será usado também em itemId
       const newId = uuidv4();
 
-      // Criar o item com os campos obrigatórios
+      // Criar o item com os campos necessários
       const item = await prisma.item.create({
         data: {
           id: newId,
@@ -41,17 +45,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       });
 
-      // Criar um exemplo vazio associado ao item
+      // Criar um exemplo vazio associado, passando também technologyId
       const example = await prisma.example.create({
         data: {
+          id: uuidv4(),
           title,
           description: '',
           code: '',
           explanation: '',
-          itemId: item.itemId
+          itemId: item.itemId,
+          technologyId
         }
       });
 
+      console.log('Tópico criado com sucesso:', { item, example });
       return res.status(201).json({
         success: true,
         data: {
