@@ -8,37 +8,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { rows } = await pool.query(`
         SELECT t.*, 
-          array_agg(
-            json_build_object(
-              'id', c.id,
-              'name', c.name,
-              'items', (
-                SELECT json_agg(
-                  json_build_object(
-                    'id', i.id,
-                    'itemId', i.itemId,
-                    'title', i.title,
-                    'example', (
-                      SELECT json_build_object(
-                        'id', e.id,
-                        'title', e.title,
-                        'description', e.description,
-                        'code', e.code,
-                        'explanation', e.explanation
+          COALESCE(
+            array_agg(
+              json_build_object(
+                'id', c.id,
+                'name', c.name,
+                'items', COALESCE(
+                  (
+                    SELECT json_agg(
+                      json_build_object(
+                        'id', i.id,
+                        'itemId', i.itemId,
+                        'title', i.title,
+                        'example', (
+                          SELECT json_build_object(
+                            'id', e.id,
+                            'title', e.title,
+                            'description', e.description,
+                            'code', e.code,
+                            'explanation', e.explanation
+                          )
+                          FROM example e
+                          WHERE e.itemId = i.itemId
+                        )
                       )
-                      FROM example e
-                      WHERE e.itemId = i.itemId
                     )
-                  )
+                    FROM item i
+                    WHERE i.categoryId = c.id
+                  ),
+                  '[]'
                 )
-                FROM item i
-                WHERE i.categoryId = c.id
               )
-            )
+            ) FILTER (WHERE c.id IS NOT NULL),
+            '[]'
           ) as categories
         FROM technology t
         LEFT JOIN category c ON c.technologyId = t.id
-        GROUP BY t.id`);      
+        GROUP BY t.id
+      `);           
       
       return res.json(rows);
     } catch (error: unknown) {
