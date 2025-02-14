@@ -5,12 +5,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
       const { id, code } = req.body;
+      console.log('Request save-code:', { id, codeLength: code?.length });
 
-      // Verificar se o exemplo existe utilizando a coluna "itemId" ao invés de "id"
-      const exampleCheck = await pool.query(
-        'SELECT * FROM "example" WHERE "itemId" = $1',
-        [id]
-      );
+      // Buscar o exemplo utilizando "itemId"
+      const exampleCheck = await pool.query(`
+        SELECT * FROM example
+        WHERE "itemId" = $1
+      `, [id]);
 
       if (exampleCheck.rows.length === 0) {
         return res.status(404).json({
@@ -19,11 +20,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Atualizar o código, também utilizando "itemId"
-      const result = await pool.query(
-        'UPDATE "example" SET "code" = $1 WHERE "itemId" = $2 RETURNING *',
-        [code, id]
-      );
+      // Atualizar o código utilizando "itemId"
+      const result = await pool.query(`
+        UPDATE example
+        SET code = $1
+        WHERE "itemId" = $2
+        RETURNING *
+      `, [code, id]);
 
       return res.json({
         success: true,
@@ -39,6 +42,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
   }
-
   return res.status(405).json({ error: 'Método não permitido' });
 }
