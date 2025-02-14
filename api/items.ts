@@ -4,12 +4,12 @@ import pool from './config/db.js';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
-      const { itemId, title, categoryId } = req.body;
+      const { title, categoryId } = req.body;
 
-      if (!itemId || !title || !categoryId) {
+      if (!title || !categoryId) {
         return res.status(400).json({
           success: false,
-          error: 'itemId, title e categoryId são obrigatórios'
+          error: 'title e categoryId são obrigatórios'
         });
       }
 
@@ -26,25 +26,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Criar o item
+      // Criar o item (usando a coluna id que é gerada automaticamente)
       const itemResult = await pool.query(
-        'INSERT INTO item (itemId, title, "categoryId") VALUES ($1, $2, $3) RETURNING *',
-        [itemId, title, categoryId]
+        'INSERT INTO "Item" (title, "categoryId") VALUES ($1, $2) RETURNING *',
+        [title, categoryId]
       );
 
-      // Criar o exemplo associado
+      // Obter o id recém-criado do item
+      const newItemId = itemResult.rows[0].id;
+
+      // Criar o exemplo associado, utilizando o id gerado no item
       const exampleResult = await pool.query(
-        'INSERT INTO example (title, description, code, explanation, "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [title, '', '', '', itemId]
+        'INSERT INTO "Example" (title, description, code, explanation, "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [title, '', '', '', newItemId]
       );
 
-      return res.status(201).json({ 
-        success: true, 
+      return res.status(201).json({
+        success: true,
         data: {
           ...itemResult.rows[0],
           example: exampleResult.rows[0]
         }
       });
+
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
