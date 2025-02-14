@@ -46,7 +46,7 @@ export default async function handler(
               description: item.example.description,
               code: item.example.code,
               explanation: item.example.explanation,
-              itemId: item.itemId, // Garantindo que itemId esteja presente
+              itemId: item.example.id, 
               categoryId: category.id
             };
           }
