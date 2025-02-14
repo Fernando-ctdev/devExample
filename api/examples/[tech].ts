@@ -3,7 +3,10 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
   if (req.method === 'GET') {
     try {
       const techParam = req.query.tech as string;
@@ -31,17 +34,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const examples: Record<string, any> = {};
 
-      // Itera sobre as categorias e itens e adiciona os exemplos quando existentes
+      // Itera sobre as categorias e itens; usamos (item as any).itemId para garantir que o campo seja lido
       tech.categories.forEach(category => {
         category.items.forEach(item => {
-          if (item.example) {
-            examples[item.itemId] = {
+          // Força a leitura do itemId (se por algum motivo ele não estiver no tipo)
+          const idFromItem = (item as any).itemId;
+          if (item.example && idFromItem) {
+            examples[idFromItem] = {
               id: item.example.id,
               title: item.example.title,
               description: item.example.description,
               code: item.example.code,
               explanation: item.example.explanation,
-              itemId: item.itemId,
+              itemId: idFromItem,     // aqui garantimos que itemId está definido
               categoryId: category.id
             };
           }
