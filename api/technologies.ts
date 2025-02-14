@@ -5,54 +5,59 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     console.log('Requisição recebida em /api/technologies');
     try {
-      const { rows } = await pool.query(`
-        SELECT t.*, 
-          COALESCE(
-            array_remove(
-              array_agg(
+      const result = await pool.query(`
+        WITH category_data AS (
+          SELECT 
+            c.id as category_id,
+            c.name as category_name,
+            c."technologyId",
+            COALESCE(
+              json_agg(
                 json_build_object(
-                  'id', c.id,
-                  'name', c.name,
-                  'items', COALESCE(
-                    (
-                      SELECT json_agg(
-                        json_build_object(
-                          'id', i.id,
-                          'itemId', i."itemId",
-                          'title', i.title,
-                          'example', (
-                            SELECT json_build_object(
-                              'id', e.id,
-                              'title', e.title,
-                              'description', e.description,
-                              'code', e.code,
-                              'explanation', e.explanation
-                            )
-                            FROM example e
-                            WHERE e."itemId" = i."itemId"
-                          )
-                        )
-                      )
-                      FROM item i
-                      WHERE i."categoryId" = c.id
-                    ), '[]'::json
+                  'id', i.id,
+                  'itemId', i."itemId",
+                  'title', i.title,
+                  'example', (
+                    SELECT json_build_object(
+                      'id', e.id,
+                      'title', e.title,
+                      'description', e.description,
+                      'code', e.code,
+                      'explanation', e.explanation
+                    )
+                    FROM example e
+                    WHERE e."itemId" = i."itemId"
                   )
                 )
-              ), null
-            ), '[]'::json
-          ) as categories
+              ) FILTER (WHERE i.id IS NOT NULL),
+              '[]'
+            ) as items
+          FROM category c
+          LEFT JOIN item i ON i."categoryId" = c.id
+          GROUP BY c.id, c.name, c."technologyId"
+        )
+        SELECT t.*, 
+          array_agg(
+            json_build_object(
+              'id', cd.category_id,
+              'name', cd.category_name,
+              'items', cd.items
+            )
+          ) FILTER (WHERE cd.category_id IS NOT NULL) as categories
         FROM technology t
-        LEFT JOIN category c ON c."technologyId" = t.id
+        LEFT JOIN category_data cd ON cd."technologyId" = t.id
         GROUP BY t.id
       `);
       
-      return res.json(rows);
+      return res.json(result.rows);
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({ error: errorMessage });
     }
-  } else if (req.method === 'POST') {
+  }
+
+  if (req.method === 'POST') {
     try {
       const { name, title, color, hoverColor, logo, alt, padding } = req.body;
       if (!name || !title || !color || !hoverColor || !logo || !alt || !padding) {
@@ -73,5 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ success: false, error: errorMessage });
     }
   }
+
   return res.status(405).json({ error: 'Método não permitido' });
 }
