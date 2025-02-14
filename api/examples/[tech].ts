@@ -1,60 +1,48 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import pool from '../config/db.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     try {
-      const techParam = req.query.tech as string;
+      const tech = req.query.tech as string;
 
-      const tech = await prisma.technology.findUnique({
-        where: { name: techParam },
-        include: {
-          categories: {
-            include: {
-              items: {
-                include: {
-                  example: true
-                }
-              }
-            }
-          }
-        }
-      });
+      const { rows } = await pool.query(`
+        WITH tech_data AS (
+          SELECT id 
+          FROM technology 
+          WHERE name = $1
+        )
+        SELECT 
+          i."itemId" as "itemId",
+          json_build_object(
+            'id', e.id,
+            'title', e.title,
+            'description', e.description,
+            'code', e.code,
+            'explanation', e.explanation,
+            'categoryId', c.id
+          ) as example_data
+        FROM tech_data
+        JOIN category c ON c.technologyId = tech_data.id
+        JOIN item i ON i.categoryId = c.id
+        JOIN example e ON e.itemId = i."itemId"
+      `, [tech]);
 
-      if (!tech) {
-        return res
-          .status(404)
-          .json({ success: false, error: 'Tecnologia não encontrada' });
-      }
-
-      const examples: Record<string, any> = {};
-
-      // Itera sobre as categorias e itens e adiciona os exemplos quando existentes
-      tech.categories.forEach(category => {
-        category.items.forEach(item => {
-          if (item.example) {
-            examples[item.itemId] = {
-              id: item.example.id,
-              title: item.example.title,
-              description: item.example.description,
-              code: item.example.code,
-              explanation: item.example.explanation,
-              itemId: item.itemId,
-              categoryId: category.id
-            };
-          }
-        });
-      });
+      // Monta o objeto final com a propriedade "itemId" definida corretamente
+      const examples = rows.reduce((acc: any, row) => {
+        acc[row.itemId] = {
+          ...row.example_data,
+          itemId: row.itemId,
+        };
+        return acc;
+      }, {});
 
       console.log('Exemplos sendo enviados:', examples);
       return res.json({ success: true, data: examples });
     } catch (error: unknown) {
-      console.error('Erro ao buscar exemplos:', error);
-      return res
-        .status(500)
-        .json({ success: false, error: 'Erro ao buscar exemplos' });
+      console.error('Erro detalhado:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      return res.status(500).json({ success: false, error: errorMessage });
     }
   }
 
