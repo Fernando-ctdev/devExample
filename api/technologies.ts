@@ -7,40 +7,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { rows } = await pool.query(`
         SELECT t.*, 
-          array_agg(
-            json_build_object(
-              'id', c.id,
-              'name', c.name,
-              'items', COALESCE(
-                (
-                  SELECT json_agg(
-                    json_build_object(
-                      'id', i.id,
-                      'itemId', i."itemId",
-                      'title', i.title,
-                      'example', (
-                        SELECT json_build_object(
-                          'id', e.id,
-                          'title', e.title,
-                          'description', e.description,
-                          'code', e.code,
-                          'explanation', e.explanation
+          COALESCE(
+            array_remove(
+              array_agg(
+                json_build_object(
+                  'id', c.id,
+                  'name', c.name,
+                  'items', COALESCE(
+                    (
+                      SELECT json_agg(
+                        json_build_object(
+                          'id', i.id,
+                          'itemId', i."itemId",
+                          'title', i.title,
+                          'example', (
+                            SELECT json_build_object(
+                              'id', e.id,
+                              'title', e.title,
+                              'description', e.description,
+                              'code', e.code,
+                              'explanation', e.explanation
+                            )
+                            FROM example e
+                            WHERE e."itemId" = i."itemId"
+                          )
                         )
-                        FROM example e
-                        WHERE e."itemId" = i."itemId"
                       )
-                    )
+                      FROM item i
+                      WHERE i."categoryId" = c.id
+                    ), '[]'::json
                   )
-                  FROM item i
-                  WHERE i."categoryId" = c.id
-                ), '[]'::json
-              )
-            )
+                )
+              ), null
+            ), '[]'::json
           ) as categories
         FROM technology t
         LEFT JOIN category c ON c."technologyId" = t.id
         GROUP BY t.id
       `);
+      
       return res.json(rows);
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
@@ -48,7 +53,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: errorMessage });
     }
   } else if (req.method === 'POST') {
-    // Endpoint para criação de nova tecnologia
     try {
       const { name, title, color, hoverColor, logo, alt, padding } = req.body;
       if (!name || !title || !color || !hoverColor || !logo || !alt || !padding) {
