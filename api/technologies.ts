@@ -46,18 +46,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     FROM "item" i
                     WHERE i."categoryId" = c."id"
                   ),
-                  '[]'
+                  '[]'::json
                 )
               )
             ),
-            '[]'
+            '[]'::json
           ) as categories
         FROM "technology" t
         LEFT JOIN "category" c ON c."technologyId" = t."id"
         GROUP BY t."id", t."name", t."title", t."color", t."hoverColor", t."logo", t."alt", t."padding", t."createdAt", t."updatedAt"
         ORDER BY t."createdAt" DESC
-      `);
-                  
+      `);                  
       
       return res.json(rows);
     } catch (error: unknown) {
