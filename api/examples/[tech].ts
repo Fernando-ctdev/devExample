@@ -6,24 +6,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const tech = req.query.tech as string;
 
-      // A query abaixo faz os JOINs para buscar a tecnologia e, a partir dela, as categorias, itens e exemplos.
+      // A query abaixo busca as categorias, itens e exemplos relacionados à tecnologia
       const { rows } = await pool.query(`
         SELECT 
           c.id AS categoryid,
-          i.itemid,
+          i."itemId" AS itemid,
           e.id AS exampleid,
           e.title AS example_title,
           e.description AS example_description,
           e.code AS example_code,
           e.explanation AS example_explanation
         FROM technology t
-        JOIN category c ON c.technologyid = t.id
-        JOIN item i ON i.categoryid = c.id
-        JOIN example e ON e.itemid = i.itemid
+        JOIN category c ON c."technologyId" = t.id
+        JOIN item i ON i."categoryId" = c.id
+        JOIN example e ON e."itemId" = i."itemId"
         WHERE t.name = $1
       `, [tech]);
 
-    
+      // Estruturar os dados no formato esperado pelo frontend
       const examples: Record<string, any> = {};
       rows.forEach(row => {
         examples[row.itemid] = {
