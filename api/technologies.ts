@@ -7,30 +7,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { rows } = await pool.query(`
         SELECT t.*, 
-          array_agg(json_build_object(
-            'id', c.id,
-            'name', c.name,
-            'items', (
-              SELECT json_agg(json_build_object(
-                'id', i.id,
-                'itemId', i."itemId",
-                'title', i.title,
-                'example', (
-                  SELECT json_build_object(
-                    'id', e.id,
-                    'title', e.title,
-                    'description', e.description,
-                    'code', e.code,
-                    'explanation', e.explanation
+          array_agg(
+            json_build_object(
+              'id', c.id,
+              'name', c.name,
+              'items', COALESCE(
+                (
+                  SELECT json_agg(
+                    json_build_object(
+                      'id', i.id,
+                      'itemId', i."itemId",
+                      'title', i.title,
+                      'example', (
+                        SELECT json_build_object(
+                          'id', e.id,
+                          'title', e.title,
+                          'description', e.description,
+                          'code', e.code,
+                          'explanation', e.explanation
+                        )
+                        FROM example e
+                        WHERE e."itemId" = i."itemId"
+                      )
+                    )
                   )
-                  FROM example e
-                  WHERE e."itemId" = i."itemId"
-                )
-              ))
-              FROM item i
-              WHERE i."categoryId" = c.id
+                  FROM item i
+                  WHERE i."categoryId" = c.id
+                ), '[]'::json
+              )
             )
-          )) as categories
+          ) as categories
         FROM technology t
         LEFT JOIN category c ON c."technologyId" = t.id
         GROUP BY t.id
@@ -51,8 +57,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error: 'Todos os campos são obrigatórios'
         });
       }
-
-      // Insere a tecnologia
       const techResult = await pool.query(
         `INSERT INTO technology (name, title, color, "hoverColor", logo, alt, padding)
          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
