@@ -112,7 +112,7 @@ export function ExampleView({
       const content = type === 'code' ? editedCode : editedExplanation;
       
       try {
-      await onSave(type, content, example.itemId);
+      await onSave(type, content, example.id);
 
         if (type === 'code') {
           setIsEditingCode(false);
