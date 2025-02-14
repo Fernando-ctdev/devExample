@@ -13,9 +13,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Verificar se a categoria existe
+      // Verificar se a categoria existe e recuperar o technologyId
       const categoryCheck = await pool.query(
-        'SELECT * FROM category WHERE id = $1',
+        'SELECT * FROM "Category" WHERE id = $1',
         [categoryId]
       );
       if (categoryCheck.rows.length === 0) {
@@ -24,20 +24,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error: 'Categoria não encontrada'
         });
       }
+      const technologyId = categoryCheck.rows[0].technologyId;
 
-      // Gerar um id para o item; usamos esse mesmo valor para "itemId"
+      // Gerar um id para o item e usar esse mesmo valor para "itemId"
       const newId = uuidv4();
 
-      // Inserir o item, configurando updatedAt com now()
+      // Inserir o item; "updatedAt" é setado com now()
       const itemResult = await pool.query(
-        'INSERT INTO item (id, title, "categoryId", "itemId", "updatedAt") VALUES ($1, $2, $3, $4, now()) RETURNING *',
+        'INSERT INTO "Item" (id, title, "categoryId", "itemId", "updatedAt") VALUES ($1, $2, $3, $4, now()) RETURNING *',
         [newId, title, categoryId, newId]
       );
 
-      // Criar o exemplo associado utilizando o mesmo novo id na coluna "itemId"
+      // Gerar um id para o registro de exemplo
+      const newExampleId = uuidv4();
+
+      // Inserir o exemplo, utilizando o valor do item para "itemId" e passando technologyId
       const exampleResult = await pool.query(
-        'INSERT INTO example (title, description, code, explanation, "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [title, '', '', '', newId]
+        'INSERT INTO "Example" (id, title, description, code, explanation, "itemId", "technologyId", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, now()) RETURNING *',
+        [newExampleId, title, '', '', '', newId, technologyId]
       );
 
       return res.status(201).json({
@@ -56,5 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
   }
+
   return res.status(405).json({ error: 'Método não permitido' });
 }
