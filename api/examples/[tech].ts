@@ -17,8 +17,10 @@ export default async function handler(
           categories: {
             include: {
               items: {
-                include: {
-                  example: true
+                select: {
+                  itemId: true,
+                  title: true,
+                  example: true,
                 }
               }
             }
@@ -34,19 +36,17 @@ export default async function handler(
 
       const examples: Record<string, any> = {};
 
-      // Itera sobre as categorias e itens; usamos (item as any).itemId para garantir que o campo seja lido
+      // Itera sobre as categorias e itens e constrói o objeto de exemplos
       tech.categories.forEach(category => {
         category.items.forEach(item => {
-          // Força a leitura do itemId (se por algum motivo ele não estiver no tipo)
-          const idFromItem = (item as any).itemId;
-          if (item.example && idFromItem) {
-            examples[idFromItem] = {
+          if (item.example && item.itemId) {
+            examples[item.itemId] = {
               id: item.example.id,
               title: item.example.title,
               description: item.example.description,
               code: item.example.code,
               explanation: item.example.explanation,
-              itemId: idFromItem,     // aqui garantimos que itemId está definido
+              itemId: item.itemId, // Garantindo que itemId esteja presente
               categoryId: category.id
             };
           }
