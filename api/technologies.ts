@@ -49,8 +49,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   '[]'::json
                 )
               )
-            ),
-            '[]'::json
+            ) FILTER (WHERE c."id" IS NOT NULL),
+            array[]::json[]
           ) as categories
         FROM "technology" t
         LEFT JOIN "category" c ON c."technologyId" = t."id"
