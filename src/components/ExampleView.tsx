@@ -22,6 +22,7 @@ interface Example {
   title: string;
   code: string;
   explanation: string;
+  itemId: string; 
 }
 
 interface Technology {
@@ -112,7 +113,7 @@ export function ExampleView({
       const content = type === 'code' ? editedCode : editedExplanation;
       
       try {
-      await onSave(type, content, example.id);
+      await onSave(type, content, example.itemId);
 
         if (type === 'code') {
           setIsEditingCode(false);
