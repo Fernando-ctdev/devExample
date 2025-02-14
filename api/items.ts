@@ -28,13 +28,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Criar o item
       const itemResult = await pool.query(
-        'INSERT INTO "Item" ("itemId", "title", "categoryId") VALUES ($1, $2, $3) RETURNING *',
+        'INSERT INTO "item" ("itemId", "title", "categoryId") VALUES ($1, $2, $3) RETURNING *',
         [itemId, title, categoryId]
       );
 
       // Criar o exemplo associado
       const exampleResult = await pool.query(
-        'INSERT INTO "Example" ("title", "description", "code", "explanation", "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        'INSERT INTO "example" ("title", "description", "code", "explanation", "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [title, '', '', '', itemId]
       );
 

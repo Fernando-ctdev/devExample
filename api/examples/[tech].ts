@@ -24,9 +24,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             'categoryId', c."id"
           ) as example_data
         FROM tech_data
-        JOIN "Category" c ON c."technologyId" = tech_data.id
-        JOIN "Item" i ON i."categoryId" = c."id"
-        JOIN "Example" e ON e."itemId" = i."itemId"
+        JOIN "category" c ON c."technologyId" = tech_data.id
+        JOIN "item" i ON i."categoryId" = c."id"
+        JOIN "example" e ON e."itemId" = i."itemId"
       `, [tech]);
 
       // Usando o alias "itemId" para acessar a chave retornada

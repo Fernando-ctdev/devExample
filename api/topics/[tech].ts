@@ -22,8 +22,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             )
           ) as items
         FROM tech_data
-        JOIN "Category" c ON c."technologyId" = tech_data.id
-        JOIN "Item" i ON i."categoryId" = c."id"
+        JOIN "category" c ON c."technologyId" = tech_data.id
+        JOIN "item" i ON i."categoryId" = c."id"
         GROUP BY c."id", c."name"
         ORDER BY c."createdAt" DESC
       `, [tech]);
