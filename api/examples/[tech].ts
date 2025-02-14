@@ -4,7 +4,7 @@ import pool from '../config/db.js';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     try {
-      const tech = req.query.tech as string;
+      const tech = req.query.technology as string;
 
       // A query abaixo busca as categorias, itens e exemplos relacionados à tecnologia
       const { rows } = await pool.query(`
