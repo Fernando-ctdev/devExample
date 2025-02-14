@@ -44,7 +44,7 @@ interface ExampleViewProps {
   currentTech: string;
   isDarkMode: boolean;
   toggleTheme: () => void;
-  onSave: (type: 'code' | 'explanation', content: string) => Promise<boolean>;
+  onSave: (type: 'code' | 'explanation', content: string, itemId: string) => Promise<boolean>;
 }
 
 const TECH_LOGOS: Record<string, string> = {
@@ -112,7 +112,7 @@ export function ExampleView({
       const content = type === 'code' ? editedCode : editedExplanation;
       
       try {
-        await onSave(type, content);
+      await onSave(type, content, example.itemId);
 
         if (type === 'code') {
           setIsEditingCode(false);
