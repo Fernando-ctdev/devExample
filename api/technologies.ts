@@ -39,14 +39,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   '[]'
                 )
               )
-            ) FILTER (WHERE c.id IS NOT NULL),
+            ),
             '[]'
           ) as categories
         FROM technology t
         LEFT JOIN category c ON c.technologyId = t.id
         GROUP BY t.id
         ORDER BY t."createdAt" DESC
-      `);      
+      `);          
       
       return res.json(rows);
     } catch (error: unknown) {
