@@ -34,7 +34,7 @@ router.get('/topics/:tech', async (req, res) => {
      include: {
        categories: {
          orderBy: {
-           createdAt: 'desc' // Ordena as categorias pela data de criação, mais novas primeiro
+           createdAt: 'desc' 
          },
          include: {
            items: true
@@ -192,7 +192,7 @@ router.post('/save-explanation', async (req, res) => {
   }
 });
 
-// Adicionar a rota de criar tecnologia ao arquivo existente
+// dicionar a rota de criar tecnologia ao arquivo existente
 router.post('/technologies', async (req, res) => {
   try {
     const { name, title, color, hoverColor, logo, alt, padding } = req.body;
