@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             'items', (
               SELECT json_agg(json_build_object(
                 'id', i.id,
-                'itemId', i."itemId",
+                'itemId', i.itemId,
                 'title', i.title,
                 'example', (
                   SELECT json_build_object(
@@ -24,22 +24,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     'explanation', e.explanation
                   )
                   FROM example e
-                  WHERE e."itemId" = i."itemId"
+                  WHERE e.itemId = i.itemId
                 )
               ))
               FROM item i
-              WHERE i."categoryId" = c.id
+              WHERE i.categoryId = c.id
             )
           )) as categories
         FROM technology t
-        LEFT JOIN category c ON c."technologyId" = t.id
-        GROUP BY t.id`);      
-      
+        LEFT JOIN category c ON c.technologyId = t.id
+        GROUP BY t.id
+      `);
       return res.json(rows);
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({ error: errorMessage });
     }
+  } else if (req.method === 'POST') {
+    // Endpoint para criação de nova tecnologia
+    try {
+      const { name, title, color, hoverColor, logo, alt, padding } = req.body;
+      if (!name || !title || !color || !hoverColor || !logo || !alt || !padding) {
+        return res.status(400).json({
+          success: false,
+          error: 'Todos os campos são obrigatórios'
+        });
+      }
+
+      // Insere a tecnologia
+      const techResult = await pool.query(
+        `INSERT INTO technology (name, title, color, "hoverColor", logo, alt, padding)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [name.toLowerCase(), title, color, hoverColor, logo, alt, padding]
+      );
+      return res.status(201).json({ success: true, data: techResult.rows[0] });
+    } catch (error: unknown) {
+      console.error('Erro ao criar tecnologia:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      return res.status(500).json({ success: false, error: errorMessage });
+    }
   }
+  return res.status(405).json({ error: 'Método não permitido' });
 }

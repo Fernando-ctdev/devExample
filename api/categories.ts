@@ -13,9 +13,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Verificar se a tecnologia existe
+      // Verificar se a tecnologia existe (aqui assumimos que technologyId é o nome da tecnologia; ajuste conforme seu schema)
       const techResult = await pool.query(
-        'SELECT "id" FROM "technology" WHERE "name" = $1',
+        'SELECT id FROM technology WHERE name = $1',
         [technologyId]
       );
 
@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Criar nova categoria
       const result = await pool.query(
-        'INSERT INTO "category" ("name", "technologyId") VALUES ($1, $2) RETURNING *',
+        'INSERT INTO category (name, "technologyId") VALUES ($1, $2) RETURNING *',
         [category, techResult.rows[0].id]
       );
 
@@ -36,7 +36,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true, 
         data: result.rows[0]
       });
-
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

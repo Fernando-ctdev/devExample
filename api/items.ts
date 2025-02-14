@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Verificar se a categoria existe
       const categoryCheck = await pool.query(
-        'SELECT * FROM "category" WHERE "id" = $1',
+        'SELECT * FROM category WHERE id = $1',
         [categoryId]
       );
 
@@ -28,13 +28,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Criar o item
       const itemResult = await pool.query(
-        'INSERT INTO "item" ("itemId", "title", "categoryId") VALUES ($1, $2, $3) RETURNING *',
+        'INSERT INTO item (itemId, title, "categoryId") VALUES ($1, $2, $3) RETURNING *',
         [itemId, title, categoryId]
       );
 
       // Criar o exemplo associado
       const exampleResult = await pool.query(
-        'INSERT INTO "example" ("title", "description", "code", "explanation", "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        'INSERT INTO example (title, description, code, explanation, "itemId") VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [title, '', '', '', itemId]
       );
 
@@ -45,7 +45,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           example: exampleResult.rows[0]
         }
       });
-
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
