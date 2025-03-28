@@ -223,7 +223,7 @@ export function ExampleView({
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 md:px-8 lg:px-6 py-6 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[min(100vh-12rem,1200px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[min(100vh-12rem,900px)]">
           {/* Code Card */}
           <div className="group bg-[#282a36] rounded-2xl overflow-hidden border border-[#44475a] shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)] transition-all duration-300">
             <div className="flex items-center justify-between px-4 py-3 bg-[#21222c] border-b border-[#44475a]">
