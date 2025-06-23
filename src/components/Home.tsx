@@ -1,992 +1,1021 @@
-import {
-  Search,
-  ChevronRight,
-  Code2,
-  BookOpen,
-  Moon,
-  Sun,
-  Plus,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import toast, { Toaster } from "react-hot-toast"; 
+import { useState, useEffect } from "react";
+import { HomeProps, StudySession } from "../types/types";
+import { Calendar, Code2, TrendingUp, Clock, Play } from "lucide-react";
+import { StudyModal } from "./StudyModal";
 
-interface TopicItem {
-  id: string;
-  itemId: string;
-  title: string;
-}
-
-interface Topic {
-  id: string;
-  name: string;
-  technologyId: string;
-  category: string; // Adicionado este campo
-  items: TopicItem[];
-}
-
-interface Technology {
-  id: string;
-  name: string;
-  title: string;
-  color: string;
-  hoverColor: string;
-  logo: string;
-  alt: string;
-  padding: string;
-}
-
-interface HomeProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void; // Adicionado
-  onExampleClick: (id: string) => void;    // Adicionado
-  currentTech: string;
-  onTechChange: (tech: string) => void;
-  topics: Topic[];
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-  onCreateNewTechnology: (tech: NewTechnologyData) => Promise<boolean>;
-  onCreateCategory: (category: string) => Promise<boolean>;
-  onCreateItem: (itemData: NewItemData) => Promise<boolean>;
-  technologies: Technology[]; // Atualizado o tipo
-}
-
-interface NewTechnologyData {
-  name: string;
-  title: string;
-  color: string;
-  hoverColor: string;
-  logo: string;
-  alt: string;
-  padding: string;
-}
-
-interface NewItemData {
-  itemId: string;
-  title: string;
-  categoryId: string;
-}
-
-
-const getRandomColor = () => {
-  const gradients = [
-    {
-      color: "bg-gradient-to-r from-blue-400 to-blue-600",
-      hoverColor: "hover:from-blue-500 hover:to-blue-700",
-    },
-    {
-      color: "bg-gradient-to-r from-purple-400 to-purple-600",
-      hoverColor: "hover:from-purple-500 hover:to-purple-700",
-    },
-    {
-      color: "bg-gradient-to-r from-red-400 to-red-600",
-      hoverColor: "hover:from-red-500 hover:to-red-700",
-    },
-    {
-      color: "bg-gradient-to-r from-green-400 to-green-600",
-      hoverColor: "hover:from-green-500 hover:to-green-700",
-    },
-    {
-      color: "bg-gradient-to-r from-yellow-400 to-yellow-600",
-      hoverColor: "hover:from-yellow-500 hover:to-yellow-700",
-    },
-    {
-      color: "bg-gradient-to-r from-pink-400 to-pink-600",
-      hoverColor: "hover:from-pink-500 hover:to-pink-700",
-    },
-    {
-      color: "bg-gradient-to-r from-indigo-400 to-indigo-600",
-      hoverColor: "hover:from-indigo-500 hover:to-indigo-700",
-    },
-    {
-      color: "bg-gradient-to-r from-cyan-400 to-cyan-600",
-      hoverColor: "hover:from-cyan-500 hover:to-cyan-700",
-    },
-    {
-      color: "bg-gradient-to-r from-teal-400 to-teal-600",
-      hoverColor: "hover:from-teal-500 hover:to-teal-700",
-    },
-  ];
-
-  const currentGradient =
-    gradients[Math.floor(Math.random() * gradients.length)];
-  return currentGradient;
-};
-
-export function Home({
-  searchTerm,
-  onSearchChange,
-  onExampleClick,
-  currentTech,
-  onTechChange,
-  topics,
-  isDarkMode,
-  toggleTheme,
-  onCreateNewTechnology,
-  onCreateCategory,
-  onCreateItem, 
-  technologies, 
-}: HomeProps) {
-
+export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession }: HomeProps) {  const [currentDate] = useState(new Date());
+  const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<{title: string; type: string} | null>(null);
+  
+  // CSS customizado para scrollbar
   useEffect(() => {
-    console.log("Topics received in Home:", topics);
-  }, [topics]);
-
-  const [showNewTechModal, setShowNewTechModal] = useState(false);
-  const [newTech, setNewTech] = useState(() => {
-    const gradient = getRandomColor();
-    return {
-      name: "",
-      title: "",
-      color: gradient.color,
-      hoverColor: gradient.hoverColor,
-      logo: "",
-      alt: "",
-      padding: "px-8 py-3",
-    };
-  });
-
-  const [showNewTopicModal, setShowNewTopicModal] = useState(false);
-  const [newTopic, setNewTopic] = useState({
-    category: "",
-    items: [],
-  });
-
-  //modal de novo item e a categoria selecionada
-  const [showNewItemModal, setShowNewItemModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [newItem, setNewItem] = useState({
-    id: "",
-    title: "",
-    categoryId: "", 
-  });
-
-  const techButtons = [
-    {
-      title: "JavaScript with example",
-      tech: "javascript",
-      color: "bg-gradient-to-r from-yellow-400 to-yellow-600",
-      hoverColor: "hover:from-yellow-500 hover:to-yellow-700",
-      logo: "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
-      alt: "JavaScript Logo",
-      padding: "px-5 py-3",
-    },
-    {
-      title: "TypeScript with example",
-      tech: "typescript",
-      color: "bg-gradient-to-r from-blue-400 to-blue-600",
-      hoverColor: "hover:from-blue-500 hover:to-blue-700",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
-      alt: "TypeScript Logo",
-      padding: "px-5 py-3",
-    },
-    {
-      title: "GoLang with example",
-      tech: "golang",
-      color: "bg-gradient-to-r from-cyan-500 to-blue-500",
-      hoverColor: "hover:from-cyan-600 hover:to-blue-600",
-      logo: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
-      alt: "GoLang Logo",
-      padding: "px-8 py-3",
-    },
-    {
-      title: "Gin Gonic with example",
-      tech: "gin",
-      color: "bg-gradient-to-r from-cyan-500 to-blue-500",
-      hoverColor: "hover:from-cyan-600 hover:to-blue-600",
-      logo: "https://avatars.githubusercontent.com/u/7894478?v=4",
-      alt: "gin Logo",
-      padding: "px-12 py-3",
-    },
-    {
-      title: "NodeJS with example",
-      tech: "nodejs",
-      color: "bg-gradient-to-r from-cyan-600 to-green-700",
-      hoverColor: "hover:from-cyan-800 hover:to-green-700",
-      logo: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
-      alt: "NodeJS Logo",
-      padding: "px-8 py-3",
-    },
-    {
-      title: "NestJS with example",
-      tech: "nestjs",
-      color: "bg-gradient-to-r from-cyan-600 to-red-700",
-      hoverColor: "hover:from-cyan-800 hover:to-red-700",
-      logo: "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
-      alt: "NestJS Logo",
-      padding: "px-8 py-3",
-    },
-    {
-      title: "SQL with example",
-      tech: "sql",
-      color: "bg-gradient-to-r from-orange-300 to-orange-700",
-      hoverColor: "hover:from-orange-400 hover:to-orange-800",
-      logo: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png",
-      alt: "SQL Logo",
-      padding: "px-12 py-3",
-    },
-  ];
-
-
-  const staticTechNames = techButtons.map((btn) => btn.tech);
-
-  // Filtrar apenas as tecnologias que não estão nos botões estáticos
-  const dynamicTechButtons =
-    technologies
-      ?.filter((tech) => !staticTechNames.includes(tech.name))
-      .map((tech) => ({
-        title: tech.title,
-        tech: tech.name,
-        color: tech.color,
-        hoverColor: tech.hoverColor,
-        logo: tech.logo,
-        alt: tech.alt,
-        padding: tech.padding,
-      })) || [];
-
-  // Combinar os botões estáticos com as tecnologias dinâmicas filtradas
-  const allTechButtons = [...techButtons, ...dynamicTechButtons];
-
-  const AddNewTechButton = (
-    <button
-      onClick={() => setShowNewTechModal(true)}
-      className={`flex items-center gap-2 px-6 py-3 
-        ${isDarkMode 
-          ? "bg-gray-700 hover:bg-gray-600 text-gray-400" 
-          : "bg-gray-200 hover:bg-gray-300 text-gray-400"}
-        rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg
-        hover:text-blue-400 group`}
-    >
-      <Plus size={24} className="transition-colors duration-200" />
-      <span className="font-medium transition-colors duration-200">Nova Tech</span>
-    </button>
-  );
-
-  const AddNewTopicButton = (
-    <button
-      onClick={() => setShowNewTopicModal(true)}
-      className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group flex items-center justify-center gap-2
-        ${
+    const scrollbarStyles = `
+      .events-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .events-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .events-scrollbar::-webkit-scrollbar-thumb {
+        background: ${
           isDarkMode
-            ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400"
-            : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"
-        }`}
-    >
-      <Plus size={24} />
-      <span className="font-medium">Nova Categoria</span>
-    </button>
-  );
+            ? "linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(168, 85, 247, 0.5))"
+            : "linear-gradient(135deg, rgba(124, 58, 237, 0.5), rgba(147, 51, 234, 0.5))"
+        };
+        border-radius: 3px;
+      }
+      .events-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: ${
+          isDarkMode
+            ? "linear-gradient(135deg, rgba(139, 92, 246, 0.7), rgba(168, 85, 247, 0.7))"
+            : "linear-gradient(135deg, rgba(124, 58, 237, 0.7), rgba(147, 51, 234, 0.7))"
+        };
+      }
+    `;
 
-  // Função para salvar posição do scroll antes de navegar
-  const handleExampleClick = (id: string) => {
-    localStorage.setItem("scrollPosition", window.scrollY.toString());
-    onExampleClick(id);
-  };
+    const style = document.createElement("style");
+    style.textContent = scrollbarStyles;
+    document.head.appendChild(style);
 
-  // Restaura a posição do scroll quando o componente é montado
-  useEffect(() => {
-    const savedPosition = localStorage.getItem("scrollPosition");
-    if (savedPosition) {
-      window.scrollTo({
-        top: parseInt(savedPosition),
-        behavior: "auto",
-      });
-      // Limpa a posição salva após restaurar
-      localStorage.removeItem("scrollPosition");
-    }
-  }, []);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, [isDarkMode]); // Dados resumidos para o dashboard
+  const totalTechnologies = technologies?.length || 0;
+  // Gerar dados de eventos do mês atual
+  const generateMonthEvents = () => {
+    const events: Array<{
+      date: string;
+      day: number;
+      title: string;
+      type: string;
+    }> = [];
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
 
-  // Função para mudar de tecnologia e voltar ao topo
-  const handleTechChange = (tech: string) => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    onTechChange(tech);
-  };
+    // Eventos de exemplo
+    const sampleEvents = [
+      { day: 5, title: "Reunião de projeto", type: "meeting" },
+      { day: 12, title: "Deadline entrega", type: "deadline" },
+      { day: 18, title: "Workshop React", type: "workshop" },
+      { day: 23, title: "Code Review", type: "review" },
+      { day: 25, title: "Apresentação", type: "presentation" },
+      { day: 28, title: "Sprint Planning", type: "planning" },
+    ];
 
-  // Função para filtrar tópicos baseado no termo de busca
-  const filteredTopics = topics && topics.length > 0
-  ? topics
-      .map((topic) => ({
-        ...topic,
-        items: topic.items?.filter(
-          (item) =>
-            item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            topic.name.toLowerCase().includes(searchTerm.toLowerCase())
-        ) || [],
-      }))
-      .filter((topic) =>
-        searchTerm
-          ? topic.items.length > 0 ||
-            topic.name.toLowerCase().includes(searchTerm.toLowerCase())
-          : true
-      )
-  : [];
-
-  console.log("Filtered topics:", filteredTopics);
-
-
-  const handleCancelTechModal = () => {
-    setNewTech({
-      name: "",
-      title: "",
-      color: "bg-gradient-to-r from-purple-500 to-purple-700",
-      hoverColor: "hover:from-purple-600 hover:to-purple-800",
-      logo: "",
-      alt: "",
-      padding: "px-8 py-3",
+    sampleEvents.forEach((event) => {
+      const eventDate = new Date(year, month, event.day);
+      if (eventDate.getMonth() === month) {
+        // Verificar se ainda está no mês atual
+        events.push({
+          date: eventDate.toISOString().split("T")[0],
+          day: event.day,
+          title: event.title,
+          type: event.type,
+        });
+      }
     });
-    setShowNewTechModal(false);
+
+    return events;
   };
 
-  const handleCancelTopicModal = () => {
-    setNewTopic({
-      category: "",
-      items: [],
-    });
-    setShowNewTopicModal(false);
-  };
+  const monthEvents = generateMonthEvents();
 
-  const handleCancelItemModal = () => {
-    setNewItem({
-      id: "",
-      title: "",
-      categoryId: "",
-    });
-    setSelectedCategory("");
-    setShowNewItemModal(false);
-  };
+  // Gerar dados de atividade de estudos baseado no conteúdo real
+  const generateStudyActivity = () => {
+    const data = [];
+    const today = new Date();
 
-  // Adicionar função para gerar novo gradiente
-  const generateNewGradient = () => {
-    const gradient = getRandomColor();
-    setNewTech((prev) => ({
-      ...prev,
-      color: gradient.color,
-      hoverColor: gradient.hoverColor,
-    }));
-  };
-
-  // Modificar o NewTechModal para usar toast
-  const NewTechModal = (
-    <>
-      {showNewTechModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div
-            className={`${
-              isDarkMode ? "bg-gray-800" : "bg-white"
-            } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}
-          >
-            <h2
-              className={`text-xl font-bold mb-4 ${
-                isDarkMode ? "text-gray-100" : "text-gray-800"
-              }`}
-            >
-              Adicionar Nova Tecnologia
-            </h2>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  console.log("Dados da nova tecnologia:", newTech); // Debug
-                  await onCreateNewTechnology(newTech);
-                  setShowNewTechModal(false);
-                  // Limpar form
-                  setNewTech({
-                    name: "",
-                    title: "",
-                    color: "bg-gradient-to-r from-purple-500 to-purple-700",
-                    hoverColor: "hover:from-purple-600 hover:to-purple-800",
-                    logo: "",
-                    alt: "",
-                    padding: "px-8 py-3",
-                  });
-                  toast.success("Tecnologia criada com sucesso!", {
-                    style: {
-                      background: isDarkMode ? "#333" : "#fff",
-                      color: isDarkMode ? "#fff" : "#333",
-                    },
-                  });
-                } catch (error: unknown) {
-                  const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-                  toast.error("Erro ao criar tecnologia: " + errorMessage, {
-                    style: {
-                      background: isDarkMode ? "#333" : "#fff",
-                      color: isDarkMode ? "#fff" : "#333",
-                    },
-                  });
-                }
-              }}
-            >
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Nome da tecnologia (ex: python)"
-                  value={newTech.name}
-                  onChange={(e) =>
-                    setNewTech({
-                      ...newTech,
-                      name: e.target.value,
-                      alt: `${e.target.value} Logo`,
-                    })
-                  }
-                  className={`w-full p-2 rounded border ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300"
-                  }`}
-                  required
-                />
-
-                <input
-                  type="text"
-                  placeholder="Título de exibição (ex: Python with example)"
-                  value={newTech.title}
-                  onChange={(e) =>
-                    setNewTech({ ...newTech, title: e.target.value })
-                  }
-                  className={`w-full p-2 rounded border ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300"
-                  }`}
-                  required
-                />
-
-                <input
-                  type="url"
-                  placeholder="URL da logo da tecnologia SEM FUNDO"
-                  value={newTech.logo}
-                  onChange={(e) =>
-                    setNewTech({ ...newTech, logo: e.target.value })
-                  }
-                  className={`w-full p-2 rounded border ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300"
-                  }`}
-                  required
-                />
-
-                {/* Adicionar preview do botão e botão de gerar nova cor */}
-                <div className="flex flex-col gap-2">
-                  <button
-                    type="button"
-                    className={`flex items-center justify-center gap-3 px-8 py-3 ${newTech.color} ${newTech.hoverColor} text-white rounded-xl transition-all duration-300`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      generateNewGradient();
-                    }}
-                  >
-                    Clique para gerar cor do botão
-                  </button>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Adicionar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelTechModal}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  // Modificar o NewTopicModal para usar toast
-  const NewTopicModal = (
-    <>
-      {showNewTopicModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div
-            className={`${
-              isDarkMode ? "bg-gray-800" : "bg-white"
-            } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}
-          >
-            <h2
-              className={`text-xl font-bold mb-4 ${
-                isDarkMode ? "text-gray-100" : "text-gray-800"
-              }`}
-            >
-              Adicionar Nova Categoria em {currentTech}
-            </h2>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const categoryName = newTopic.category.trim();
-
-                if (!categoryName) {
-                  toast.error("Nome da categoria é obrigatório", {
-                    style: {
-                      background: isDarkMode ? "#333" : "#fff",
-                      color: isDarkMode ? "#fff" : "#333",
-                    },
-                  });
-                  return;
-                }
-
-                try {
-                  console.log("Enviando requisição para criar categoria:", {
-                    category: categoryName,
-                    technologyId: currentTech,
-                  });
-
-                  const success = await onCreateCategory(categoryName);
-
-                  if (success) {
-                    toast.success("Categoria criada com sucesso!", {
-                      style: {
-                        background: isDarkMode ? "#333" : "#fff",
-                        color: isDarkMode ? "#fff" : "#333",
-                      },
-                    });
-                    setShowNewTopicModal(false);
-                    setNewTopic({ category: "", items: [] });
-                    window.location.reload(); // Recarrega para mostrar a nova categoria
-                  } else {
-                    throw new Error("Erro ao criar categoria");
-                  }
-                } catch (error: unknown) {
-                  const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-                  toast.error("Erro ao criar categoria: " + errorMessage, {
-                    style: {
-                      background: isDarkMode ? "#333" : "#fff",
-                      color: isDarkMode ? "#fff" : "#333",
-                    },
-                  });
-                }
-              }}
-            >
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Nome da categoria (ex: Arrays)"
-                  value={newTopic.category}
-                  onChange={(e) =>
-                    setNewTopic({ ...newTopic, category: e.target.value })
-                  }
-                  className={`w-full p-2 rounded border ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300"
-                  }`}
-                  required
-                />
-
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Adicionar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelTopicModal}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  // Modificar o NewItemModal para usar toast
-  const NewItemModal = (
-    <>
-      {showNewItemModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div
-            className={`${
-              isDarkMode ? "bg-gray-800" : "bg-white"
-            } p-6 rounded-xl shadow-xl max-w-md w-full mx-4`}
-          >
-            <h2
-              className={`text-xl font-bold mb-4 ${
-                isDarkMode ? "text-gray-100" : "text-gray-800"
-              }`}
-            >
-              Adicionar Novo Tópico em {selectedCategory}
-            </h2>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  const itemData = {
-                    itemId: newItem.id,
-                    title: newItem.title,
-                    categoryId: newItem.categoryId, // Usando o categoryId que já está no estado
-                  };
-
-                  console.log("Dados do novo item:", itemData); // Debug
-
-                  const success = await onCreateItem(itemData);
-                  if (success) {
-                    toast.success("Tópico criado com sucesso!", {
-                      style: {
-                        background: isDarkMode ? "#333" : "#fff",
-                        color: isDarkMode ? "#fff" : "#333",
-                      },
-                    });
-                    setShowNewItemModal(false);
-                    setNewItem({ id: "", title: "", categoryId: "" }); // Limpar também o categoryId
-                    window.location.reload();
-                  }
-                } catch (error: unknown) {
-                  const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-                  toast.error("Erro ao criar tópico: " + errorMessage, {
-                    style: {
-                      background: isDarkMode ? "#333" : "#fff",
-                      color: isDarkMode ? "#fff" : "#333",
-                    },
-                  });
-                }
-              }}
-            >
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="ID do tópico (ex: arrays-map)"
-                  value={newItem.id}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, id: e.target.value })
-                  }
-                  className={`w-full p-2 rounded border ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300"
-                  }`}
-                  required
-                />
-
-                <input
-                  type="text"
-                  placeholder="Título do tópico"
-                  value={newItem.title}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, title: e.target.value })
-                  }
-                  className={`w-full p-2 rounded border ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300"
-                  }`}
-                  required
-                />
-
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Adicionar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelItemModal}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  // Renderização condicional dos botões
-  const renderTopicSection = () => {
-    if (filteredTopics.length === 0) {
-      return (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-          {AddNewTopicButton}
-        </div>
+    // Gerar dados dos últimos 12 meses
+    for (let monthOffset = 11; monthOffset >= 0; monthOffset--) {
+      const currentMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() - monthOffset,
+        1
       );
+      const daysInMonth = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + 1,
+        0
+      ).getDate();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(
+          currentMonth.getFullYear(),
+          currentMonth.getMonth(),
+          day
+        );
+
+        // Parar se passou de hoje
+        if (date > today) break;
+
+        // Simular atividade de estudos
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        const studyChance = isWeekend ? 0.2 : 0.6;
+        const hasStudy = Math.random() < studyChance;
+
+        let intensity = 0;
+        if (hasStudy) {
+          const topicsStudied = Math.floor(Math.random() * 4) + 1;
+          intensity = Math.min(topicsStudied, 4);
+        }
+
+        data.push({
+          date: date.toISOString().split("T")[0],
+          count: intensity,
+          day: date.getDate(),
+          month: date.getMonth(),
+          year: date.getFullYear(),
+          dayOfWeek: date.getDay(),
+          formattedDate: date.toLocaleDateString("pt-BR"),
+        });
+      }
     }
 
-    // Inverte a ordem das categorias antes de renderizar
-    const reversedTopics = [...filteredTopics].reverse();
-
-    return (
-      <>
-        {reversedTopics.map((topic) => (
-          <div key={topic.id} className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <BookOpen
-                className={isDarkMode ? "text-gray-400" : "text-gray-600"}
-                size={24}
-              />
-              <h2
-                className={`text-2xl font-bold ${
-                  isDarkMode ? "text-gray-200" : "text-gray-800"
-                }`}
-              >
-                {topic.category}
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Renderizar os items existentes */}
-              {topic.items?.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleExampleClick(item.id)}
-                  className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
-                    ${
-                      isDarkMode
-                        ? "bg-gray-800 hover:bg-gray-700"
-                        : "bg-white hover:bg-gray-50"
-                    }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Code2
-                        className={`${
-                          isDarkMode
-                            ? "text-gray-500 group-hover:text-blue-400"
-                            : "text-gray-400 group-hover:text-blue-500"
-                        } transition-colors`}
-                        size={20}
-                      />
-                      <h3
-                        className={`text-lg font-medium transition-colors 
-                        ${
-                          isDarkMode
-                            ? "text-gray-300 group-hover:text-blue-400"
-                            : "text-gray-800 group-hover:text-blue-500"
-                        }`}
-                      >
-                        {item.title}
-                      </h3>
-                    </div>
-                    <ChevronRight
-                      className={`${
-                        isDarkMode
-                          ? "text-gray-500 group-hover:text-blue-400"
-                          : "text-gray-400 group-hover:text-blue-500"
-                      } transition-colors`}
-                      size={20}
-                    />
-                  </div>
-                </button>
-              ))}
-              {/* Botão de adicionar item */}
-              <button
-                onClick={() => {
-                  console.log("Categoria selecionada:", topic);
-                  setSelectedCategory(topic.category); // Use topic.category em vez de topic.name
-                  setNewItem({
-                    id: `${topic.category
-                      .toLowerCase()
-                      .replace(/\s+/g, "-")}-${Date.now()}`,
-                    title: "",
-                    categoryId: topic.id,
-                  });
-                  setShowNewItemModal(true);
-                }}
-                className={`p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group
-                  flex items-center justify-center gap-2
-                  ${
-                    isDarkMode
-                      ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-blue-400"
-                      : "bg-white hover:bg-gray-50 text-gray-400 hover:text-blue-500"
-                  }`}
-              >
-                <Plus size={24} />
-                <span className="font-medium">Novo Tópico</span>
-              </button>
-            </div>
-          </div>
-        ))}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-          {AddNewTopicButton}
-        </div>
-      </>
-    );
+    return data;
   };
 
+  const studyData = generateStudyActivity();
+  const totalStudyDays = studyData.filter((day) => day.count > 0).length;
+  const currentStreak = (() => {
+    let streak = 0;
+    for (let i = studyData.length - 1; i >= 0; i--) {
+      if (studyData[i].count > 0) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  })();
+  // Agrupar dados por mês
+  const monthlyData = [];
+  const monthNames = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
+  const fullMonthNames = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+
+  for (let i = 0; i < 12; i++) {
+    const monthData = studyData.filter((day) => {
+      const monthIndex = (new Date().getMonth() - 11 + i + 12) % 12;
+      return day.month === monthIndex;
+    });
+
+    monthlyData.push({
+      name: monthNames[i],
+      days: monthData,
+    });
+  }
+  const getIntensityColor = (count: number) => {
+    if (count === 0) {
+      return isDarkMode
+        ? "bg-slate-800/50 border-slate-700/30"
+        : "bg-slate-100 border-slate-200/50";
+    }
+
+    const colors = isDarkMode
+      ? [
+          "bg-emerald-900/60 border-emerald-800/40", // 1 tópico
+          "bg-emerald-700/70 border-emerald-600/50", // 2 tópicos
+          "bg-emerald-500/80 border-emerald-400/60", // 3 tópicos
+          "bg-emerald-400/90 border-emerald-300/70", // 4+ tópicos
+        ]
+      : [
+          "bg-emerald-200 border-emerald-300/60", // 1 tópico
+          "bg-emerald-300 border-emerald-400/70", // 2 tópicos
+          "bg-emerald-400 border-emerald-500/80", // 3 tópicos
+          "bg-emerald-500 border-emerald-600/90", // 4+ tópicos
+        ];
+
+    return colors[Math.min(count - 1, 3)];
+  };
+
+  // Funções para gerenciar sessões de estudo
+  const handleStartStudyClick = (eventTitle: string, eventType: string) => {
+    setSelectedEvent({ title: eventTitle, type: eventType });
+    setIsStudyModalOpen(true);
+  };
+  const handleStartStudy = (duration: number, breakDuration: number) => {
+    if (!selectedEvent || !onStartStudySession) return;
+
+    const newSession: StudySession = {
+      id: Date.now().toString(),
+      eventTitle: selectedEvent.title,
+      eventType: selectedEvent.type,
+      duration,
+      breakDuration,
+      startTime: new Date(),
+      isActive: true,
+      isPaused: false,
+    };
+
+    onStartStudySession(newSession);
+    setIsStudyModalOpen(false);
+    setSelectedEvent(null);
+  };
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 
-      ${
+      className={`h-screen flex flex-col ${
         isDarkMode
-          ? "bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100"
-          : "bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900"
+          ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+          : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
       }`}
     >
-      <Toaster position="top-right" /> {/* Adicionar este componente */}
-      {/* Botão de alternância de tema */}
-      <div
-        onClick={toggleTheme}
-        className={`fixed top-4 right-4 z-20 w-16 h-8 rounded-full cursor-pointer transition-all duration-300 
-    ${
-      isDarkMode
-        ? "bg-gray-700 flex items-center justify-end"
-        : "bg-gray-300 flex items-center justify-start"
-    }`}
+      {/* Header Modernizado */}
+      <header
+        className={`flex-shrink-0 text-white shadow-2xl backdrop-blur-md border-b
+        ${
+          isDarkMode
+            ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
+            : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
+        }`}
       >
-        <div
-          className={`w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center
-      ${
-        isDarkMode
-          ? "bg-yellow-400 translate-x-[-4px]"
-          : "bg-white translate-x-[4px]"
-      }`}
-        >
-          {isDarkMode ? (
-            <Sun size={16} className="text-gray-800" />
-          ) : (
-            <Moon size={16} className="text-gray-800" />
-          )}
-        </div>
-      </div>
-      {/* Fixed Header Section */}
-      <div
-        className={`fixed top-0 left-0 right-0 z-10 border-b border-none
-       ${
-         isDarkMode
-           ? "bg-gradient-to-br from-gray-900 to-gray-800"
-           : "bg-gradient-to-br from-gray-50 to-gray-100"
-       }
-     `}
-      >
-        <div className="max-w-6xl mx-auto p-2">
-          {/* Hero Section */}
-          <div className="mb-8 text-center">
-            <h1
-              className={`text-5xl font-extrabold mb-0 leading-tight
-    ${
-      isDarkMode
-        ? "bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent"
-        : "bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent"
-    }`}
-            >
-              {allTechButtons.find((btn) => btn.tech === currentTech)?.title ||
-                "Select a technology"}
-            </h1>
-            <p
-              className={`text-lg ${
-                isDarkMode ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Explore, crie e organize seu conhecimento de programação
-            </p>
-          </div>
-
-          {/* Tech Buttons */}
-          <div className="flex flex-wrap gap-4 mb-8 items-center justify-center">
-            {allTechButtons.map((button, index) => (
-              <button
-                key={index}
-                className={`flex items-center gap-3 ${button.padding} ${
-                  button.color
-                } ${button.hoverColor} 
-                  ${
-                    isDarkMode
-                      ? "text-gray-100 opacity-90 hover:opacity-100"
-                      : "text-white"
-                  }
-                  rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg 
-                  ${
-                    currentTech === button.tech
-                      ? "ring-4 ring-offset-2 ring-offset-gray-100 ring-opacity-50"
-                      : ""
-                  }`}
-                onClick={() => handleTechChange(button.tech)}
-              >
-                <img src={button.logo} alt={button.alt} className="w-6 h-6" />
-                <span className="font-medium">
-                  {button.title.split(" ")[0]}
-                </span>
-              </button>
-            ))}
-            {AddNewTechButton}
-          </div>
-
-          {/* Search Bar */}
-          <div className="mb-4">
-            <div className="max-w-2xl mx-auto">
-              <div className="relative group">
-                <input
-                  type="text"
-                  placeholder="Buscar tópico ou função..."
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className={`w-full p-3 pr-12 rounded-xl border 
-                   ${
-                     isDarkMode
-                       ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-gray-600"
-                       : "bg-white border-gray-200 focus:ring-blue-500"
-                   } focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-300 group-hover:shadow-md`}
-                />
-                <Search
-                  className={`absolute right-4 top-4     
-                 ${isDarkMode ? "text-gray-400" : "text-gray-400"}`}
-                  size={20}
-                />
-              </div>
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl backdrop-blur-md border border-white/20 bg-white/15">
+              <TrendingUp className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                Home
+              </h1>
+              <p className="text-lg text-white/80 font-medium">
+                Bem-vindo de volta! Aqui está seu resumo de desenvolvimento.
+              </p>
             </div>
           </div>
         </div>
-      </div>
-      {/* Content Section with top padding to account for fixed header */}
-      <div className={`max-w-6xl mx-auto p-6 pt-[370px]`}>
-        {renderTopicSection()}
-      </div>
-      <div className="text-center py-4">
-        <a
-          href="https://github.com/Fernando-ctdev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`inline-flex items-center gap-2 text-sm hover:opacity-75 transition-opacity ${
-            isDarkMode ? "text-gray-400" : "text-gray-500"
-          }`}
-        >
-          <span>Desenvolvido por</span>
-          <span
-            className={`font-semibold ${
-              isDarkMode
-                ? "text-blue-400 hover:text-blue-300"
-                : "text-blue-600 hover:text-blue-500"
-            }`}
-          >
-            Maicon Fernando
-          </span>
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="h-5 w-5 fill-current"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0112 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48C19.137 20.107 22 16.373 22 11.969 22 6.463 17.522 2 12 2z"
-            />
-          </svg>
-        </a>
-      </div>
-      {NewTechModal}
-      {NewTopicModal}
-      {NewItemModal}
+      </header>{" "}
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="container mx-auto px-6 py-6 pb-14 flex flex-col h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+            {/* Cards de Estatísticas */}
+            <div className="lg:col-span-2 flex flex-col gap-6 h-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-fit">
+                {/* Total de Tecnologias */}
+                <div
+                  onClick={() => onNavigate("gallery")}
+                  className={`group p-4 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl cursor-pointer hover:scale-[1.02] ${
+                    isDarkMode
+                      ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-blue-500/50"
+                      : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-blue-400/50"
+                  }`}
+                  title="Clique para ver a galeria de tecnologias"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p
+                        className={`text-sm font-medium ${
+                          isDarkMode ? "text-slate-400" : "text-slate-600"
+                        }`}
+                      >
+                        Temas
+                      </p>{" "}
+                      <p
+                        className={`text-2xl font-bold mt-1 ${
+                          isDarkMode ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {totalTechnologies}
+                      </p>
+                      <p
+                        className={`text-xs mt-1 ${
+                          isDarkMode ? "text-slate-500" : "text-slate-500"
+                        }`}
+                      >
+                        Clique para ver galeria
+                      </p>
+                    </div>
+                    <div
+                      className={`p-2 rounded-2xl transition-all duration-300 group-hover:scale-110 ${
+                        isDarkMode
+                          ? "bg-blue-500/20 group-hover:bg-blue-500/30"
+                          : "bg-blue-100 group-hover:bg-blue-200"
+                      }`}
+                    >
+                      <Code2
+                        className={`w-6 h-6 ${
+                          isDarkMode ? "text-blue-400" : "text-blue-600"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>{" "}
+                {/* Progresso da Semana */}
+                <div
+                  onClick={() => onNavigate("dashboard")}
+                  className={`group p-4 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl cursor-pointer hover:scale-[1.02] ${
+                    isDarkMode
+                      ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-purple-500/50"
+                      : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-purple-400/50"
+                  }`}
+                  title="Clique para ver o dashboard"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p
+                        className={`text-sm font-medium ${
+                          isDarkMode ? "text-slate-400" : "text-slate-600"
+                        }`}
+                      >
+                        Esta Semana
+                      </p>
+                      <p
+                        className={`text-2xl font-bold mt-1 ${
+                          isDarkMode ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        8h
+                      </p>
+                      <p
+                        className={`text-xs ${
+                          isDarkMode ? "text-slate-500" : "text-slate-500"
+                        }`}
+                      >
+                        de estudos - Clique para dashboard
+                      </p>
+                    </div>{" "}
+                    <div
+                      className={`p-2 rounded-2xl transition-all duration-300 group-hover:scale-110 ${
+                        isDarkMode
+                          ? "bg-purple-500/20 group-hover:bg-purple-500/30"
+                          : "bg-purple-100 group-hover:bg-purple-200"
+                      }`}
+                    >
+                      <Clock
+                        className={`w-6 h-6 ${
+                          isDarkMode ? "text-purple-400" : "text-purple-600"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>{" "}
+              {/* Gráfico de Atividade de Estudos */}
+              <div
+                className={`rounded-2xl border backdrop-blur-md p-6 transition-all duration-300 hover:shadow-2xl shadow-xl flex-1 ${
+                  isDarkMode
+                    ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50"
+                    : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50"
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-3 rounded-xl ${
+                        isDarkMode
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-600"
+                          : "bg-gradient-to-r from-emerald-500 to-teal-500"
+                      } shadow-lg`}
+                    >
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3
+                        className={`text-lg font-bold ${
+                          isDarkMode ? "text-white" : "text-slate-800"
+                        }`}
+                      >
+                        Atividade de Estudos
+                      </h3>
+                      <p
+                        className={`text-sm ${
+                          isDarkMode ? "text-slate-400" : "text-slate-600"
+                        }`}
+                      >
+                        {totalStudyDays} dias de estudo • {currentStreak} dias
+                        consecutivos
+                      </p>
+                    </div>
+                  </div>
+                </div>{" "}
+                {/* Grid de Contribuições */}
+                <div className="overflow-x-auto flex-1">
+                  <div className="min-w-full space-y-3 h-full flex flex-col justify-center py-6">
+                    {/* Primeira linha - 6 meses */}
+                    <div className="grid grid-cols-6 gap-2 lg:gap-4">
+                      {monthlyData.slice(0, 6).map((month, monthIndex) => (
+                        <div
+                          key={month.name}
+                          className="flex flex-col items-center"
+                        >
+                          {/* Nome do Mês */}
+                          <div className="mb-1.5">
+                            <span
+                              className={`text-xs lg:text-sm font-medium ${
+                                isDarkMode ? "text-slate-400" : "text-slate-600"
+                              }`}
+                            >
+                              {month.name}
+                            </span>
+                          </div>
+
+                          {/* Indicadores de dias da semana */}
+                          <div className="grid grid-cols-7 gap-0.5 lg:gap-1 mb-1">
+                            <span
+                              className={`text-xs ${
+                                isDarkMode ? "text-slate-500" : "text-slate-500"
+                              } text-center`}
+                            >
+                              S
+                            </span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span
+                              className={`text-xs ${
+                                isDarkMode ? "text-slate-500" : "text-slate-500"
+                              } text-center`}
+                            >
+                              Q
+                            </span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span
+                              className={`text-xs ${
+                                isDarkMode ? "text-slate-500" : "text-slate-500"
+                              } text-center`}
+                            >
+                              D
+                            </span>
+                          </div>
+
+                          {/* Dias do Mês */}
+                          <div className="grid grid-cols-7 gap-0.5 lg:gap-1">
+                            {Array.from({ length: 35 }, (_, index) => {
+                              // Encontrar o primeiro dia do mês para calcular offset
+                              const firstDay =
+                                month.days.length > 0 ? month.days[0] : null;
+                              const startOffset = firstDay
+                                ? (firstDay.dayOfWeek + 6) % 7
+                                : 0; // Ajuste para segunda = 0
+
+                              const dayIndex = index - startOffset;
+                              const day = month.days[dayIndex];
+
+                              if (
+                                !day ||
+                                dayIndex < 0 ||
+                                dayIndex >= month.days.length
+                              ) {
+                                return (
+                                  <div
+                                    key={`${monthIndex}-${index}`}
+                                    className="w-2 h-2 lg:w-3 lg:h-3"
+                                  />
+                                );
+                              }
+
+                              return (
+                                <div
+                                  key={`${monthIndex}-${index}`}
+                                  className={`w-2 h-2 lg:w-3 lg:h-3 rounded-sm border transition-all duration-200 hover:scale-110 cursor-pointer ${getIntensityColor(
+                                    day.count
+                                  )}`}
+                                  title={`${day.formattedDate}: ${
+                                    day.count === 0
+                                      ? "Sem estudos"
+                                      : `${day.count} tópico${
+                                          day.count > 1 ? "s" : ""
+                                        } estudado${day.count > 1 ? "s" : ""}`
+                                  }`}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Segunda linha - 6 meses */}
+                    <div className="grid grid-cols-6 gap-2 lg:gap-4">
+                      {monthlyData.slice(6, 12).map((month, monthIndex) => (
+                        <div
+                          key={month.name}
+                          className="flex flex-col items-center"
+                        >
+                          {/* Nome do Mês */}
+                          <div className="mb-1.5">
+                            <span
+                              className={`text-xs lg:text-sm font-medium ${
+                                isDarkMode ? "text-slate-400" : "text-slate-600"
+                              }`}
+                            >
+                              {month.name}
+                            </span>
+                          </div>
+
+                          {/* Indicadores de dias da semana */}
+                          <div className="grid grid-cols-7 gap-0.5 lg:gap-1 mb-1">
+                            <span
+                              className={`text-xs ${
+                                isDarkMode ? "text-slate-500" : "text-slate-500"
+                              } text-center`}
+                            >
+                              S
+                            </span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span
+                              className={`text-xs ${
+                                isDarkMode ? "text-slate-500" : "text-slate-500"
+                              } text-center`}
+                            >
+                              Q
+                            </span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span className="w-2 h-2 lg:w-3 lg:h-3"></span>
+                            <span
+                              className={`text-xs ${
+                                isDarkMode ? "text-slate-500" : "text-slate-500"
+                              } text-center`}
+                            >
+                              D
+                            </span>
+                          </div>
+
+                          {/* Dias do Mês */}
+                          <div className="grid grid-cols-7 gap-0.5 lg:gap-1">
+                            {Array.from({ length: 35 }, (_, index) => {
+                              // Encontrar o primeiro dia do mês para calcular offset
+                              const firstDay =
+                                month.days.length > 0 ? month.days[0] : null;
+                              const startOffset = firstDay
+                                ? (firstDay.dayOfWeek + 6) % 7
+                                : 0; // Ajuste para segunda = 0
+
+                              const dayIndex = index - startOffset;
+                              const day = month.days[dayIndex];
+
+                              if (
+                                !day ||
+                                dayIndex < 0 ||
+                                dayIndex >= month.days.length
+                              ) {
+                                return (
+                                  <div
+                                    key={`${monthIndex + 6}-${index}`}
+                                    className="w-2 h-2 lg:w-3 lg:h-3"
+                                  />
+                                );
+                              }
+
+                              return (
+                                <div
+                                  key={`${monthIndex + 6}-${index}`}
+                                  className={`w-2 h-2 lg:w-3 lg:h-3 rounded-sm border transition-all duration-200 hover:scale-110 cursor-pointer ${getIntensityColor(
+                                    day.count
+                                  )}`}
+                                  title={`${day.formattedDate}: ${
+                                    day.count === 0
+                                      ? "Sem estudos"
+                                      : `${day.count} tópico${
+                                          day.count > 1 ? "s" : ""
+                                        } estudado${day.count > 1 ? "s" : ""}`
+                                  }`}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Legenda */}
+                    <div className="flex items-center justify-between mt-4 lg:mt-6 pt-3 lg:pt-4 border-t border-slate-200/50">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-xs lg:text-sm ${
+                            isDarkMode ? "text-slate-400" : "text-slate-600"
+                          }`}
+                        >
+                          Menos
+                        </span>
+                        <div className="flex gap-1">
+                          {[0, 1, 2, 3, 4].map((level) => (
+                            <div
+                              key={level}
+                              className={`w-2 h-2 lg:w-3 lg:h-3 rounded-sm border ${getIntensityColor(
+                                level
+                              )}`}
+                            />
+                          ))}
+                        </div>
+                        <span
+                          className={`text-xs lg:text-sm ${
+                            isDarkMode ? "text-slate-400" : "text-slate-600"
+                          }`}
+                        >
+                          Mais
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <p
+                          className={`text-xs lg:text-sm ${
+                            isDarkMode ? "text-slate-400" : "text-slate-600"
+                          }`}
+                        >
+                          Baseado em tópicos e tecnologias estudadas
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>{" "}
+            {/* Mini Calendário e Eventos */}
+            <div className="flex flex-col gap-4 h-full min-h-0">
+              {" "}
+              {/* Mini Calendário */}{" "}
+              <div
+                className={`p-3 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl h-1/2 flex flex-col min-h-0 ${
+                  isDarkMode
+                    ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50"
+                    : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <div
+                    className={`p-1.5 rounded-lg ${
+                      isDarkMode ? "bg-violet-500/20" : "bg-violet-100"
+                    }`}
+                  >
+                    <Calendar
+                      className={`w-4 h-4 ${
+                        isDarkMode ? "text-violet-400" : "text-violet-600"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <h3
+                      className={`text-sm font-bold ${
+                        isDarkMode ? "text-white" : "text-slate-800"
+                      }`}
+                    >
+                      {fullMonthNames[currentDate.getMonth()]}{" "}
+                      {currentDate.getFullYear()}
+                    </h3>
+                    <p
+                      className={`text-xs ${
+                        isDarkMode ? "text-slate-400" : "text-slate-600"
+                      }`}
+                    >
+                      Clique para ver calendário
+                    </p>
+                  </div>
+                </div>{" "}
+                {/* Cabeçalho dos dias da semana */}
+                <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2">
+                  {["D", "S", "T", "Q", "Q", "S", "S"].map((day, i) => (
+                    <div
+                      key={i}
+                      className={`py-1 font-bold ${
+                        isDarkMode ? "text-slate-400" : "text-slate-600"
+                      }`}
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>{" "}
+                {/* Grid do calendário */}
+                <div className="grid grid-cols-7 gap-1 text-center text-xs flex-1">
+                  {(() => {
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    const startOfWeek = firstDay.getDay(); // 0 = domingo, 1 = segunda, etc.
+                    const daysInMonth = lastDay.getDate();
+
+                    const days: (number | null)[] = [];
+
+                    // Adiciona dias vazios no início
+                    for (let i = 0; i < startOfWeek; i++) {
+                      days.push(null);
+                    }
+
+                    // Adiciona os dias do mês
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      days.push(day);
+                    }
+
+                    // Completa até ter pelo menos 35 células (5 semanas)
+                    while (days.length < 35) {
+                      days.push(null);
+                    }
+
+                    return days.map((day, index) => {
+                      // Verificar se o dia tem eventos
+                      const dayEvents = day
+                        ? monthEvents.filter((event) => event.day === day)
+                        : [];
+                      const hasEvents = dayEvents.length > 0;
+
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => day && onNavigate("calendar")}
+                          className={`h-8 flex flex-col items-center justify-center rounded-md text-xs font-medium relative ${
+                            day
+                              ? `cursor-pointer transition-all duration-200 hover:scale-105 ${
+                                  day === currentDate.getDate()
+                                    ? isDarkMode
+                                      ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg scale-105"
+                                      : "bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg scale-105"
+                                    : isDarkMode
+                                    ? "text-slate-300 hover:bg-slate-700/50"
+                                    : "text-slate-700 hover:bg-slate-200/70"
+                                }`
+                              : ""
+                          }`}
+                          title={
+                            day
+                              ? hasEvents
+                                ? `${day} - ${dayEvents
+                                    .map((e) => e.title)
+                                    .join(
+                                      ", "
+                                    )}. Clique para ver o calendário completo`
+                                : "Clique para ver o calendário completo"
+                              : ""
+                          }
+                        >
+                          {" "}
+                          {day && (
+                            <>
+                              <span>{day}</span>
+                              {hasEvents && (
+                                <div className="flex justify-center mt-1">
+                                  <div
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      isDarkMode ? "bg-blue-400" : "bg-blue-500"
+                                    }`}
+                                  />
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+              {/* Eventos do Dia */}
+              <div
+                className={`p-5 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl flex-1 flex flex-col min-h-0 ${
+                  isDarkMode
+                    ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50"
+                    : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50"
+                }`}
+              >
+                <h4
+                  className={`text-base font-bold mb-4 flex-shrink-0 ${
+                    isDarkMode ? "text-white" : "text-slate-800"
+                  }`}
+                >
+                  Eventos de Hoje
+                </h4>{" "}
+                {/* Container com rolagem interna */}
+                <div className="flex-1 overflow-y-auto min-h-0 events-scrollbar">
+                  {" "}                  {/* Conteúdo dos eventos */}                  <div className="space-y-3 pr-2">
+                    {/* Eventos de exemplo */}
+                    <div
+                      className={`p-3 rounded-lg border-l-4 ${
+                        isDarkMode ? "border-violet-400" : "border-violet-500"
+                      } ${
+                        isDarkMode
+                          ? "bg-slate-700/50 border-slate-600"
+                          : "bg-slate-50 border-slate-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h5
+                            className={`font-semibold text-sm ${
+                              isDarkMode ? "text-white" : "text-slate-800"
+                            }`}
+                          >
+                            Reunião de Projeto
+                          </h5>                          <p
+                            className={`text-xs mt-1 ${
+                              isDarkMode ? "text-slate-400" : "text-slate-600"
+                            }`}
+                          >
+                            Discussão sobre novas funcionalidades e roadmap do projeto
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleStartStudyClick("Reunião de Projeto", "meeting")}
+                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                            isDarkMode
+                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
+                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
+                          }`}
+                          title="Iniciar sessão de estudo"
+                        >
+                          <Play className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div
+                      className={`p-3 rounded-lg border-l-4 ${
+                        isDarkMode ? "border-violet-400" : "border-violet-500"
+                      } ${
+                        isDarkMode
+                          ? "bg-slate-700/50 border-slate-600"
+                          : "bg-slate-50 border-slate-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h5
+                            className={`font-semibold text-sm ${
+                              isDarkMode ? "text-white" : "text-slate-800"
+                            }`}
+                          >
+                            Code Review
+                          </h5>                          <p
+                            className={`text-xs mt-1 ${
+                              isDarkMode ? "text-slate-400" : "text-slate-600"
+                            }`}
+                          >
+                            Revisão do código da API e implementação de melhorias
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleStartStudyClick("Code Review", "review")}
+                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                            isDarkMode
+                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
+                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
+                          }`}
+                          title="Iniciar sessão de estudo"
+                        >
+                          <Play className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div
+                      className={`p-3 rounded-lg border-l-4 ${
+                        isDarkMode ? "border-violet-400" : "border-violet-500"
+                      } ${
+                        isDarkMode
+                          ? "bg-slate-700/50 border-slate-600"
+                          : "bg-slate-50 border-slate-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h5
+                            className={`font-semibold text-sm ${
+                              isDarkMode ? "text-white" : "text-slate-800"
+                            }`}
+                          >
+                            Workshop React
+                          </h5>                          <p
+                            className={`text-xs mt-1 ${
+                              isDarkMode ? "text-slate-400" : "text-slate-600"
+                            }`}
+                          >
+                            Hooks avançados e padrões de desenvolvimento React
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleStartStudyClick("Workshop React", "workshop")}
+                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                            isDarkMode
+                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
+                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
+                          }`}
+                          title="Iniciar sessão de estudo"
+                        >
+                          <Play className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div
+                      className={`p-3 rounded-lg border-l-4 ${
+                        isDarkMode ? "border-violet-400" : "border-violet-500"
+                      } ${
+                        isDarkMode
+                          ? "bg-slate-700/50 border-slate-600"
+                          : "bg-slate-50 border-slate-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h5
+                            className={`font-semibold text-sm ${
+                              isDarkMode ? "text-white" : "text-slate-800"
+                            }`}
+                          >
+                            Deadline Entrega
+                          </h5>                          <p
+                            className={`text-xs mt-1 ${
+                              isDarkMode ? "text-slate-400" : "text-slate-600"
+                            }`}
+                          >
+                            Finalizar implementação das funcionalidades pendentes
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleStartStudyClick("Deadline Entrega", "deadline")}
+                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                            isDarkMode
+                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
+                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
+                          }`}
+                          title="Iniciar sessão de estudo"
+                        >
+                          <Play className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Estado vazio comentado temporariamente 
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <div
+                        className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                          isDarkMode
+                            ? "bg-slate-700/50 border border-slate-600/50"
+                            : "bg-slate-100/50 border border-slate-200/50"
+                        }`}
+                      >
+                        <Calendar
+                          className={`w-8 h-8 ${
+                            isDarkMode ? "text-slate-500" : "text-slate-400"
+                          }`}
+                        />
+                      </div>
+                      <h5
+                        className={`text-sm font-semibold mb-2 ${
+                          isDarkMode ? "text-slate-300" : "text-slate-700"
+                        }`}
+                      >
+                        Nenhum evento hoje
+                      </h5>
+                      <p
+                        className={`text-xs ${
+                          isDarkMode ? "text-slate-500" : "text-slate-500"
+                        }`}
+                      >
+                        Aproveite o dia livre ou crie novos eventos no
+                        calendário{" "}
+                      </p>
+                    </div>
+                    */}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>        </div>
+      </main>
+      
+      {/* Modal de Configuração de Estudo */}
+      {selectedEvent && (
+        <StudyModal
+          isOpen={isStudyModalOpen}
+          onClose={() => {
+            setIsStudyModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          eventTitle={selectedEvent.title}
+          eventType={selectedEvent.type}
+          onStartStudy={handleStartStudy}
+          isDarkMode={isDarkMode}
+        />      )}
     </div>
   );
 }

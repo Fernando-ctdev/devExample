@@ -10,6 +10,7 @@ import {
   Sun,
 } from "lucide-react";
 import LoginModal from "./LoginModal";
+import { LANDING_PAGE_TECHNOLOGIES } from "../constants/technologies";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -48,45 +49,7 @@ console.log("Bem-vindo à sua biblioteca de código!");`;
       clearTimeout(timeoutId);
     };
   }, [codeExample]);
-
-  const technologies = [
-    {
-      name: "JavaScript",
-      logo: "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
-      color: "from-yellow-400",
-      description: "Exemplos práticos para desenvolvimento web moderno",
-    },
-    {
-      name: "TypeScript",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
-      color: "from-blue-500",
-      description: "Códigos tipados com exemplos de uso real",
-    },
-    {
-      name: "Golang",
-      logo: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
-      color: "from-cyan-500",
-      description: "Exemplos de alta performance e concorrência",
-    },
-    {
-      name: "Gin",
-      logo: "https://avatars.githubusercontent.com/u/7894478?v=4",
-      color: "from-sky-500",
-      description: "Casos práticos de APIs REST em Go",
-    },
-    {
-      name: "NodeJS",
-      logo: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
-      color: "from-green-600",
-      description: "Exemplos de backend e ferramentas JavaScript",
-    },
-    {
-      name: "NestJS",
-      logo: "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
-      color: "from-red-700",
-      description: "Exemplos escaláveis de arquitetura TypeScript",
-    },
-  ];
+  const technologies = LANDING_PAGE_TECHNOLOGIES;
 
   const handleAccessPlatform = () => {
     window.scrollTo(0, 0);
@@ -224,8 +187,7 @@ console.log("Bem-vindo à sua biblioteca de código!");`;
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${tech.color} to-transparent opacity-0 group-hover:opacity-20 transition-opacity rounded-xl`}
                 />
-                <div className="relative flex flex-col items-center text-center">
-                  {tech.logo ? (
+                <div className="relative flex flex-col items-center text-center">                  {tech.logo ? (
                     <img
                       src={tech.logo}
                       alt={tech.name}
@@ -233,10 +195,10 @@ console.log("Bem-vindo à sua biblioteca de código!");`;
                     />
                   ) : (
                     <div className="w-16 h-16 mb-4 flex items-center justify-center text-3xl">
-                      {tech.name[0]}
+                      {tech.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <h3 className="text-xl font-semibold mb-2">{tech.name}</h3>
+                  <h3 className="text-xl font-semibold mb-2">{tech.name.charAt(0).toUpperCase() + tech.name.slice(1)}</h3>
                   <p
                     className={`text-sm ${
                       isDark ? "opacity-80" : "text-gray-600"

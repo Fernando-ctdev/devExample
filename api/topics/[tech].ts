@@ -1,56 +1,69 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from '../config/db.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     try {
       const tech = req.query.tech as string;
 
-      // Primeiro verifica se a tecnologia existe
-      const techCheck = await pool.query(`
-        SELECT "id" FROM "technology" WHERE "name" = $1
-      `, [tech]);
+      if (!tech) {
+        return res.status(400).json({
+          success: false,
+          error: 'Parâmetro tech é obrigatório'
+        });
+      }
 
-      if (techCheck.rows.length === 0) {
+      // Buscar a tecnologia com suas categorias e itens
+      const technology = await prisma.technology.findUnique({
+        where: { name: tech },
+        include: {
+          categories: {
+            include: {              items: {
+                select: {
+                  id: true,
+                  itemId: true,
+                  title: true
+                }
+              }
+            },
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      });
+
+      if (!technology) {
         return res.status(404).json({
           success: false,
           error: 'Tecnologia não encontrada'
         });
-      }
-
-      const { rows } = await pool.query(`
-        WITH tech_data AS (
-          SELECT "id"
-          FROM "technology"
-          WHERE "name" = $1
-        )
-        SELECT
-          c."id",
-          c."name" as category,
-          COALESCE(
-            json_agg(
-              json_build_object(
-                'id', i."itemId",
-                'title', i."title"
-              )
-            ) FILTER (WHERE i."itemId" IS NOT NULL),
-            '[]'
-          ) as items
-        FROM tech_data
-        LEFT JOIN "category" c ON c."technologyId" = tech_data.id
-        LEFT JOIN "item" i ON i."categoryId" = c."id"
-        GROUP BY c."id", c."name"
-        ORDER BY c."createdAt" DESC
-      `, [tech]);
+      }      // Formatar os dados para o formato esperado
+      const formattedCategories = technology.categories.map(category => ({
+        id: category.id,
+        name: category.name,
+        technologyId: technology.name,
+        category: category.name,
+        items: category.items.map(item => ({
+          id: item.itemId,
+          itemId: item.itemId,
+          title: item.title
+        }))
+      }));
 
       return res.json({
         success: true,
-        data: rows
+        data: formattedCategories
       });
     } catch (error: unknown) {
       console.error('Erro detalhado:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      return res.status(500).json({ success: false, error: errorMessage });
+      return res.status(500).json({ 
+        success: false, 
+        error: errorMessage 
+      });
+    } finally {
+      await prisma.$disconnect();
     }
   }
 

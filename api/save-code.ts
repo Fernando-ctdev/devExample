@@ -1,19 +1,28 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from './config/db.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
       const { id, code, itemId } = req.body;
+      
+      if (!id || code === undefined) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID e código são obrigatórios'
+        });
+      }
+
       console.log('Request save-code:', { id, itemId, codeLength: code?.length });
 
-      // Buscar o exemplo utilizando "itemId"
-      const exampleCheck = await pool.query(`
-        SELECT * FROM example
-        WHERE "id" = $1
-      `, [id]);
+      // Buscar o exemplo utilizando "id"
+      const example = await prisma.example.findUnique({
+        where: { id }
+      });
 
-      if (exampleCheck.rows.length === 0) {
+      if (!example) {
         return res.status(404).json({
           success: false,
           error: 'Exemplo não encontrado'
@@ -21,24 +30,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Atualizar o código utilizando "id"
-      const result = await pool.query(`
-        UPDATE example
-        SET code = $1
-        WHERE "id" = $2
-        RETURNING *
-      `, [code, id]);
+      const updatedExample = await prisma.example.update({
+        where: { id },
+        data: { code }
+      });
 
       return res.json({
         success: true,
-        data: result.rows[0]
+        data: updatedExample
       });
     } catch (error: unknown) {
-      console.error('Erro ao salvar:', error);
+      console.error('Erro ao salvar código:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,
         error: errorMessage
       });
+    } finally {
+      await prisma.$disconnect();
     }
   }
   return res.status(405).json({ error: 'Método não permitido' });

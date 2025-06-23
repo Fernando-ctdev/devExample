@@ -1,96 +1,100 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from './config/db.js';
-import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method === 'GET') {
-    console.log('Requisição recebida em /api/technologies');
-    try {
-      const { rows } = await pool.query(`
-        SELECT 
-          t."id",
-          t."name",
-          t."title",
-          t."color",
-          t."hoverColor",
-          t."logo",
-          t."alt",
-          t."padding",
-          t."createdAt",
-          t."updatedAt",
-          COALESCE(
-            array_agg(
-              json_build_object(
-                'id', c."id",
-                'name', c."name",
-                'items', COALESCE(
-                  (
-                    SELECT json_agg(
-                      json_build_object(
-                        'id', i."id",
-                        'itemId', i."itemId",
-                        'title', i."title",
-                        'example', (
-                          SELECT json_build_object(
-                            'id', e."id",
-                            'title', e."title",
-                            'description', e."description",
-                            'code', e."code",
-                            'explanation', e."explanation"
-                          )
-                          FROM "example" e
-                          WHERE e."itemId" = i."itemId"
-                        )
-                      )
-                    )
-                    FROM "item" i
-                    WHERE i."categoryId" = c."id"
-                  ),
-                  '[]'::json
-                )
-              )
-            ) FILTER (WHERE c."id" IS NOT NULL),
-            array[]::json[]
-          ) as categories
-        FROM "technology" t
-        LEFT JOIN "category" c ON c."technologyId" = t."id"
-        GROUP BY t."id", t."name", t."title", t."color", t."hoverColor", t."logo", t."alt", t."padding", t."createdAt", t."updatedAt"
-        ORDER BY t."createdAt" DESC
-      `);                  
+  try {
+    if (req.method === 'GET') {
+      console.log('Requisição recebida em /api/technologies');
       
-      return res.json(rows);
-    } catch (error: unknown) {
-      console.error('Erro detalhado:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      return res.status(500).json({ error: errorMessage });
-    }
-  }
+      const technologies = await prisma.technology.findMany({
+        include: {
+          categories: {
+            include: {
+              items: {
+                include: {
+                  example: {
+                    select: {
+                      id: true,
+                      title: true,
+                      description: true,
+                      code: true,
+                      explanation: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
 
-  if (req.method === 'POST') {
-    try {
+      // Transformar os dados para o formato esperado pelo frontend
+      const formattedTechnologies = technologies.map(tech => ({
+        id: tech.id,
+        name: tech.name,
+        title: tech.title,
+        color: tech.color,
+        hoverColor: tech.hoverColor,
+        logo: tech.logo,
+        alt: tech.alt,
+        padding: tech.padding,
+        createdAt: tech.createdAt,
+        updatedAt: tech.updatedAt,
+        categories: tech.categories.map(category => ({
+          id: category.id,
+          name: category.name,
+          items: category.items.map(item => ({
+            id: item.id,
+            itemId: item.itemId,
+            title: item.title,
+            example: item.example
+          }))
+        }))
+      }));
+      
+      return res.json(formattedTechnologies);
+    }    if (req.method === 'POST') {
       const { name, title, color, hoverColor, logo, alt, padding } = req.body;
-      if (!name || !title || !color || !hoverColor || !logo || !alt || !padding) {
+      
+      // Apenas name é obrigatório, os outros têm valores padrão
+      if (!name) {
         return res.status(400).json({
           success: false,
-          error: 'Todos os campos são obrigatórios'
+          error: 'Nome da tecnologia é obrigatório'
         });
       }
 
-      const newId = uuidv4();
+      const newTechnology = await prisma.technology.create({
+        data: {
+          name: name.toLowerCase(),
+          title: title || `${name.charAt(0).toUpperCase() + name.slice(1)} examples`,
+          color: color || '#8B5CF6',
+          hoverColor: hoverColor || '#7C3AED',
+          logo: logo || '',
+          alt: alt || `${name.charAt(0).toUpperCase() + name.slice(1)} logo`,
+          padding: padding || 'px-8 py-3'
+        }
+      });
       
-      const techResult = await pool.query(
-        `INSERT INTO technology (id, name, title, color, "hoverColor", logo, alt, padding, "updatedAt")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now()) RETURNING *`,
-        [newId, name.toLowerCase(), title, color, hoverColor, logo, alt, padding]
-      );
-      
-      return res.status(201).json({ success: true, data: techResult.rows[0] });
-    } catch (error: unknown) {
-      console.error('Erro ao criar tecnologia:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      return res.status(500).json({ success: false, error: errorMessage });
+      return res.status(201).json({ 
+        success: true, 
+        data: newTechnology 
+      });
     }
-  }
 
-  return res.status(405).json({ error: 'Método não permitido' });
+    return res.status(405).json({ error: 'Método não permitido' });
+    
+  } catch (error: unknown) {
+    console.error('Erro detalhado:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    return res.status(500).json({ 
+      success: false, 
+      error: errorMessage 
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -6,8 +6,6 @@ import {
   Save,
   Edit2,
   ArrowLeft,
-  Sun,
-  Moon,
   Check,
 } from "lucide-react";
 import Prism from "prismjs";
@@ -16,47 +14,8 @@ import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-go";
 import "prismjs/components/prism-sql";
 import "prismjs/themes/prism-tomorrow.css";
-
-interface Example {
-  id: string;
-  title: string;
-  code: string;
-  explanation: string;
-  itemId: string; 
-}
-
-interface Technology {
-  id: string;
-  name: string;
-  title: string;
-  color: string;
-  hoverColor: string;
-  logo: string;
-  alt: string;
-  padding: string;
-}
-
-interface ExampleViewProps {
-  example: Example;
-  technology: Technology | null;
-  onBackClick: () => void;
-  onNavigateNext: () => void;
-  onNavigatePrevious: () => void;
-  currentTech: string;
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-  onSave: (type: 'code' | 'explanation', content: string, itemId: string) => Promise<boolean>;
-}
-
-const TECH_LOGOS: Record<string, string> = {
-  javascript: "https://cdn.iconscout.com/icon/free/png-512/free-javascript-2752148-2284965.png?f=webp&w=256",
-  typescript: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/1024px-Typescript_logo_2020.svg.png",
-  golang: "https://cdn.iconscout.com/icon/free/png-512/free-va-77-1175166.png?f=webp&w=256",
-  gin: "https://avatars.githubusercontent.com/u/7894478?v=4",
-  nodejs: "https://cdn.iconscout.com/icon/free/png-512/free-node-js-logo-icon-download-in-svg-png-gif-file-formats--nodejs-programming-language-pack-logos-icons-1174925.png?f=webp&w=256",
-  nestjs: "https://static-00.iconduck.com/assets.00/nestjs-icon-1024x1020-34exj0g6.png",
-  sql: "https://symbols.getvecta.com/stencil_28/61_sql-database-generic.90b41636a8.png"
-};
+import { ExampleViewProps } from "../types/types";
+import { TECH_LOGOS } from "../constants/technologies";
 
 export function ExampleView({
   example,
@@ -65,7 +24,6 @@ export function ExampleView({
   onNavigatePrevious,
   currentTech,
   isDarkMode,
-  toggleTheme,
   onSave,
 }: ExampleViewProps) {
   const [copied, setCopied] = useState(false);
@@ -133,97 +91,83 @@ export function ExampleView({
     } finally {
       setIsSaving(false);
     }
-  };
-  return (
+  };  return (
     <div
-      className={`flex flex-col min-h-screen relative ${
-        isDarkMode ? "bg-slate-950" : "bg-slate-50"
+      className={`flex flex-col h-screen overflow-hidden ${
+        isDarkMode ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
       }`}
     >
-      {/* Header com gradiente adaptativo */}
+      {/* Header modernizado */}
       <header
-        className={`sticky top-0 z-50 text-white shadow-lg
+        className={`sticky top-0 z-50 text-white shadow-2xl backdrop-blur-md border-b
         ${
           isDarkMode
-            ? "bg-gradient-to-r from-blue-900 to-blue-700"
-            : "bg-gradient-to-r from-blue-600 to-blue-400"
+            ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
+            : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
         }`}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between relative">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <button
                 onClick={onBackClick}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg 
+                className="flex items-center gap-3 px-5 py-3 rounded-2xl 
                          bg-white/10 hover:bg-white/20 
-                         transition-all duration-200
-                         shadow-sm hover:shadow active:scale-95"
+                         transition-all duration-300 hover:scale-105
+                         shadow-lg hover:shadow-xl active:scale-95 backdrop-blur-md"
               >
-                <ArrowLeft size={18} />
-                <span className="font-medium">Voltar</span>
+                <ArrowLeft size={20} />
+                <span className="font-semibold">Voltar</span>
               </button>
-              <h1 className="text-xl font-bold tracking-tight">
+              <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
                 {example.title}
               </h1>
             </div>
 
-            {/* Badge de tecnologia */}
+            {/* Badge de tecnologia modernizado */}
             <div
               className="absolute left-1/2 transform -translate-x-1/2 
-                          flex items-center gap-2 px-4 py-1.5 rounded-lg
-                          bg-white/10 backdrop-blur-sm
-                          shadow-sm transition-all duration-200 hover:bg-white/20"
+                          flex items-center gap-3 px-5 py-2.5 rounded-2xl
+                          bg-white/15 backdrop-blur-md border border-white/20
+                          shadow-lg transition-all duration-300 hover:bg-white/25 hover:scale-105"
             >
               {TECH_LOGOS[currentTech] && (
                 <img
                   src={TECH_LOGOS[currentTech]}
                   alt={`${currentTech} Logo`}
-                  className="w-5 h-5"
+                  className="w-6 h-6"
                 />
               )}
-              <span className="font-medium capitalize text-sm">
+              <span className="font-semibold capitalize text-base">
                 {currentTech}
               </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 
-                         transition-all duration-200
-                         shadow-sm hover:shadow active:scale-95"
-                title={isDarkMode ? "Modo claro" : "Modo escuro"}
-              >
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-              <div className="flex rounded-lg bg-white/10">
+            </div>            <div className="flex items-center gap-3">
+              <div className="flex rounded-2xl bg-white/10 backdrop-blur-md shadow-lg">
                 <button
                   onClick={onNavigatePrevious}
-                  className="p-2 rounded-l-lg hover:bg-white/20 
-                           transition-all duration-200
+                  className="p-3 rounded-l-2xl hover:bg-white/20 
+                           transition-all duration-300 hover:scale-105
                            shadow-sm hover:shadow active:scale-95"
                   title="Exemplo anterior"
                 >
-                  <ChevronLeft size={18} />
+                  <ChevronLeft size={20} />
                 </button>
                 <button
                   onClick={onNavigateNext}
-                  className="p-2 rounded-r-lg hover:bg-white/20 
-                           transition-all duration-200
+                  className="p-3 rounded-r-2xl hover:bg-white/20 
+                           transition-all duration-300 hover:scale-105
                            shadow-sm hover:shadow active:scale-95"
                   title="Próximo exemplo"
                 >
-                  <ChevronRight size={18} />
+                  <ChevronRight size={20} />
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </header>
-
-      {/* Main Content */}
+      </header>      {/* Main Content */}
       <main className="flex-1 container mx-auto px-2 md:px-4 lg:px-4 py-6 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[min(100vh-12rem,900px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full px-2 pb-8">
           {/* Code Card */}
           <div className="group bg-[#282a36] rounded-2xl overflow-hidden border border-[#44475a] shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)] transition-all duration-300">
             <div className="flex items-center justify-between px-4 py-3 bg-[#21222c] border-b border-[#44475a]">
@@ -352,42 +296,9 @@ export function ExampleView({
                      shadow-lg
                      flex items-center gap-2"
         >
-          <span className="font-medium">Erro ao salvar: {saveError}</span>
-        </div>
+          <span className="font-medium">Erro ao salvar: {saveError}</span>        </div>
       )}
 
-<footer className="absolute bottom-0 left-0 right-0 py-2 text-center bg-white/10 backdrop-blur-sm">
-        <a  
-          href="https://github.com/Fernando-ctdev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`inline-flex items-center justify-center gap-2 text-sm hover:opacity-75 transition-opacity ${
-            isDarkMode ? "text-gray-400" : "text-gray-500"
-          }`}
-        >
-          <span>Desenvolvido por</span>
-          <span
-            className={`font-semibold ${
-              isDarkMode
-                ? "text-blue-400 hover:text-blue-300"
-                : "text-blue-600 hover:text-blue-500"
-            }`}
-          >
-            Maicon Fernando
-          </span>
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="h-5 w-5 fill-current"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0112 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48C19.137 20.107 22 16.373 22 11.969 22 6.463 17.522 2 12 2z"
-            />
-          </svg>
-        </a>
-      </footer>
       <style jsx global>{`
         /* Scrollbar - Dracula Theme */
         .custom-scrollbar::-webkit-scrollbar {

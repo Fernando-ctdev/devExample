@@ -10,16 +10,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       console.log('Recebendo requisição para criar categoria:', req.body);
 
-      if (!category || !technologyId) {
+      // Validação mais robusta
+      if (!category?.trim() || !technologyId?.trim()) {
         return res.status(400).json({
           success: false,
-          error: 'Nome da categoria e ID da tecnologia são obrigatórios'
+          error: 'Nome da categoria e ID da tecnologia são obrigatórios e não podem estar vazios'
         });
       }
 
       // Buscar a tecnologia pelo nome (technologyId vem como nome)
       const technology = await prisma.technology.findUnique({
-        where: { name: technologyId }
+        where: { name: technologyId.trim() }
       });
 
       if (!technology) {
@@ -29,10 +30,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
+      // Verificar se já existe uma categoria com esse nome para esta tecnologia
+      const existingCategory = await prisma.category.findFirst({
+        where: {
+          name: category.trim(),
+          technologyId: technology.id
+        }
+      });
+
+      if (existingCategory) {
+        return res.status(409).json({
+          success: false,
+          error: 'Já existe uma categoria com este nome para esta tecnologia'
+        });
+      }
+
       // Criar apenas a categoria, sem criar itens
       const newCategory = await prisma.category.create({
         data: {
-          name: category,
+          name: category.trim(),
           technologyId: technology.id
         }
       });
@@ -42,13 +58,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true,
         data: newCategory
       });
-    } catch (error: any) {
-      console.error('Erro ao criar categoria:', error);
+    } catch (error: unknown) {      console.error('Erro ao criar categoria:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,
         error: 'Erro ao criar categoria',
-        details: error.message
+        details: errorMessage
       });
+    } finally {
+      await prisma.$disconnect();
     }
   }
 

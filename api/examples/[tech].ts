@@ -3,6 +3,16 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+interface ExampleData {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  explanation: string;
+  itemId: string;
+  categoryId: string;
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -11,8 +21,15 @@ export default async function handler(
     try {
       const techParam = req.query.tech as string;
 
+      if (!techParam?.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Parâmetro tech é obrigatório'
+        });
+      }
+
       const tech = await prisma.technology.findUnique({
-        where: { name: techParam },
+        where: { name: techParam.trim() },
         include: {
           categories: {
             include: {
@@ -34,7 +51,7 @@ export default async function handler(
           .json({ success: false, error: 'Tecnologia não encontrada' });
       }
 
-      const examples: Record<string, any> = {};
+      const examples: Record<string, ExampleData> = {};
 
       // Itera sobre as categorias e itens e constrói o objeto de exemplos
       tech.categories.forEach(category => {
@@ -57,9 +74,12 @@ export default async function handler(
       return res.json({ success: true, data: examples });
     } catch (error: unknown) {
       console.error('Erro ao buscar exemplos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res
         .status(500)
-        .json({ success: false, error: 'Erro ao buscar exemplos' });
+        .json({ success: false, error: 'Erro ao buscar exemplos', details: errorMessage });
+    } finally {
+      await prisma.$disconnect();
     }
   }
 

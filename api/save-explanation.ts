@@ -1,36 +1,43 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from './config/db.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
       const { id, explanation } = req.body;
+      
+      if (!id || explanation === undefined) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID e explicação são obrigatórios'
+        });
+      }
+
       console.log('Request save-explanation:', { id, explanationLength: explanation?.length });
 
-      // Buscar o exemplo utilizando "itemId"
-      const exampleCheck = await pool.query(`
-        SELECT * FROM example
-        WHERE "id" = $1
-      `, [id]);
+      // Buscar o exemplo utilizando "id"
+      const example = await prisma.example.findUnique({
+        where: { id }
+      });
 
-      if (exampleCheck.rows.length === 0) {
+      if (!example) {
         return res.status(404).json({
           success: false,
           error: 'Exemplo não encontrado'
         });
       }
 
-      // Atualizar o explanation utilizando "itemId"
-      const result = await pool.query(`
-        UPDATE example
-        SET explanation = $1
-        WHERE "id" = $2
-        RETURNING *
-      `, [explanation, id]);
+      // Atualizar a explicação utilizando "id"
+      const updatedExample = await prisma.example.update({
+        where: { id },
+        data: { explanation }
+      });
 
       return res.json({
         success: true,
-        data: result.rows[0]
+        data: updatedExample
       });
 
     } catch (error: unknown) {
@@ -40,6 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: false,
         error: errorMessage
       });
+    } finally {
+      await prisma.$disconnect();
     }
   }
   

@@ -9,10 +9,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { categoryId, title } = req.body as { categoryId: string; title: string };
 
-      if (!categoryId || !title) {
+      // Validação mais robusta
+      if (!categoryId?.trim() || !title?.trim()) {
         return res.status(400).json({
           success: false,
-          error: 'categoryId e title são obrigatórios'
+          error: 'categoryId e title são obrigatórios e não podem estar vazios'
         });
       }
 
@@ -20,7 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Verificar se a categoria existe e obter o technologyId
       const category = await prisma.category.findUnique({
-        where: { id: categoryId }
+        where: { id: categoryId.trim() },
+        include: { technology: true }
       });
 
       if (!category) {
@@ -32,6 +34,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const technologyId = category.technologyId;
 
+      // Verificar se já existe um item com este título na categoria
+      const existingItem = await prisma.item.findFirst({
+        where: {
+          title: title.trim(),
+          categoryId: categoryId.trim()
+        }
+      });
+
+      if (existingItem) {
+        return res.status(409).json({
+          success: false,
+          error: 'Já existe um tópico com este título nesta categoria'
+        });
+      }
+
       // Gerar um novo id para o item, que será usado também em itemId
       const newId = uuidv4();
 
@@ -40,8 +57,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         data: {
           id: newId,
           itemId: newId,
-          title,
-          categoryId
+          title: title.trim(),
+          categoryId: categoryId.trim()
         }
       });
 
@@ -49,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const example = await prisma.example.create({
         data: {
           id: uuidv4(),
-          title,
+          title: title.trim(),
           description: '',
           code: '',
           explanation: '',
@@ -67,13 +84,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar tópico:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return res.status(500).json({
         success: false,
         error: 'Erro ao criar tópico',
-        details: error.message
+        details: errorMessage
       });
+    } finally {
+      await prisma.$disconnect();
+    }
+  }  if (req.method === 'DELETE') {
+    try {
+      // Extrair itemId da URL (formato: /api/items/:itemId)
+      const { itemId } = req.query as { itemId: string };
+
+      if (!itemId?.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'itemId é obrigatório'
+        });
+      }
+
+      console.log('Recebendo requisição para deletar item:', itemId);
+
+      // Verificar se o item existe (usando id, que é a chave primária)
+      const existingItem = await prisma.item.findUnique({
+        where: { id: itemId.trim() }
+      });
+
+      if (!existingItem) {
+        return res.status(404).json({
+          success: false,
+          error: 'Item não encontrado'
+        });
+      }
+
+      // Deletar exemplos associados primeiro (usando o id do item como itemId no exemplo)
+      await prisma.example.deleteMany({
+        where: { itemId: existingItem.id }
+      });
+
+      // Deletar o item usando id (chave primária)
+      await prisma.item.delete({
+        where: { id: itemId.trim() }
+      });
+
+      console.log('Item deletado com sucesso:', itemId);
+      return res.status(200).json({
+        success: true,
+        message: 'Item deletado com sucesso'
+      });
+
+    } catch (error: unknown) {
+      console.error('Erro ao deletar item:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao deletar item',
+        details: errorMessage
+      });
+    } finally {
+      await prisma.$disconnect();
     }
   }
 
