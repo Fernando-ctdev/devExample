@@ -58,63 +58,8 @@ function App() {
   const [examples, setExamples] = useState<Record<string, Example>>({});
   const [technologies, setTechnologies] = useState<Technology[]>([]);  const [currentExample, setCurrentExample] = useState<Example>(defaultExample); // Sempre tem um valor padrão
   const [currentTechnology, setCurrentTechnology] =
-    useState<Technology>(defaultTechnology); // Sempre tem um valor padrão
-    // Estado global do StudyTimer
+    useState<Technology>(defaultTechnology); // Sempre tem um valor padrão  // Estado global do StudyTimer
   const [activeStudySession, setActiveStudySession] = useState<StudySession | null>(null);
-
-  // Lógica do timer
-  useEffect(() => {
-    if (!activeStudySession || !activeStudySession.isActive || activeStudySession.isPaused) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setActiveStudySession(prevSession => {
-        if (!prevSession) return null;          if (prevSession.isBreakTime) {
-            // Durante o intervalo
-            const newBreakTime = prevSession.breakTimeRemaining - 1;
-            if (newBreakTime <= 0) {
-              // Fim do intervalo, volta para estudo
-              return {
-                ...prevSession,
-                isBreakTime: false,
-                timeRemaining: prevSession.duration * 60,
-                breakTimeRemaining: prevSession.breakDuration * 60
-              };
-            }
-            return {
-              ...prevSession,
-              breakTimeRemaining: newBreakTime
-            };
-          } else {
-            // Durante o estudo
-            const newTime = prevSession.timeRemaining - 1;
-            if (newTime <= 0) {
-              // Fim do estudo
-              if (prevSession.breakDuration > 0) {
-                // Iniciar intervalo
-                return {
-                  ...prevSession,
-                  isBreakTime: true,
-                  timeRemaining: 0,
-                  breakTimeRemaining: prevSession.breakDuration * 60
-                };
-              } else {
-                // Sessão completa (sem intervalo)
-                setTimeout(() => handleSessionComplete(), 0);
-                return prevSession;
-              }
-            }
-            return {
-              ...prevSession,
-              timeRemaining: newTime
-            };
-          }
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [activeStudySession]);
   // Funções do timer
   const handleStartStudySession = (session: StudySession) => {
     const newSession: StudySession = {
@@ -571,21 +516,7 @@ function App() {
       setCurrentPage(page);
       if (page === "home") {
         setSearchTerm("");
-      }
-    };
-
-    // Funções globais para controle do StudyTimer
-    const handleSessionComplete = () => {
-      if (activeStudySession) {
-        setActiveStudySession({
-          ...activeStudySession,
-          endTime: new Date(),
-          isActive: false,
-        });        // Aqui você pode salvar a sessão no banco de dados ou localStorage
-        console.log('Sessão concluída:', activeStudySession);
-        setActiveStudySession(null);
-      }
-    };
+      }    };
 
     const renderCurrentPage = () => {
       // Se a página atual não é uma das páginas da sidebar e não é 'home',
@@ -711,16 +642,14 @@ function App() {
               {renderCurrentPage()}
             </div>
           </div>
-        </div>
-        
-        {/* StudyTimer Global - aparece em todas as páginas */}
+        </div>        {/* StudyTimer Global - aparece em todas as páginas */}
         {activeStudySession && (          <StudyTimer
             session={activeStudySession}
-            isDarkMode={isDarkMode}            onSessionComplete={handleSessionComplete}
-            onSessionPause={handlePauseSession}
+            isDarkMode={isDarkMode}            onSessionPause={handlePauseSession}
             onSessionResume={handleResumeSession}
             onSessionStop={handleStopSession}
             onToggleMinimize={handleToggleMinimize}
+            onSessionComplete={handleSessionComplete}
           />
         )}
       </div>

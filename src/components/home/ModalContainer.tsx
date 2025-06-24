@@ -68,10 +68,9 @@ export function ModalContainer({
       categoryId: "",
     });
     onCloseModals();
-  };
-  // Modal para Nova Tecnologia
+  };  // Modal para Nova Tecnologia
   const NewTechModal = showNewTechModal && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -79,7 +78,7 @@ export function ModalContainer({
       />
       {/* Modal */}
       <div
-        className={`relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl ${
+        className={`modal-content relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl z-[61] ${
           isDarkMode
             ? "bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50"
             : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50"
@@ -231,10 +230,9 @@ export function ModalContainer({
         </form>
       </div>
     </div>
-  );
-  // Modal para Novo Tópico
+  );  // Modal para Novo Tópico
   const NewTopicModal = showNewTopicModal && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -242,7 +240,7 @@ export function ModalContainer({
       />
       {/* Modal */}
       <div
-        className={`relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl ${
+        className={`modal-content relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl z-[61] ${
           isDarkMode
             ? "bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50"
             : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50"
@@ -405,10 +403,9 @@ export function ModalContainer({
         </form>
       </div>
     </div>
-  );
-  // Modal para Novo Item
+  );  // Modal para Novo Item
   const NewItemModal = showNewItemModal && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -416,7 +413,7 @@ export function ModalContainer({
       />
       {/* Modal */}
       <div
-        className={`relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl ${
+        className={`modal-content relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl z-[61] ${
           isDarkMode
             ? "bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50"
             : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50"

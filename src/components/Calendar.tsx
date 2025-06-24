@@ -222,8 +222,7 @@ export const Calendar: React.FC<CalendarProps> = ({ isDarkMode, onStartStudySess
   const handleStartStudyClick = (eventTitle: string, eventType: string) => {
     setSelectedEvent({ title: eventTitle, type: eventType });
     setIsStudyModalOpen(true);
-  };
-  const handleStartStudy = (duration: number, breakDuration: number) => {
+  };  const handleStartStudy = (duration: number, breakDuration: number) => {
     if (!selectedEvent || !onStartStudySession) return;
 
     const newSession: StudySession = {
@@ -235,6 +234,10 @@ export const Calendar: React.FC<CalendarProps> = ({ isDarkMode, onStartStudySess
       startTime: new Date(),
       isActive: true,
       isPaused: false,
+      timeRemaining: duration * 60,
+      breakTimeRemaining: breakDuration * 60,
+      isBreakTime: false,
+      isMinimized: false,
     };
 
     onStartStudySession(newSession);
@@ -715,16 +718,15 @@ export const Calendar: React.FC<CalendarProps> = ({ isDarkMode, onStartStudySess
           </div>
         </div>
       </main>
-      {/* Modal de Novo Evento */}
-      {showEventModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Modal de Novo Evento */}      {showEventModal && (
+        <div className="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Backdrop */}          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={handleCloseModal}
           />
           {/* Modal */}
           <div
-            className={`relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl ${
+            className={`modal-content relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl z-[61] ${
               isDarkMode
                 ? "bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50"
                 : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50"
@@ -967,11 +969,9 @@ export const Calendar: React.FC<CalendarProps> = ({ isDarkMode, onStartStudySess
               </div>
             </div>{" "}          </div>{" "}
         </div>
-      )}
-
-      {/* Modal de Confirmação de Exclusão */}
+      )}      {/* Modal de Confirmação de Exclusão */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -979,7 +979,7 @@ export const Calendar: React.FC<CalendarProps> = ({ isDarkMode, onStartStudySess
           />
           {/* Modal */}
           <div
-            className={`relative w-full max-w-sm rounded-3xl border backdrop-blur-xl shadow-2xl ${
+            className={`modal-content relative w-full max-w-sm rounded-3xl border backdrop-blur-xl shadow-2xl z-[61] ${
               isDarkMode
                 ? "bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50"
                 : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50"

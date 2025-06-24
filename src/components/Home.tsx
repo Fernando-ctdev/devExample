@@ -220,8 +220,7 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
   const handleStartStudyClick = (eventTitle: string, eventType: string) => {
     setSelectedEvent({ title: eventTitle, type: eventType });
     setIsStudyModalOpen(true);
-  };
-  const handleStartStudy = (duration: number, breakDuration: number) => {
+  };  const handleStartStudy = (duration: number, breakDuration: number) => {
     if (!selectedEvent || !onStartStudySession) return;
 
     const newSession: StudySession = {
@@ -233,6 +232,10 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
       startTime: new Date(),
       isActive: true,
       isPaused: false,
+      timeRemaining: duration * 60,
+      breakTimeRemaining: breakDuration * 60,
+      isBreakTime: false,
+      isMinimized: false,
     };
 
     onStartStudySession(newSession);

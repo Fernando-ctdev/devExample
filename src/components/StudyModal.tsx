@@ -34,11 +34,10 @@ export function StudyModal({
   };
 
   if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
       <div
-        className={`relative w-full max-w-lg rounded-2xl shadow-2xl border backdrop-blur-md ${
+        className={`modal-content relative w-full max-w-lg rounded-2xl shadow-2xl border backdrop-blur-md z-[61] ${
           isDarkMode
             ? 'bg-gradient-to-br from-slate-800/95 to-slate-900/95 border-slate-700/50'
             : 'bg-gradient-to-br from-white/95 to-slate-50/95 border-slate-200/50'

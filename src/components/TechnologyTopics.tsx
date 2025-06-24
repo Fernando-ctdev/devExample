@@ -1,11 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   ChevronLeft,
-  Plus,
   BookOpen,
-  Code2,
+  Plus,
   Search,
   Target,
+  Code2,
   Trash2,
 } from "lucide-react";
 import { Technology, Topic, NewItemData } from "../types/types";
@@ -34,6 +34,55 @@ export const TechnologyTopics: React.FC<TechnologyTopicsProps> = ({
   onDeleteCategory,
   isDarkMode,
 }) => {
+  // Custom scrollbar styles effect
+  React.useEffect(() => {
+    const scrollbarStyles = `
+      .custom-scrollbar-topics::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      .custom-scrollbar-topics::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 8px;
+      }
+      
+      .custom-scrollbar-topics::-webkit-scrollbar-thumb {
+        background: ${isDarkMode ? 'rgba(71, 85, 105, 0.6)' : 'rgba(148, 163, 184, 0.6)'};
+        border-radius: 8px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+        transition: all 0.3s ease;
+      }
+      
+      .custom-scrollbar-topics::-webkit-scrollbar-thumb:hover {
+        background: ${isDarkMode ? 'rgba(71, 85, 105, 0.8)' : 'rgba(148, 163, 184, 0.8)'};
+        background-clip: content-box;
+      }
+      
+      .custom-scrollbar-topics::-webkit-scrollbar-corner {
+        background: transparent;
+      }
+      
+      /* Firefox scrollbar */
+      .custom-scrollbar-topics {
+        scrollbar-width: thin;
+        scrollbar-color: ${isDarkMode 
+          ? 'rgba(71, 85, 105, 0.6) transparent' 
+          : 'rgba(148, 163, 184, 0.6) transparent'
+        };
+      }
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = scrollbarStyles;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, [isDarkMode]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
   const [showNewItemModal, setShowNewItemModal] = useState(false);
@@ -116,10 +165,9 @@ export const TechnologyTopics: React.FC<TechnologyTopicsProps> = ({
     setShowNewItemModal(false);
     setSelectedCategory("");
     setSelectedCategoryId("");
-  };
-  return (
+  };  return (
     <div
-      className={`h-full overflow-y-auto ${
+      className={`h-full overflow-y-auto custom-scrollbar-topics ${
         isDarkMode
           ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
           : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
@@ -483,11 +531,9 @@ export const TechnologyTopics: React.FC<TechnologyTopicsProps> = ({
         onCreateCategory={onCreateCategory}
         onCreateItem={onCreateItem}
         onCloseModals={handleCloseModals}
-      />
-
-      {/* Modal de Confirmação de Exclusão */}
+      />      {/* Modal de Confirmação de Exclusão */}
       {showDeleteModal && itemToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -495,7 +541,7 @@ export const TechnologyTopics: React.FC<TechnologyTopicsProps> = ({
           />
           {/* Modal */}
           <div
-            className={`relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl ${
+            className={`modal-content relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl z-[61] ${
               isDarkMode
                 ? "bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50"
                 : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50"
@@ -608,11 +654,9 @@ export const TechnologyTopics: React.FC<TechnologyTopicsProps> = ({
             </div>
           </div>
         </div>
-      )}
-
-      {/* Modal de Confirmação de Exclusão de Categoria */}
+      )}      {/* Modal de Confirmação de Exclusão de Categoria */}
       {showDeleteCategoryModal && categoryToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -620,7 +664,7 @@ export const TechnologyTopics: React.FC<TechnologyTopicsProps> = ({
           />
           {/* Modal */}
           <div
-            className={`relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl ${
+            className={`modal-content relative w-full max-w-md rounded-3xl border backdrop-blur-xl shadow-2xl z-[61] ${
               isDarkMode
                 ? "bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50"
                 : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50"

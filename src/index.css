@@ -129,3 +129,28 @@ code[class*="language-"] {
 .delay-400 {
   animation-delay: 400ms;
 }
+
+/* Layout e Z-Index Management */
+.study-timer-container {
+  /* Garantir que o StudyTimer não interfira com outros elementos */
+  pointer-events: auto !important;
+  isolation: isolate;
+}
+
+/* Garantir que modais tenham precedência sobre o StudyTimer */
+.modal-overlay {
+  z-index: 9999 !important;
+}
+
+.modal-content {
+  z-index: 10000 !important;
+}
+
+/* Prevenir interferência do StudyTimer com scroll da página */
+.study-timer-container:not(:hover) {
+  pointer-events: none;
+}
+
+.study-timer-container:not(:hover) > * {
+  pointer-events: auto;
+}

@@ -1,48 +1,140 @@
 import { StudySession } from '../types/types';
 import { Play, Pause, Square, Clock, Coffee, Minimize2, Maximize2 } from 'lucide-react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
+
+/**
+ * Z-Index Hierarchy:
+ * z-40: StudyTimer (fixed position, must be below modals)
+ * z-50: Modals (main content overlays)
+ * z-60: Critical overlays (if any)
+ */
 
 interface StudyTimerProps {
   session: StudySession;
   isDarkMode: boolean;
-  onSessionComplete: () => void;
   onSessionPause: () => void;
   onSessionResume: () => void;
   onSessionStop: () => void;
   onToggleMinimize: () => void;
+  onSessionComplete?: () => void;
 }
 
-export function StudyTimer({
+export const StudyTimer = memo(function StudyTimer({
   session,
   isDarkMode,
-  onSessionComplete,
   onSessionPause,
   onSessionResume,
   onSessionStop,
   onToggleMinimize,
+  onSessionComplete,
 }: StudyTimerProps) {
-  // Agora usamos os valores do session que vem das props (gerenciado pelo App)
-  const { timeRemaining, breakTimeRemaining, isBreakTime, isMinimized } = session;
+  // Estado local para o timer (não afeta o componente pai)
+  const [timeRemaining, setTimeRemaining] = useState(session.timeRemaining);
+  const [breakTimeRemaining, setBreakTimeRemaining] = useState(session.breakTimeRemaining);
+  const [isBreakTime, setIsBreakTime] = useState(session.isBreakTime);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const formatTime = (seconds: number) => {
+  // Sincronizar com mudanças externas na sessão (pause/resume)
+  useEffect(() => {
+    setTimeRemaining(session.timeRemaining);
+    setBreakTimeRemaining(session.breakTimeRemaining);
+    setIsBreakTime(session.isBreakTime);
+  }, [session.timeRemaining, session.breakTimeRemaining, session.isBreakTime]);
+
+  // Lógica do timer interno
+  useEffect(() => {
+    if (!session.isActive || session.isPaused) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      if (isBreakTime) {
+        // Durante o intervalo
+        setBreakTimeRemaining(prev => {
+          const newTime = prev - 1;
+          if (newTime <= 0) {
+            // Fim do intervalo, volta para estudo
+            setIsBreakTime(false);
+            setTimeRemaining(session.duration * 60);
+            setBreakTimeRemaining(session.breakDuration * 60);
+            return session.breakDuration * 60;
+          }
+          return newTime;
+        });
+      } else {
+        // Durante o estudo
+        setTimeRemaining(prev => {
+          const newTime = prev - 1;
+          if (newTime <= 0) {
+            // Fim do estudo
+            if (session.breakDuration > 0) {
+              // Iniciar intervalo
+              setIsBreakTime(true);
+              setBreakTimeRemaining(session.breakDuration * 60);
+              return 0;
+            } else {
+              // Sessão completa (sem intervalo)
+              if (onSessionComplete) {
+                setTimeout(() => onSessionComplete(), 0);
+              }
+              return 0;
+            }
+          }
+          return newTime;
+        });
+      }
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [session.isActive, session.isPaused, isBreakTime, session.duration, session.breakDuration, onSessionComplete]);
+  const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
+
+  const handlePause = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSessionPause();
+  }, [onSessionPause]);
+
+  const handleResume = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSessionResume();
+  }, [onSessionResume]);
+
+  const handleStop = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSessionStop();
+  }, [onSessionStop]);
+
+  const handleToggleMinimize = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleMinimize();
+  }, [onToggleMinimize]);
 
   const currentTime = isBreakTime ? breakTimeRemaining : timeRemaining;
   const totalTime = isBreakTime ? session.breakDuration * 60 : session.duration * 60;
-  const progress = ((totalTime - currentTime) / totalTime) * 100;
-  return (
+  const progress = totalTime > 0 ? ((totalTime - currentTime) / totalTime) * 100 : 0;  return (
     <div
-      className={`fixed bottom-6 right-6 rounded-2xl shadow-2xl border backdrop-blur-md z-50 transition-all duration-300 ${
-        isMinimized ? 'w-48' : 'w-80'
+      className={`study-timer-container fixed bottom-6 right-6 rounded-2xl shadow-2xl border backdrop-blur-md z-40 transition-all duration-300 ${
+        session.isMinimized ? 'w-48' : 'w-80'
       } ${
         isDarkMode
           ? 'bg-gradient-to-br from-slate-800/95 to-slate-900/95 border-slate-700/50'
           : 'bg-gradient-to-br from-white/95 to-slate-50/95 border-slate-200/50'
       }`}
     >
-      {isMinimized ? (
+      {session.isMinimized ? (
         // Versão Minimizada
         <div className="p-3">
           <div className="flex items-center justify-between">
@@ -87,10 +179,9 @@ export function StudyTimer({
               </div>
             </div>
             
-            <div className="flex items-center gap-1">
-              {session.isPaused ? (
+            <div className="flex items-center gap-1">              {session.isPaused ? (
                 <button
-                  onClick={onSessionResume}
+                  onClick={handleResume}
                   className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110 ${
                     isDarkMode
                       ? 'bg-green-600/20 hover:bg-green-600/30 text-green-400'
@@ -102,7 +193,7 @@ export function StudyTimer({
                 </button>
               ) : (
                 <button
-                  onClick={onSessionPause}
+                  onClick={handlePause}
                   className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110 ${
                     isDarkMode
                       ? 'bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400'
@@ -114,7 +205,7 @@ export function StudyTimer({
                 </button>
               )}
                 <button
-                onClick={onToggleMinimize}
+                onClick={handleToggleMinimize}
                 className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110 ${
                   isDarkMode
                     ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300'
@@ -175,9 +266,8 @@ export function StudyTimer({
                     {isBreakTime ? 'Momento de descansar' : 'Sessão de estudo'}
                   </p>
                 </div>
-              </div>
-                <button
-                onClick={onToggleMinimize}
+              </div>                <button
+                onClick={handleToggleMinimize}
                 className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                   isDarkMode
                     ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300'
@@ -238,11 +328,10 @@ export function StudyTimer({
           </div>
 
           {/* Controls */}
-          <div className="p-4 border-t border-slate-200/20">
-            <div className="flex gap-2">
+          <div className="p-4 border-t border-slate-200/20">            <div className="flex gap-2">
               {session.isPaused ? (
                 <button
-                  onClick={onSessionResume}
+                  onClick={handleResume}
                   className={`flex-1 py-2 px-3 rounded-lg font-medium text-white transition-all duration-200 hover:scale-[1.02] ${
                     isDarkMode
                       ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
@@ -256,7 +345,7 @@ export function StudyTimer({
                 </button>
               ) : (
                 <button
-                  onClick={onSessionPause}
+                  onClick={handlePause}
                   className={`flex-1 py-2 px-3 rounded-lg font-medium text-white transition-all duration-200 hover:scale-[1.02] ${
                     isDarkMode
                       ? 'bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700'
@@ -271,7 +360,7 @@ export function StudyTimer({
               )}
 
               <button
-                onClick={onSessionStop}
+                onClick={handleStop}
                 className={`py-2 px-3 rounded-lg font-medium transition-colors ${
                   isDarkMode
                     ? 'bg-slate-700/50 text-slate-300 hover:bg-red-600/20 hover:text-red-400'
@@ -282,8 +371,7 @@ export function StudyTimer({
               </button>
             </div>
           </div>
-        </>
-      )}
+        </>      )}
     </div>
   );
-}
+});
