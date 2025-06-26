@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
-import { HomeProps, StudySession } from "../types/types";
+import { HomeProps } from "../types/types";
 import { Calendar, Code2, TrendingUp, Clock, Play } from "lucide-react";
 import { StudyModal } from "./StudyModal";
+import { useStudyTimerControl } from "../hooks/useStudyTimer";
 
-export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession }: HomeProps) {  const [currentDate] = useState(new Date());
+export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
+  const [currentDate] = useState(new Date());
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<{title: string; type: string} | null>(null);
-  
+  const [selectedEvent, setSelectedEvent] = useState<{
+    title: string;
+    type: string;
+  } | null>(null);
+  const { startSession } = useStudyTimerControl();
+
   // CSS customizado para scrollbar
   useEffect(() => {
     const scrollbarStyles = `
@@ -220,25 +226,16 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
   const handleStartStudyClick = (eventTitle: string, eventType: string) => {
     setSelectedEvent({ title: eventTitle, type: eventType });
     setIsStudyModalOpen(true);
-  };  const handleStartStudy = (duration: number, breakDuration: number) => {
-    if (!selectedEvent || !onStartStudySession) return;
+  };
+  const handleStartStudy = (duration: number, breakDuration: number) => {
+    if (!selectedEvent) return;
 
-    const newSession: StudySession = {
-      id: Date.now().toString(),
+    startSession({
       eventTitle: selectedEvent.title,
-      eventType: selectedEvent.type,
       duration,
       breakDuration,
-      startTime: new Date(),
-      isActive: true,
-      isPaused: false,
-      timeRemaining: duration * 60,
-      breakTimeRemaining: breakDuration * 60,
-      isBreakTime: false,
-      isMinimized: false,
-    };
+    });
 
-    onStartStudySession(newSession);
     setIsStudyModalOpen(false);
     setSelectedEvent(null);
   };
@@ -809,7 +806,9 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                 </h4>{" "}
                 {/* Container com rolagem interna */}
                 <div className="flex-1 overflow-y-auto min-h-0 events-scrollbar">
-                  {" "}                  {/* Conteúdo dos eventos */}                  <div className="space-y-3 pr-2">
+                  {" "}
+                  {/* Conteúdo dos eventos */}{" "}
+                  <div className="space-y-3 pr-2">
                     {/* Eventos de exemplo */}
                     <div
                       className={`p-3 rounded-lg border-l-4 ${
@@ -828,16 +827,23 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                             }`}
                           >
                             Reunião de Projeto
-                          </h5>                          <p
+                          </h5>{" "}
+                          <p
                             className={`text-xs mt-1 ${
                               isDarkMode ? "text-slate-400" : "text-slate-600"
                             }`}
                           >
-                            Discussão sobre novas funcionalidades e roadmap do projeto
+                            Discussão sobre novas funcionalidades e roadmap do
+                            projeto
                           </p>
                         </div>
                         <button
-                          onClick={() => handleStartStudyClick("Reunião de Projeto", "meeting")}
+                          onClick={() =>
+                            handleStartStudyClick(
+                              "Reunião de Projeto",
+                              "meeting"
+                            )
+                          }
                           className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                             isDarkMode
                               ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
@@ -849,7 +855,7 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                         </button>
                       </div>
                     </div>
-                    
+
                     <div
                       className={`p-3 rounded-lg border-l-4 ${
                         isDarkMode ? "border-violet-400" : "border-violet-500"
@@ -867,16 +873,20 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                             }`}
                           >
                             Code Review
-                          </h5>                          <p
+                          </h5>{" "}
+                          <p
                             className={`text-xs mt-1 ${
                               isDarkMode ? "text-slate-400" : "text-slate-600"
                             }`}
                           >
-                            Revisão do código da API e implementação de melhorias
+                            Revisão do código da API e implementação de
+                            melhorias
                           </p>
                         </div>
                         <button
-                          onClick={() => handleStartStudyClick("Code Review", "review")}
+                          onClick={() =>
+                            handleStartStudyClick("Code Review", "review")
+                          }
                           className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                             isDarkMode
                               ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
@@ -888,7 +898,7 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                         </button>
                       </div>
                     </div>
-                    
+
                     <div
                       className={`p-3 rounded-lg border-l-4 ${
                         isDarkMode ? "border-violet-400" : "border-violet-500"
@@ -906,7 +916,8 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                             }`}
                           >
                             Workshop React
-                          </h5>                          <p
+                          </h5>{" "}
+                          <p
                             className={`text-xs mt-1 ${
                               isDarkMode ? "text-slate-400" : "text-slate-600"
                             }`}
@@ -915,7 +926,9 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                           </p>
                         </div>
                         <button
-                          onClick={() => handleStartStudyClick("Workshop React", "workshop")}
+                          onClick={() =>
+                            handleStartStudyClick("Workshop React", "workshop")
+                          }
                           className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                             isDarkMode
                               ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
@@ -927,7 +940,7 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                         </button>
                       </div>
                     </div>
-                    
+
                     <div
                       className={`p-3 rounded-lg border-l-4 ${
                         isDarkMode ? "border-violet-400" : "border-violet-500"
@@ -945,16 +958,23 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                             }`}
                           >
                             Deadline Entrega
-                          </h5>                          <p
+                          </h5>{" "}
+                          <p
                             className={`text-xs mt-1 ${
                               isDarkMode ? "text-slate-400" : "text-slate-600"
                             }`}
                           >
-                            Finalizar implementação das funcionalidades pendentes
+                            Finalizar implementação das funcionalidades
+                            pendentes
                           </p>
                         </div>
                         <button
-                          onClick={() => handleStartStudyClick("Deadline Entrega", "deadline")}
+                          onClick={() =>
+                            handleStartStudyClick(
+                              "Deadline Entrega",
+                              "deadline"
+                            )
+                          }
                           className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                             isDarkMode
                               ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
@@ -1003,9 +1023,9 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
                 </div>
               </div>
             </div>
-          </div>        </div>
+          </div>{" "}
+        </div>
       </main>
-      
       {/* Modal de Configuração de Estudo */}
       {selectedEvent && (
         <StudyModal
@@ -1018,7 +1038,8 @@ export function Home({ isDarkMode, technologies, onNavigate, onStartStudySession
           eventType={selectedEvent.type}
           onStartStudy={handleStartStudy}
           isDarkMode={isDarkMode}
-        />      )}
+        />
+      )}
     </div>
   );
 }

@@ -5,7 +5,44 @@ import { v4 as uuidv4 } from 'uuid';
 const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method === 'POST') {
+  if (req.method === 'GET') {
+    try {
+      const { categoryId } = req.query;
+
+      if (!categoryId || typeof categoryId !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'CategoryId é obrigatório'
+        });
+      }
+
+      // Buscar itens da categoria específica
+      const items = await prisma.item.findMany({
+        where: {
+          categoryId: categoryId
+        },
+        orderBy: {
+          title: 'asc'
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: items
+      });
+
+    } catch (error: unknown) {
+      console.error('Erro ao buscar itens:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao buscar itens',
+        details: errorMessage
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
+  } else if (req.method === 'POST') {
     try {
       const { categoryId, title } = req.body as { categoryId: string; title: string };
 

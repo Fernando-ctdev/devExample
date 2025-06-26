@@ -100,7 +100,6 @@ export interface HomeProps {
   technologies: Technology[];
   topics: Topic[];
   onNavigate: (page: string) => void;
-  onStartStudySession?: (session: StudySession) => void;
 }
 
 export interface ExampleViewProps {

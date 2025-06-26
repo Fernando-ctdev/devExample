@@ -1,4 +1,3 @@
-import { StudySession } from '../types/types';
 import { Play, Pause, Square, Clock, Coffee, Minimize2, Maximize2 } from 'lucide-react';
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
 
@@ -10,40 +9,94 @@ import { useState, useEffect, useRef, memo, useCallback } from 'react';
  */
 
 interface StudyTimerProps {
-  session: StudySession;
   isDarkMode: boolean;
-  onSessionPause: () => void;
-  onSessionResume: () => void;
-  onSessionStop: () => void;
-  onToggleMinimize: () => void;
-  onSessionComplete?: () => void;
 }
 
-export const StudyTimer = memo(function StudyTimer({
-  session,
-  isDarkMode,
-  onSessionPause,
-  onSessionResume,
-  onSessionStop,
-  onToggleMinimize,
-  onSessionComplete,
-}: StudyTimerProps) {
-  // Estado local para o timer (não afeta o componente pai)
-  const [timeRemaining, setTimeRemaining] = useState(session.timeRemaining);
-  const [breakTimeRemaining, setBreakTimeRemaining] = useState(session.breakTimeRemaining);
-  const [isBreakTime, setIsBreakTime] = useState(session.isBreakTime);
+interface TimerState {
+  eventTitle: string;
+  duration: number;
+  breakDuration: number;
+  timeRemaining: number;
+  breakTimeRemaining: number;
+  isBreakTime: boolean;
+  isActive: boolean;
+  isPaused: boolean;
+  isMinimized: boolean;
+  startTime: Date;
+}
+
+const STORAGE_KEY = 'study-timer-state';
+
+// Hook personalizado para gerenciar o timer
+const useStudyTimer = () => {
+  const [timerState, setTimerState] = useState<TimerState | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sincronizar com mudanças externas na sessão (pause/resume)
+  // Carregar estado do localStorage na inicialização
   useEffect(() => {
-    setTimeRemaining(session.timeRemaining);
-    setBreakTimeRemaining(session.breakTimeRemaining);
-    setIsBreakTime(session.isBreakTime);
-  }, [session.timeRemaining, session.breakTimeRemaining, session.isBreakTime]);
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        // Recalcular o tempo restante baseado no tempo decorrido
+        const now = new Date();
+        const startTime = new Date(parsed.startTime);
+        const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        
+        if (parsed.isActive && !parsed.isPaused) {
+          if (parsed.isBreakTime) {
+            parsed.breakTimeRemaining = Math.max(0, parsed.breakTimeRemaining - elapsedSeconds);
+          } else {
+            parsed.timeRemaining = Math.max(0, parsed.timeRemaining - elapsedSeconds);
+          }
+        }
+        
+        setTimerState(parsed);
+      } catch (error) {
+        console.error('Erro ao carregar estado do timer:', error);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
 
-  // Lógica do timer interno
+  // Listener para eventos customizados de iniciar sessão
   useEffect(() => {
-    if (!session.isActive || session.isPaused) {
+    const handleStartSession = (event: CustomEvent) => {
+      const sessionData = event.detail;
+      const newState: TimerState = {
+        eventTitle: sessionData.eventTitle,
+        duration: sessionData.duration,
+        breakDuration: sessionData.breakDuration,
+        timeRemaining: sessionData.duration * 60,
+        breakTimeRemaining: sessionData.breakDuration * 60,
+        isBreakTime: false,
+        isActive: true,
+        isPaused: false,
+        isMinimized: false,
+        startTime: new Date()
+      };
+      setTimerState(newState);
+    };
+
+    window.addEventListener('start-study-session', handleStartSession as EventListener);
+    
+    return () => {
+      window.removeEventListener('start-study-session', handleStartSession as EventListener);
+    };
+  }, []);
+
+  // Salvar estado no localStorage sempre que mudar
+  useEffect(() => {
+    if (timerState) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(timerState));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [timerState]);
+
+  // Lógica do timer
+  useEffect(() => {
+    if (!timerState || !timerState.isActive || timerState.isPaused) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -52,41 +105,51 @@ export const StudyTimer = memo(function StudyTimer({
     }
 
     timerRef.current = setInterval(() => {
-      if (isBreakTime) {
-        // Durante o intervalo
-        setBreakTimeRemaining(prev => {
-          const newTime = prev - 1;
-          if (newTime <= 0) {
+      setTimerState(prevState => {
+        if (!prevState) return null;
+
+        if (prevState.isBreakTime) {
+          // Durante o intervalo
+          const newBreakTime = prevState.breakTimeRemaining - 1;
+          if (newBreakTime <= 0) {
             // Fim do intervalo, volta para estudo
-            setIsBreakTime(false);
-            setTimeRemaining(session.duration * 60);
-            setBreakTimeRemaining(session.breakDuration * 60);
-            return session.breakDuration * 60;
+            return {
+              ...prevState,
+              isBreakTime: false,
+              timeRemaining: prevState.duration * 60,
+              breakTimeRemaining: prevState.breakDuration * 60,
+              startTime: new Date()
+            };
           }
-          return newTime;
-        });
-      } else {
-        // Durante o estudo
-        setTimeRemaining(prev => {
-          const newTime = prev - 1;
+          return {
+            ...prevState,
+            breakTimeRemaining: newBreakTime
+          };
+        } else {
+          // Durante o estudo
+          const newTime = prevState.timeRemaining - 1;
           if (newTime <= 0) {
             // Fim do estudo
-            if (session.breakDuration > 0) {
+            if (prevState.breakDuration > 0) {
               // Iniciar intervalo
-              setIsBreakTime(true);
-              setBreakTimeRemaining(session.breakDuration * 60);
-              return 0;
+              return {
+                ...prevState,
+                isBreakTime: true,
+                timeRemaining: 0,
+                breakTimeRemaining: prevState.breakDuration * 60,
+                startTime: new Date()
+              };
             } else {
               // Sessão completa (sem intervalo)
-              if (onSessionComplete) {
-                setTimeout(() => onSessionComplete(), 0);
-              }
-              return 0;
+              return null; // Remove o timer
             }
           }
-          return newTime;
-        });
-      }
+          return {
+            ...prevState,
+            timeRemaining: newTime
+          };
+        }
+      });
     }, 1000);
 
     return () => {
@@ -95,7 +158,63 @@ export const StudyTimer = memo(function StudyTimer({
         timerRef.current = null;
       }
     };
-  }, [session.isActive, session.isPaused, isBreakTime, session.duration, session.breakDuration, onSessionComplete]);
+  }, [timerState]);
+
+  const startSession = useCallback((sessionData: {
+    eventTitle: string;
+    duration: number;
+    breakDuration: number;
+  }) => {
+    const newState: TimerState = {
+      eventTitle: sessionData.eventTitle,
+      duration: sessionData.duration,
+      breakDuration: sessionData.breakDuration,
+      timeRemaining: sessionData.duration * 60,
+      breakTimeRemaining: sessionData.breakDuration * 60,
+      isBreakTime: false,
+      isActive: true,
+      isPaused: false,
+      isMinimized: false,
+      startTime: new Date()
+    };
+    setTimerState(newState);
+  }, []);
+
+  const pauseSession = useCallback(() => {
+    setTimerState(prev => prev ? { ...prev, isPaused: true } : null);
+  }, []);
+
+  const resumeSession = useCallback(() => {
+    setTimerState(prev => prev ? { ...prev, isPaused: false, startTime: new Date() } : null);
+  }, []);
+
+  const stopSession = useCallback(() => {
+    setTimerState(null);
+  }, []);
+
+  const toggleMinimize = useCallback(() => {
+    setTimerState(prev => prev ? { ...prev, isMinimized: !prev.isMinimized } : null);
+  }, []);
+
+  return {
+    timerState,
+    startSession,
+    pauseSession,
+    resumeSession,
+    stopSession,
+    toggleMinimize
+  };
+};
+
+export const StudyTimer = memo(function StudyTimer({ isDarkMode }: StudyTimerProps) {
+  const {
+    timerState,
+    pauseSession,
+    resumeSession,
+    stopSession,
+    toggleMinimize
+  } = useStudyTimer();
+
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -104,44 +223,47 @@ export const StudyTimer = memo(function StudyTimer({
 
   const handlePause = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onSessionPause();
-  }, [onSessionPause]);
+    pauseSession();
+  }, [pauseSession]);
 
   const handleResume = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onSessionResume();
-  }, [onSessionResume]);
+    resumeSession();
+  }, [resumeSession]);
 
   const handleStop = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onSessionStop();
-  }, [onSessionStop]);
+    stopSession();
+  }, [stopSession]);
 
   const handleToggleMinimize = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleMinimize();
-  }, [onToggleMinimize]);
+    toggleMinimize();
+  }, [toggleMinimize]);
 
-  const currentTime = isBreakTime ? breakTimeRemaining : timeRemaining;
-  const totalTime = isBreakTime ? session.breakDuration * 60 : session.duration * 60;
+  // Se não há sessão ativa, não renderizar nada
+  if (!timerState) return null;
+
+  const currentTime = timerState.isBreakTime ? timerState.breakTimeRemaining : timerState.timeRemaining;
+  const totalTime = timerState.isBreakTime ? timerState.breakDuration * 60 : timerState.duration * 60;
   const progress = totalTime > 0 ? ((totalTime - currentTime) / totalTime) * 100 : 0;  return (
     <div
       className={`study-timer-container fixed bottom-6 right-6 rounded-2xl shadow-2xl border backdrop-blur-md z-40 transition-all duration-300 ${
-        session.isMinimized ? 'w-48' : 'w-80'
+        timerState.isMinimized ? 'w-48' : 'w-80'
       } ${
         isDarkMode
           ? 'bg-gradient-to-br from-slate-800/95 to-slate-900/95 border-slate-700/50'
           : 'bg-gradient-to-br from-white/95 to-slate-50/95 border-slate-200/50'
       }`}
     >
-      {session.isMinimized ? (
+      {timerState.isMinimized ? (
         // Versão Minimizada
         <div className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div
                 className={`p-1.5 rounded-lg ${
-                  isBreakTime
+                  timerState.isBreakTime
                     ? isDarkMode
                       ? 'bg-emerald-600/20'
                       : 'bg-emerald-100'
@@ -150,7 +272,7 @@ export const StudyTimer = memo(function StudyTimer({
                     : 'bg-violet-100'
                 }`}
               >
-                {isBreakTime ? (
+                {timerState.isBreakTime ? (
                   <Coffee
                     className={`w-4 h-4 ${
                       isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
@@ -166,7 +288,7 @@ export const StudyTimer = memo(function StudyTimer({
               </div>
               <div
                 className={`text-lg font-bold ${
-                  isBreakTime
+                  timerState.isBreakTime
                     ? isDarkMode
                       ? 'text-emerald-300'
                       : 'text-emerald-600'
@@ -179,7 +301,8 @@ export const StudyTimer = memo(function StudyTimer({
               </div>
             </div>
             
-            <div className="flex items-center gap-1">              {session.isPaused ? (
+            <div className="flex items-center gap-1">
+              {timerState.isPaused ? (
                 <button
                   onClick={handleResume}
                   className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110 ${
@@ -227,7 +350,7 @@ export const StudyTimer = memo(function StudyTimer({
               <div className="flex items-center gap-3">
                 <div
                   className={`p-2 rounded-lg ${
-                    isBreakTime
+                    timerState.isBreakTime
                       ? isDarkMode
                         ? 'bg-emerald-600/20'
                         : 'bg-emerald-100'
@@ -236,7 +359,7 @@ export const StudyTimer = memo(function StudyTimer({
                       : 'bg-violet-100'
                   }`}
                 >
-                  {isBreakTime ? (
+                  {timerState.isBreakTime ? (
                     <Coffee
                       className={`w-5 h-5 ${
                         isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
@@ -256,17 +379,19 @@ export const StudyTimer = memo(function StudyTimer({
                       isDarkMode ? 'text-white' : 'text-slate-800'
                     }`}
                   >
-                    {isBreakTime ? 'Pausa' : session.eventTitle}
+                    {timerState.isBreakTime ? 'Pausa' : timerState.eventTitle}
                   </h3>
                   <p
                     className={`text-xs ${
                       isDarkMode ? 'text-slate-400' : 'text-slate-600'
                     }`}
                   >
-                    {isBreakTime ? 'Momento de descansar' : 'Sessão de estudo'}
+                    {timerState.isBreakTime ? 'Momento de descansar' : 'Sessão de estudo'}
                   </p>
                 </div>
-              </div>                <button
+              </div>
+
+              <button
                 onClick={handleToggleMinimize}
                 className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                   isDarkMode
@@ -284,7 +409,7 @@ export const StudyTimer = memo(function StudyTimer({
           <div className="p-6 text-center">
             <div
               className={`text-4xl font-bold mb-2 ${
-                isBreakTime
+                timerState.isBreakTime
                   ? isDarkMode
                     ? 'text-emerald-300'
                     : 'text-emerald-600'
@@ -304,7 +429,7 @@ export const StudyTimer = memo(function StudyTimer({
             >
               <div
                 className={`h-full rounded-full transition-all duration-1000 ${
-                  isBreakTime
+                  timerState.isBreakTime
                     ? isDarkMode
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
                       : 'bg-gradient-to-r from-emerald-400 to-teal-400'
@@ -321,15 +446,16 @@ export const StudyTimer = memo(function StudyTimer({
                 isDarkMode ? 'text-slate-400' : 'text-slate-600'
               }`}
             >
-              {isBreakTime
-                ? `Pausa de ${session.breakDuration} minutos`
-                : `Sessão de ${session.duration} minutos`}
+              {timerState.isBreakTime
+                ? `Pausa de ${timerState.breakDuration} minutos`
+                : `Sessão de ${timerState.duration} minutos`}
             </p>
           </div>
 
           {/* Controls */}
-          <div className="p-4 border-t border-slate-200/20">            <div className="flex gap-2">
-              {session.isPaused ? (
+          <div className="p-4 border-t border-slate-200/20">
+            <div className="flex gap-2">
+              {timerState.isPaused ? (
                 <button
                   onClick={handleResume}
                   className={`flex-1 py-2 px-3 rounded-lg font-medium text-white transition-all duration-200 hover:scale-[1.02] ${
@@ -371,7 +497,29 @@ export const StudyTimer = memo(function StudyTimer({
               </button>
             </div>
           </div>
-        </>      )}
+        </>
+      )}
     </div>
   );
 });
+
+// Função utilitária para iniciar uma sessão de estudo de outros componentes
+declare global {
+  interface Window {
+    startStudySession: (sessionData: {
+      eventTitle: string;
+      duration: number;
+      breakDuration: number;
+    }) => void;
+  }
+}
+
+window.startStudySession = (sessionData: {
+  eventTitle: string;
+  duration: number;
+  breakDuration: number;
+}) => {
+  window.dispatchEvent(new CustomEvent('start-study-session', { 
+    detail: sessionData 
+  }));
+};

@@ -623,3 +623,97 @@ app.post('/api/save-explanation', async (req, res) => {
     handleError(res, error, 'Erro ao salvar explicação');
   }
 });
+
+// GET /api/categories - Buscar categorias por tecnologia
+app.get('/api/categories', async (req, res) => {
+  try {
+    const { technologyId } = req.query;
+
+    if (!technologyId?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'technologyId é obrigatório'
+      });
+    }
+
+    console.log('Buscando categorias para tecnologia:', technologyId);
+
+    // Verificar se a tecnologia existe
+    const technology = await prisma.technology.findUnique({
+      where: { id: technologyId.trim() }
+    });
+
+    if (!technology) {
+      return res.status(404).json({
+        success: false,
+        error: 'Tecnologia não encontrada'
+      });
+    }
+
+    // Buscar categorias da tecnologia
+    const categories = await prisma.category.findMany({
+      where: { technologyId: technologyId.trim() },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    console.log('Categorias encontradas:', categories);
+    res.json({
+      success: true,
+      data: categories
+    });
+
+  } catch (error) {
+    handleError(res, error, 'Erro ao buscar categorias');
+  }
+});
+
+// GET /api/items - Buscar itens por categoria
+app.get('/api/items', async (req, res) => {
+  try {
+    const { categoryId } = req.query;
+
+    if (!categoryId?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'categoryId é obrigatório'
+      });
+    }
+
+    console.log('Buscando itens para categoria:', categoryId);
+
+    // Verificar se a categoria existe
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId.trim() }
+    });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        error: 'Categoria não encontrada'
+      });
+    }
+
+    // Buscar itens da categoria
+    const items = await prisma.item.findMany({
+      where: { categoryId: categoryId.trim() },
+      select: {
+        id: true,
+        itemId: true,
+        title: true,
+        categoryId: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    console.log('Itens encontrados:', items);
+    res.json({
+      success: true,
+      data: items
+    });
+
+  } catch (error) {
+    handleError(res, error, 'Erro ao buscar itens');
+  }
+});
+
+// GET /api/topics/:tech

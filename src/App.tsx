@@ -21,7 +21,6 @@ import {
   NewTechnologyData,
   NewItemData,
   Topic,
-  StudySession,
 } from "./types/types";
 
 // Valores padrão para Example e Technology
@@ -56,59 +55,11 @@ function App() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [examples, setExamples] = useState<Record<string, Example>>({});
-  const [technologies, setTechnologies] = useState<Technology[]>([]);  const [currentExample, setCurrentExample] = useState<Example>(defaultExample); // Sempre tem um valor padrão
+  const [technologies, setTechnologies] = useState<Technology[]>([]);
+
+  const [currentExample, setCurrentExample] = useState<Example>(defaultExample); // Sempre tem um valor padrão
   const [currentTechnology, setCurrentTechnology] =
-    useState<Technology>(defaultTechnology); // Sempre tem um valor padrão  // Estado global do StudyTimer
-  const [activeStudySession, setActiveStudySession] = useState<StudySession | null>(null);
-  // Funções do timer
-  const handleStartStudySession = (session: StudySession) => {
-    const newSession: StudySession = {
-      ...session,
-      timeRemaining: session.duration * 60,
-      breakTimeRemaining: session.breakDuration * 60,
-      isBreakTime: false,
-      isActive: true,
-      isPaused: false,
-      isMinimized: false,
-      startTime: new Date()
-    };
-    setActiveStudySession(newSession);
-  };
-
-  const handlePauseSession = () => {
-    if (activeStudySession) {
-      setActiveStudySession({
-        ...activeStudySession,
-        isPaused: true
-      });
-    }
-  };
-
-  const handleResumeSession = () => {
-    if (activeStudySession) {
-      setActiveStudySession({
-        ...activeStudySession,
-        isPaused: false
-      });
-    }
-  };
-
-  const handleStopSession = () => {
-    setActiveStudySession(null);
-  };
-
-  const handleSessionComplete = () => {
-    setActiveStudySession(null);
-  };
-
-  const handleToggleMinimize = () => {
-    if (activeStudySession) {
-      setActiveStudySession({
-        ...activeStudySession,
-        isMinimized: !activeStudySession.isMinimized
-      });
-    }
-  };
+    useState<Technology>(defaultTechnology); // Sempre tem um valor padrão
 
   // Carregar tema
   useEffect(() => {
@@ -555,7 +506,6 @@ function App() {
               technologies={technologies}
               topics={topics}
               onNavigate={handleNavigate}
-              onStartStudySession={handleStartStudySession}
             />
           );
         case "gallery":
@@ -608,7 +558,7 @@ function App() {
         }
         case "dashboard":
           return <Dashboard isDarkMode={isDarkMode} />;        case "calendar":
-          return <Calendar isDarkMode={isDarkMode} onStartStudySession={handleStartStudySession} />;
+          return <Calendar isDarkMode={isDarkMode} technologies={technologies} />;
         case "config":
           return <Config isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;        default:          return (
             <Home
@@ -616,7 +566,6 @@ function App() {
               technologies={technologies}
               topics={topics}
               onNavigate={handleNavigate}
-              onStartStudySession={handleStartStudySession}
             />
           );
       }
@@ -642,16 +591,10 @@ function App() {
               {renderCurrentPage()}
             </div>
           </div>
-        </div>        {/* StudyTimer Global - aparece em todas as páginas */}
-        {activeStudySession && (          <StudyTimer
-            session={activeStudySession}
-            isDarkMode={isDarkMode}            onSessionPause={handlePauseSession}
-            onSessionResume={handleResumeSession}
-            onSessionStop={handleStopSession}
-            onToggleMinimize={handleToggleMinimize}
-            onSessionComplete={handleSessionComplete}
-          />
-        )}
+        </div>
+
+        {/* StudyTimer Global - agora totalmente independente */}
+        <StudyTimer isDarkMode={isDarkMode} />
       </div>
     );
   };

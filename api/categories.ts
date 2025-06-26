@@ -4,7 +4,44 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method === 'POST') {
+  if (req.method === 'GET') {
+    try {
+      const { technologyId } = req.query;
+
+      if (!technologyId || typeof technologyId !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'TechnologyId é obrigatório'
+        });
+      }
+
+      // Buscar categorias da tecnologia específica
+      const categories = await prisma.category.findMany({
+        where: {
+          technologyId: technologyId
+        },
+        orderBy: {
+          name: 'asc'
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: categories
+      });
+
+    } catch (error: unknown) {
+      console.error('Erro ao buscar categorias:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao buscar categorias',
+        details: errorMessage
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
+  } else if (req.method === 'POST') {
     try {
       const { category, technologyId } = req.body as { category: string; technologyId: string };
 
