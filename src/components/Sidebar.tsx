@@ -9,6 +9,7 @@ import {
   Calendar,
   Settings,
   Code2,
+  Award,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -64,6 +65,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Dashboard",
       icon: BarChart3,
       onClick: () => onNavigate("dashboard"),
+    },
+    {
+      id: "certificates",
+      label: "Certificados",
+      icon: Award,
+      onClick: () => onNavigate("certificates"),
     },
     {
       id: "config",

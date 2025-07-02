@@ -526,6 +526,167 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// ====================== ROTAS DE CERTIFICADOS ======================
+
+// GET /api/certificates - Buscar todos os certificados
+app.get('/api/certificates', async (req, res) => {
+  try {
+    const certificates = await prisma.certificate.findMany({
+      include: {
+        technology: {
+          select: {
+            id: true,
+            name: true,
+            title: true,
+            color: true,
+            logo: true
+          }
+        }
+      },
+      orderBy: {
+        issueDate: 'desc'
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: certificates
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao buscar certificados');
+  }
+});
+
+// POST /api/certificates - Criar novo certificado
+app.post('/api/certificates', async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      issuer,
+      issueDate,
+      expiryDate,
+      credentialId,
+      link,
+      imageUrl,
+      skills,
+      technologyId
+    } = req.body;
+
+    // Validações básicas
+    if (!title || !issuer || !issueDate || !link) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos obrigatórios: title, issuer, issueDate, link'
+      });
+    }
+
+    const certificate = await prisma.certificate.create({
+      data: {
+        title,
+        description,
+        issuer,
+        issueDate: new Date(issueDate),
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
+        credentialId,
+        link,
+        imageUrl,
+        skills: skills || [],
+        technologyId: technologyId || null
+      },
+      include: {
+        technology: {
+          select: {
+            id: true,
+            name: true,
+            title: true,
+            color: true,
+            logo: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: certificate
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao criar certificado');
+  }
+});
+
+// PUT /api/certificates/:id - Atualizar certificado
+app.put('/api/certificates/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      issuer,
+      issueDate,
+      expiryDate,
+      credentialId,
+      link,
+      imageUrl,
+      skills,
+      technologyId
+    } = req.body;
+
+    const certificate = await prisma.certificate.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        issuer,
+        issueDate: issueDate ? new Date(issueDate) : undefined,
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
+        credentialId,
+        link,
+        imageUrl,
+        skills: skills || [],
+        technologyId: technologyId || null
+      },
+      include: {
+        technology: {
+          select: {
+            id: true,
+            name: true,
+            title: true,
+            color: true,
+            logo: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: certificate
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao atualizar certificado');
+  }
+});
+
+// DELETE /api/certificates/:id - Deletar certificado
+app.delete('/api/certificates/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.certificate.delete({
+      where: { id }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Certificado deletado com sucesso'
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao deletar certificado');
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Servidor API rodando em http://localhost:${PORT}`);
   console.log(`📊 Teste da API: http://localhost:${PORT}/api/test`);

@@ -14,6 +14,7 @@ import { Calendar } from "./components/Calendar";
 import { Config } from "./components/Config";
 import { TechnologyTopics } from "./components/TechnologyTopics";
 import { StudyTimer } from "./components/StudyTimer";
+import { Certificates } from "./components/Certificates";
 import LandingPage from "./components/LandingPage";
 import {
   Technology,
@@ -477,6 +478,7 @@ function App() {
         "gallery",
         "dashboard",
         "calendar",
+        "certificates",
         "config",
         "tech-topics",
       ];
@@ -557,8 +559,11 @@ function App() {
           );
         }
         case "dashboard":
-          return <Dashboard isDarkMode={isDarkMode} />;        case "calendar":
+          return <Dashboard isDarkMode={isDarkMode} />;        
+        case "calendar":
           return <Calendar isDarkMode={isDarkMode} technologies={technologies} />;
+        case "certificates":
+          return <Certificates isDarkMode={isDarkMode} technologies={technologies} onNavigate={handleNavigate} />;
         case "config":
           return <Config isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;        default:          return (
             <Home

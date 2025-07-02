@@ -102,6 +102,45 @@ export interface HomeProps {
   onNavigate: (page: string) => void;
 }
 
+// Certificate interfaces
+export interface Certificate {
+  id: string;
+  title: string;
+  description?: string;
+  issuer: string;
+  issueDate: Date | string;
+  expiryDate?: Date | string | null;
+  credentialId?: string;
+  link: string;
+  technologyId?: string | null;
+  technology?: {
+    id: string;
+    name: string;
+    title: string;
+    color: string;
+    logo: string;
+  } | null;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface CertificateFormData {
+  title: string;
+  description: string;
+  issuer: string;
+  issueDate: string;
+  expiryDate: string;
+  credentialId: string;
+  link: string;
+  technologyId: string;
+}
+
+export interface CertificatesProps {
+  isDarkMode: boolean;
+  technologies: Technology[];
+  onNavigate: (page: string) => void;
+}
+
 export interface ExampleViewProps {
   example: Example;
   technology: Technology | null;

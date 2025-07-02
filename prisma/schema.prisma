@@ -23,6 +23,7 @@ model Technology {
   examples   Example[]
   studyEvents StudyEvent[]
   studyStatistics StudyStatistics[]
+  certificates Certificate[]
 
   @@map("technology")
 }
@@ -136,6 +137,27 @@ model StudyStatistics {
   
   @@unique([date, technologyId, categoryId])
   @@map("study_statistics")
+}
+
+model Certificate {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  issuer      String   // Instituição que emitiu
+  issueDate   DateTime
+  expiryDate  DateTime? // Data de expiração (opcional)
+  credentialId String? // ID da credencial (opcional)
+  link        String   // Link para o certificado (PDF, Drive, etc)
+  imageUrl    String?  // URL da imagem do certificado (opcional)
+  skills      String[] // Lista de habilidades relacionadas
+  technologyId String? // Tecnologia relacionada (opcional)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relacionamento
+  technology  Technology? @relation(fields: [technologyId], references: [id], onDelete: SetNull)
+  
+  @@map("certificate")
 }
 
 enum StudyEventType {
