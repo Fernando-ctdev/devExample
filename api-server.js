@@ -716,4 +716,830 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
-// GET /api/topics/:tech
+// ==========================================
+// ROTAS PARA EVENTOS DE ESTUDO
+// ==========================================
+
+// GET /api/study-events - Listar eventos de estudo
+app.get('/api/study-events', async (req, res) => {
+  try {
+    const { 
+      month,
+      year,
+      technologyId,
+      completed,
+      limit = '50',
+      offset = '0'
+    } = req.query;
+
+    const where = {};
+
+    // Filtrar por mês/ano
+    if (month && year) {
+      const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endDate = new Date(parseInt(year), parseInt(month), 0);
+      where.date = {
+        gte: startDate,
+        lte: endDate
+      };
+    }
+
+    // Filtrar por tecnologia
+    if (technologyId) {
+      where.technologyId = technologyId;
+    }
+
+    // Filtrar por status de conclusão
+    if (completed !== undefined) {
+      where.completed = completed === 'true';
+    }
+
+    const events = await prisma.studyEvent.findMany({
+      where,
+      include: {
+        technology: {
+          select: {
+            id: true,
+            name: true,
+            title: true
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        item: {
+          select: {
+            id: true,
+            title: true
+          }
+        },
+        studySessions: {
+          select: {
+            id: true,
+            actualStudyTime: true,
+            completed: true
+          }
+        }
+      },
+      orderBy: {
+        date: 'asc'
+      },
+      take: parseInt(limit),
+      skip: parseInt(offset)
+    });
+
+    res.json({
+      success: true,
+      data: events
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao buscar eventos de estudo');
+  }
+});
+
+// POST /api/study-events - Criar evento de estudo
+app.post('/api/study-events', async (req, res) => {
+  try {
+    const { title, description, type, date, completed, technologyId, categoryId, itemId } = req.body;
+
+    if (!title || !date) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Título e data são obrigatórios' 
+      });
+    }
+
+    const event = await prisma.studyEvent.create({
+      data: {
+        title: title.trim(),
+        description: description?.trim(),
+        type: type || 'STUDY',
+        date: new Date(date),
+        completed: completed || false,
+        technologyId: technologyId || null,
+        categoryId: categoryId || null,
+        itemId: itemId || null,
+      },
+      include: {
+        technology: {
+          select: {
+            id: true,
+            name: true,
+            title: true
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        item: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: event
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao criar evento de estudo');
+  }
+});
+
+// PUT /api/study-events/:id - Atualizar evento de estudo
+app.put('/api/study-events/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, type, date, completed, technologyId, categoryId, itemId } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'ID do evento é obrigatório' 
+      });
+    }
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title.trim();
+    if (description !== undefined) updateData.description = description?.trim();
+    if (type !== undefined) updateData.type = type;
+    if (date !== undefined) updateData.date = new Date(date);
+    if (completed !== undefined) updateData.completed = completed;
+    if (technologyId !== undefined) updateData.technologyId = technologyId || null;
+    if (categoryId !== undefined) updateData.categoryId = categoryId || null;
+    if (itemId !== undefined) updateData.itemId = itemId || null;
+
+    const event = await prisma.studyEvent.update({
+      where: { id },
+      data: updateData,
+      include: {
+        technology: {
+          select: {
+            id: true,
+            name: true,
+            title: true
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        item: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      data: event
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao atualizar evento de estudo');
+  }
+});
+
+// DELETE /api/study-events/:id - Deletar evento de estudo
+app.delete('/api/study-events/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'ID do evento é obrigatório' 
+      });
+    }
+
+    await prisma.studyEvent.delete({
+      where: { id }
+    });
+
+    res.json({
+      success: true,
+      message: 'Evento de estudo deletado com sucesso'
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao deletar evento de estudo');
+  }
+});
+
+// ==========================================
+// ROTAS PARA SESSÕES DE ESTUDO
+// ==========================================
+
+// GET /api/study-sessions - Listar sessões de estudo
+app.get('/api/study-sessions', async (req, res) => {
+  try {
+    const { 
+      eventId,
+      startDate,
+      endDate,
+      completed,
+      limit = '50',
+      offset = '0'
+    } = req.query;
+
+    const where = {};
+
+    if (eventId) {
+      where.eventId = eventId;
+    }
+
+    if (startDate && endDate) {
+      where.startTime = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      };
+    }
+
+    if (completed !== undefined) {
+      where.completed = completed === 'true';
+    }
+
+    const sessions = await prisma.studySession.findMany({
+      where,
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            type: true
+          }
+        }
+      },
+      orderBy: {
+        startTime: 'desc'
+      },
+      take: parseInt(limit),
+      skip: parseInt(offset)
+    });
+
+    res.json({
+      success: true,
+      data: sessions
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao buscar sessões de estudo');
+  }
+});
+
+// POST /api/study-sessions - Criar sessão de estudo
+app.post('/api/study-sessions', async (req, res) => {
+  try {
+    const { eventId, studyDuration, breakDuration, startTime } = req.body;
+
+    if (!eventId || !studyDuration || !breakDuration) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'EventId, studyDuration e breakDuration são obrigatórios' 
+      });
+    }
+
+    // Verificar se o evento existe
+    const event = await prisma.studyEvent.findUnique({
+      where: { id: eventId }
+    });
+
+    if (!event) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Evento não encontrado' 
+      });
+    }
+
+    const session = await prisma.studySession.create({
+      data: {
+        eventId,
+        startTime: startTime ? new Date(startTime) : new Date(),
+        studyDuration,
+        breakDuration,
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            type: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: session
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao criar sessão de estudo');
+  }
+});
+
+// PUT /api/study-sessions/:id - Atualizar sessão de estudo
+app.put('/api/study-sessions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      endTime, 
+      actualStudyTime, 
+      actualBreakTime, 
+      completed, 
+      paused, 
+      pausedAt, 
+      resumedAt, 
+      totalPauseTime 
+    } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'ID da sessão é obrigatório' 
+      });
+    }
+
+    const updateData = {};
+    if (endTime !== undefined) updateData.endTime = new Date(endTime);
+    if (actualStudyTime !== undefined) updateData.actualStudyTime = actualStudyTime;
+    if (actualBreakTime !== undefined) updateData.actualBreakTime = actualBreakTime;
+    if (completed !== undefined) updateData.completed = completed;
+    if (paused !== undefined) updateData.paused = paused;
+    if (pausedAt !== undefined) updateData.pausedAt = new Date(pausedAt);
+    if (resumedAt !== undefined) updateData.resumedAt = new Date(resumedAt);
+    if (totalPauseTime !== undefined) updateData.totalPauseTime = totalPauseTime;
+
+    // Calcular totalStudyTime automaticamente se actualStudyTime foi fornecido
+    if (actualStudyTime !== undefined) {
+      // Se temos o tempo real de estudo em segundos, usamos ele diretamente como totalStudyTime
+      updateData.totalStudyTime = actualStudyTime;
+    }
+
+    const session = await prisma.studySession.update({
+      where: { id },
+      data: updateData,
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            type: true
+          }
+        }
+      }
+    });
+
+    // Se a sessão foi concluída, atualizar as estatísticas
+    if (completed && updateData.totalStudyTime) {
+      await updateStudyStatistics(session.eventId, updateData.totalStudyTime);
+    }
+
+    res.json({
+      success: true,
+      data: session
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao atualizar sessão de estudo');
+  }
+});
+
+// DELETE /api/study-sessions/:id - Deletar sessão de estudo
+app.delete('/api/study-sessions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'ID da sessão é obrigatório' 
+      });
+    }
+
+    await prisma.studySession.delete({
+      where: { id }
+    });
+
+    res.json({
+      success: true,
+      message: 'Sessão de estudo deletada com sucesso'
+    });
+  } catch (error) {
+    handleError(res, error, 'Erro ao deletar sessão de estudo');
+  }
+});
+
+// ==========================================
+// ROTAS PARA ESTATÍSTICAS DE ESTUDO
+// ==========================================
+
+// GET /api/study-statistics - Obter estatísticas de estudo
+app.get('/api/study-statistics', async (req, res) => {
+  try {
+    const { 
+      type = 'dashboard',
+      startDate,
+      endDate,
+      technologyId,
+      categoryId,
+      limit = '50',
+      offset = '0'
+    } = req.query;
+
+    if (type === 'dashboard') {
+      return await getDashboardStatistics(req, res);
+    } else {
+      return await getDetailedStatistics(req, res);
+    }
+  } catch (error) {
+    handleError(res, error, 'Erro ao buscar estatísticas de estudo');
+  }
+});
+
+// Função auxiliar para estatísticas do dashboard
+async function getDashboardStatistics(req, res) {
+  const { startDate, endDate } = req.query;
+  
+  if (!startDate || !endDate) {
+    return res.status(400).json({
+      success: false,
+      error: 'startDate e endDate são obrigatórios'
+    });
+  }
+
+  const startDateTime = new Date(startDate);
+  const endDateTime = new Date(endDate);
+  endDateTime.setHours(23, 59, 59, 999); // Incluir o dia inteiro
+
+  // Eventos criados no período
+  const totalEvents = await prisma.studyEvent.count({
+    where: {
+      createdAt: {
+        gte: startDateTime,
+        lte: endDateTime
+      }
+    }
+  });
+
+  // Eventos concluídos no período
+  const completedEvents = await prisma.studyEvent.count({
+    where: {
+      createdAt: {
+        gte: startDateTime,
+        lte: endDateTime
+      },
+      completed: true
+    }
+  });
+
+  // Sessões de estudo no período
+  const studySessions = await prisma.studySession.findMany({
+    where: {
+      createdAt: {
+        gte: startDateTime,
+        lte: endDateTime
+      }
+    },
+    select: {
+      totalStudyTime: true
+    }
+  });
+
+  const totalSessions = studySessions.length;
+  const totalStudyTimeSeconds = studySessions.reduce((sum, session) => {
+    return sum + (session.totalStudyTime || 0);
+  }, 0);
+
+  // Converter segundos para minutos para exibição
+  const totalStudyTimeMinutes = Math.floor(totalStudyTimeSeconds / 60);
+
+  // Progresso semanal (sempre os últimos 7 dias completos)
+  const weeklyProgress = [];
+  const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  
+  // Sempre mostrar os últimos 7 dias (independente do período selecionado)
+  const currentDate = new Date();
+  currentDate.setHours(23, 59, 59, 999);
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(currentDate);
+    date.setDate(date.getDate() - i);
+    date.setHours(0, 0, 0, 0);
+    
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    const daySessionsCount = await prisma.studySession.count({
+      where: {
+        createdAt: {
+          gte: date,
+          lte: dayEnd
+        }
+      }
+    });
+
+    const daySessionsTime = await prisma.studySession.aggregate({
+      where: {
+        createdAt: {
+          gte: date,
+          lte: dayEnd
+        }
+      },
+      _sum: {
+        totalStudyTime: true
+      }
+    });
+
+    weeklyProgress.push({
+      day: dayNames[date.getDay()],
+      horas: (daySessionsTime._sum.totalStudyTime || 0) / 3600, // converter segundos para horas
+      estudos: daySessionsCount
+    });
+  }
+
+  // Estatísticas por tecnologia no período
+  const techSessionsWithEvents = await prisma.studySession.findMany({
+    where: {
+      createdAt: {
+        gte: startDateTime,
+        lte: endDateTime
+      },
+      event: {
+        technologyId: { not: null }
+      }
+    },
+    include: {
+      event: {
+        include: {
+          technology: true
+        }
+      }
+    }
+  });
+
+  // Agrupar por tecnologia
+  const techStatsMap = new Map();
+  techSessionsWithEvents.forEach(session => {
+    const tech = session.event?.technology;
+    if (tech && session.totalStudyTime) {
+      const existing = techStatsMap.get(tech.id) || { name: tech.title || tech.name, totalTime: 0 };
+      existing.totalTime += session.totalStudyTime;
+      techStatsMap.set(tech.id, existing);
+    }
+  });
+
+  const technologiesData = Array.from(techStatsMap.values())
+    .sort((a, b) => b.totalTime - a.totalTime)
+    .slice(0, 6)
+    .map(tech => ({
+      name: tech.name,
+      value: Math.round((tech.totalTime / 3600) * 10) / 10 // converter segundos para horas
+    }));
+
+  // Atividade mensal (baseada no período selecionado)
+  const monthlyActivity = [];
+  const sessionsInPeriod = await prisma.studySession.findMany({
+    where: {
+      createdAt: {
+        gte: startDateTime,
+        lte: endDateTime
+      }
+    },
+    select: {
+      createdAt: true
+    }
+  });
+
+  // Criar um mapa de contagem por dia
+  const activityMap = new Map();
+  sessionsInPeriod.forEach(session => {
+    const date = new Date(session.createdAt);
+    const dateKey = date.toISOString().split('T')[0];
+    activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + 1);
+  });
+
+  // Converter para o formato esperado
+  activityMap.forEach((count, dateKey) => {
+    const date = new Date(dateKey);
+    monthlyActivity.push({
+      date: dateKey,
+      count: Math.min(count, 4), // Máximo 4 para o display
+      day: date.getDate(),
+      month: date.getMonth(),
+      year: date.getFullYear()
+    });
+  });
+
+  // Calcular sequência atual (mantendo a lógica original)
+  let currentStreak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const streakStats = await prisma.studyStatistics.findMany({
+    where: {
+      technologyId: null,
+      categoryId: null,
+      totalSessions: { gt: 0 }
+    },
+    orderBy: {
+      date: 'desc'
+    },
+    take: 365
+  });
+
+  for (const stat of streakStats) {
+    const statDate = new Date(stat.date);
+    const expectedDate = new Date(today);
+    expectedDate.setDate(expectedDate.getDate() - currentStreak);
+    
+    if (statDate.toDateString() === expectedDate.toDateString()) {
+      currentStreak++;
+    } else {
+      break;
+    }
+  }
+
+  const response = {
+    totalStudyTime: totalStudyTimeMinutes,
+    totalSessions: totalSessions,
+    totalEvents: totalEvents,
+    completedEvents: completedEvents,
+    currentStreak: currentStreak,
+    weeklyProgress: weeklyProgress,
+    technologiesData: technologiesData,
+    monthlyActivity: monthlyActivity
+  };
+
+  res.json({
+    success: true,
+    data: response
+  });
+}
+
+// Função auxiliar para estatísticas detalhadas
+async function getDetailedStatistics(req, res) {
+  const { 
+    startDate,
+    endDate,
+    technologyId,
+    categoryId,
+    limit = '50',
+    offset = '0'
+  } = req.query;
+
+  const where = {};
+
+  if (startDate && endDate) {
+    where.date = {
+      gte: new Date(startDate),
+      lte: new Date(endDate)
+    };
+  }
+
+  if (technologyId) {
+    where.technologyId = technologyId;
+  }
+
+  if (categoryId) {
+    where.categoryId = categoryId;
+  }
+
+  const statistics = await prisma.studyStatistics.findMany({
+    where,
+    include: {
+      technology: {
+        select: {
+          id: true,
+          name: true,
+          title: true
+        }
+      },
+      category: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    },
+    orderBy: {
+      date: 'desc'
+    },
+    take: parseInt(limit),
+    skip: parseInt(offset)
+  });
+
+  res.json({
+    success: true,
+    data: statistics
+  });
+}
+
+// Função auxiliar para atualizar estatísticas
+async function updateStudyStatistics(eventId, studyTime) {
+  // Buscar o evento para obter as informações de tecnologia e categoria
+  const event = await prisma.studyEvent.findUnique({
+    where: { id: eventId },
+    include: {
+      technology: true,
+      category: true
+    }
+  });
+
+  if (!event) return;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Atualizar estatísticas gerais do dia
+  await prisma.studyStatistics.upsert({
+    where: {
+      date_technologyId_categoryId: {
+        date: today,
+        technologyId: null,
+        categoryId: null
+      }
+    },
+    update: {
+      totalStudyTime: {
+        increment: studyTime
+      },
+      totalSessions: {
+        increment: 1
+      }
+    },
+    create: {
+      date: today,
+      totalStudyTime: studyTime,
+      totalSessions: 1,
+      completedEvents: 0
+    }
+  });
+
+  // Atualizar estatísticas por tecnologia
+  if (event.technologyId) {
+    await prisma.studyStatistics.upsert({
+      where: {
+        date_technologyId_categoryId: {
+          date: today,
+          technologyId: event.technologyId,
+          categoryId: null
+        }
+      },
+      update: {
+        totalStudyTime: {
+          increment: studyTime
+        },
+        totalSessions: {
+          increment: 1
+        }
+      },
+      create: {
+        date: today,
+        technologyId: event.technologyId,
+        totalStudyTime: studyTime,
+        totalSessions: 1,
+        completedEvents: 0
+      }
+    });
+  }
+
+  // Atualizar estatísticas por categoria
+  if (event.categoryId) {
+    await prisma.studyStatistics.upsert({
+      where: {
+        date_technologyId_categoryId: {
+          date: today,
+          technologyId: event.technologyId,
+          categoryId: event.categoryId
+        }
+      },
+      update: {
+        totalStudyTime: {
+          increment: studyTime
+        },
+        totalSessions: {
+          increment: 1
+        }
+      },
+      create: {
+        date: today,
+        technologyId: event.technologyId,
+        categoryId: event.categoryId,
+        totalStudyTime: studyTime,
+        totalSessions: 1,
+        completedEvents: 0
+      }
+    });
+  }
+}

@@ -1,5 +1,5 @@
-import React from "react";
-import { BarChart3, TrendingUp, Users, Activity } from "lucide-react";
+import React, { useState } from "react";
+import { BarChart3, TrendingUp, Users, Activity, Loader2, RefreshCw } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -10,56 +10,143 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+import { useDashboardStats, DateRangeType } from "../hooks/useDashboardStats";
+import { DateRangePicker } from "./DateRangePicker";
 
 interface DashboardProps {
   isDarkMode: boolean;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
-  // Dados mockup para os gráficos
-  const weeklyProgressData = [
-    { day: "Seg", horas: 2.5, estudos: 3 },
-    { day: "Ter", horas: 4.2, estudos: 5 },
-    { day: "Qua", horas: 3.8, estudos: 4 },
-    { day: "Qui", horas: 5.1, estudos: 6 },
-    { day: "Sex", horas: 3.2, estudos: 4 },
-    { day: "Sáb", horas: 6.3, estudos: 8 },
-    { day: "Dom", horas: 2.1, estudos: 2 },
-  ];
+  const [dateRange, setDateRange] = useState<DateRangeType>('this_week');
 
-  const technologiesData = [
-    { name: "React", value: 35 },
-    { name: "TypeScript", value: 28 },
-    { name: "Node.js", value: 22 },
-    { name: "Python", value: 18 },
-    { name: "Next.js", value: 15 },
-    { name: "GraphQL", value: 12 },
-  ];
+  const { stats, loading, error, refetch } = useDashboardStats(dateRange);
 
-  const stats = [
+  const handleDateRangeChange = (range: DateRangeType) => {
+    setDateRange(range);
+  };
+
+  // Função para formatar tempo em horas
+  const formatStudyTime = (minutes: number) => {
+    if (minutes < 60) {
+      return `${minutes}min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+  };
+
+  // Garantir que sempre temos os 7 dias da semana no gráfico
+  const getWeeklyProgressData = () => {
+    const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    
+    // Criar array com todos os dias da semana
+    const weeklyData = daysOfWeek.map(day => {
+      // Procurar se existe dados para este dia
+      const dayData = stats?.weeklyProgress?.find(item => item.day === day);
+      return {
+        day,
+        horas: dayData?.horas || 0,
+        estudos: dayData?.estudos || 0
+      };
+    });
+    
+    return weeklyData;
+  };
+
+  // Se está carregando, mostrar loading
+  if (loading) {
+    return (
+      <div
+        className={`h-screen flex items-center justify-center ${
+          isDarkMode
+            ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+            : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
+        }`}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-violet-600" />
+          <p className={`text-lg font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            Carregando estatísticas...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se há erro, mostrar erro
+  if (error) {
+    return (
+      <div
+        className={`h-screen flex items-center justify-center ${
+          isDarkMode
+            ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+            : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
+        }`}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-red-500 text-center">
+            <p className="text-lg font-medium">Erro ao carregar estatísticas</p>
+            <p className="text-sm">{error}</p>
+          </div>
+          <button
+            onClick={refetch}
+            className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não há dados, mostrar mensagem
+  if (!stats) {
+    return (
+      <div
+        className={`h-screen flex items-center justify-center ${
+          isDarkMode
+            ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+            : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
+        }`}
+      >
+        <p className={`text-lg font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+          Nenhuma estatística encontrada
+        </p>
+      </div>
+    );
+  }
+
+  // Dados para os cards de estatísticas
+  const statsCards = [
     {
-      title: "Temas Estudados",
-      value: "12",
+      title: "Eventos Criados",
+      value: stats.totalEvents.toString(),
       icon: BarChart3,
       color: "blue",
+      subtitle: `${stats.completedEvents} concluídos`,
     },
     {
-      title: "Exemplos Criados",
-      value: "48",
+      title: "Sessões de Estudo",
+      value: stats.totalSessions.toString(),
       icon: TrendingUp,
       color: "green",
+      subtitle: "Total de sessões",
     },
     {
-      title: "Horas de Estudo",
-      value: "127h",
+      title: "Tempo de Estudo",
+      value: formatStudyTime(stats.totalStudyTime),
       icon: Activity,
       color: "purple",
+      subtitle: "Tempo total",
     },
     {
-      title: "Projetos Concluídos",
-      value: "8",
+      title: "Sequência Atual",
+      value: `${stats.currentStreak} dias`,
       icon: Users,
       color: "orange",
+      subtitle: "Dias consecutivos",
     },
   ];
   return (
@@ -72,7 +159,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
     >
       {/* Header Modernizado */}
       <header
-        className={`flex-shrink-0 text-white shadow-2xl backdrop-blur-md border-b
+        className={`flex-shrink-0 text-white shadow-2xl backdrop-blur-md border-b relative z-50
         ${
           isDarkMode
             ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
@@ -80,28 +167,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
         }`}
       >
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl backdrop-blur-md border border-white/20 bg-white/15">
-              <BarChart3 className="w-7 h-7 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl backdrop-blur-md border border-white/20 bg-white/15">
+                <BarChart3 className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                  Analytics
+                </h1>
+                <p className="text-lg text-white/80 font-medium">
+                  Acompanhe seu progresso detalhado nos estudos
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
-                Analytics
-              </h1>
-              <p className="text-lg text-white/80 font-medium">
-                Acompanhe seu progresso detalhado nos estudos
-              </p>
-            </div>
+            
+            {/* Date Range Picker */}
+            <DateRangePicker
+              currentRange={dateRange}
+              onChange={handleDateRangeChange}
+              isDarkMode={isDarkMode}
+            />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden relative z-10">
         <div className="container mx-auto px-6 py-8 flex flex-col h-full">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8 flex-shrink-0">
-            {stats.map((stat, index) => {
+            {statsCards.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <div
@@ -159,13 +255,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
                           : "bg-amber-100 text-amber-700"
                       }`}
                     >
-                      {stat.color === "blue"
-                        ? "12"
-                        : stat.color === "green"
-                        ? "+15%"
-                        : stat.color === "purple"
-                        ? "ATIVO"
-                        : "META"}
+                      {stat.subtitle}
                     </span>
                   </div>
                   <div>
@@ -222,7 +312,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
                   </h3>
                 </div>                <div className="flex-1 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={weeklyProgressData}>
+                    <LineChart data={getWeeklyProgressData()}>
                       <CartesianGrid 
                         strokeDasharray="3 3" 
                         stroke={isDarkMode ? "#334155" : "#e2e8f0"}
@@ -300,7 +390,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
                   </h3>
                 </div>                <div className="flex-1 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={technologiesData} layout="horizontal">
+                    <BarChart data={stats.technologiesData} layout="horizontal">
                       <CartesianGrid 
                         strokeDasharray="3 3" 
                         stroke={isDarkMode ? "#334155" : "#e2e8f0"}

@@ -1,6 +1,87 @@
 import { Play, Pause, Square, Clock, Coffee, Minimize2, Maximize2 } from 'lucide-react';
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
 
+// Funções para integração com a API
+const createStudySession = async (eventId: string, studyDuration: number, breakDuration: number, startTime: Date) => {
+  console.log('🔵 createStudySession chamada com:', {
+    eventId,
+    studyDuration,
+    breakDuration,
+    startTime: startTime.toISOString()
+  });
+
+  try {
+    const payload = {
+      eventId,
+      studyDuration,
+      breakDuration,
+      startTime: startTime.toISOString(),
+    };
+    
+    console.log('🔵 Enviando payload:', payload);
+    
+    const response = await fetch('http://localhost:3001/api/study-sessions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    console.log('🔵 Response status:', response.status);
+    console.log('🔵 Response headers:', Object.fromEntries(response.headers.entries()));
+
+    const data = await response.json();
+    console.log('🔵 Response data:', data);
+    
+    if (data.success) {
+      console.log('✅ Sessão criada com sucesso. ID:', data.data.id);
+      return data.data.id;
+    } else {
+      console.error('❌ Erro ao criar sessão:', data.error);
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Erro de rede ao criar sessão:', error);
+    return null;
+  }
+};
+
+const updateStudySession = async (sessionId: string, updateData: {
+  endTime?: Date;
+  actualStudyTime?: number;
+  actualBreakTime?: number;
+  completed?: boolean;
+  paused?: boolean;
+  pausedAt?: Date;
+  resumedAt?: Date;
+  totalPauseTime?: number;
+}) => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/study-sessions/${sessionId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...updateData,
+        endTime: updateData.endTime?.toISOString(),
+        pausedAt: updateData.pausedAt?.toISOString(),
+        resumedAt: updateData.resumedAt?.toISOString(),
+      }),
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      console.error('Erro ao atualizar sessão:', data.error);
+    }
+    return data.success;
+  } catch (error) {
+    console.error('Erro ao atualizar sessão:', error);
+    return false;
+  }
+};
+
 /**
  * Z-Index Hierarchy:
  * z-40: StudyTimer (fixed position, must be below modals)
@@ -14,6 +95,8 @@ interface StudyTimerProps {
 
 interface TimerState {
   eventTitle: string;
+  eventId?: string; // ID do evento associado
+  sessionId?: string; // ID da sessão no banco
   duration: number;
   breakDuration: number;
   timeRemaining: number;
@@ -23,6 +106,10 @@ interface TimerState {
   isPaused: boolean;
   isMinimized: boolean;
   startTime: Date;
+  actualStudyTime: number; // Tempo real de estudo (sem pausas)
+  actualBreakTime: number; // Tempo real de intervalo
+  totalPauseTime: number; // Tempo total pausado
+  pausedAt?: Date; // Quando foi pausado
 }
 
 const STORAGE_KEY = 'study-timer-state';
@@ -31,65 +118,140 @@ const STORAGE_KEY = 'study-timer-state';
 const useStudyTimer = () => {
   const [timerState, setTimerState] = useState<TimerState | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  console.log('🔧 useStudyTimer: Hook chamado, isInitialized:', isInitialized);
 
   // Carregar estado do localStorage na inicialização
   useEffect(() => {
+    if (isInitialized) {
+      console.log('🔍 StudyTimer: Hook já foi inicializado, pulando');
+      return;
+    }
+    
+    console.log('🔍 StudyTimer: Carregando estado do localStorage...');
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
+        console.log('🔍 StudyTimer: Estado encontrado no localStorage:', parsed);
+        
+        // Converter strings de data em objetos Date
+        if (parsed.startTime) {
+          parsed.startTime = new Date(parsed.startTime);
+        }
+        if (parsed.pausedAt) {
+          parsed.pausedAt = new Date(parsed.pausedAt);
+        }
+        
         // Recalcular o tempo restante baseado no tempo decorrido
         const now = new Date();
-        const startTime = new Date(parsed.startTime);
-        const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        const startTime = parsed.startTime;
         
-        if (parsed.isActive && !parsed.isPaused) {
-          if (parsed.isBreakTime) {
-            parsed.breakTimeRemaining = Math.max(0, parsed.breakTimeRemaining - elapsedSeconds);
-          } else {
-            parsed.timeRemaining = Math.max(0, parsed.timeRemaining - elapsedSeconds);
+        // Verificar se startTime é válido antes de calcular
+        if (startTime && startTime instanceof Date && !isNaN(startTime.getTime())) {
+          const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+          console.log('🔍 StudyTimer: Tempo decorrido desde o início:', elapsedSeconds, 'segundos');
+          
+          if (parsed.isActive && !parsed.isPaused) {
+            if (parsed.isBreakTime) {
+              parsed.breakTimeRemaining = Math.max(0, parsed.breakTimeRemaining - elapsedSeconds);
+            } else {
+              parsed.timeRemaining = Math.max(0, parsed.timeRemaining - elapsedSeconds);
+            }
+            console.log('🔍 StudyTimer: Tempo restante atualizado:', parsed.timeRemaining);
           }
         }
         
+        console.log('🔍 StudyTimer: Restaurando estado:', parsed);
         setTimerState(parsed);
       } catch (error) {
-        console.error('Erro ao carregar estado do timer:', error);
+        console.error('❌ StudyTimer: Erro ao carregar estado do timer:', error);
         localStorage.removeItem(STORAGE_KEY);
       }
+    } else {
+      console.log('🔍 StudyTimer: Nenhum estado encontrado no localStorage');
     }
+    
+    setIsInitialized(true);
+  }, [isInitialized]);
+
+  // Definir startSession antes do listener
+  const startSession = useCallback(async (sessionData: {
+    eventTitle: string;
+    eventId?: string;
+    duration: number;
+    breakDuration: number;
+  }) => {
+    console.log('🟡 startSession chamada com:', sessionData);
+    
+    const newState: TimerState = {
+      eventTitle: sessionData.eventTitle,
+      eventId: sessionData.eventId,
+      duration: sessionData.duration,
+      breakDuration: sessionData.breakDuration,
+      timeRemaining: sessionData.duration * 60,
+      breakTimeRemaining: sessionData.breakDuration * 60,
+      isBreakTime: false,
+      isActive: true,
+      isPaused: false,
+      isMinimized: false,
+      startTime: new Date(),
+      actualStudyTime: 0,
+      actualBreakTime: 0,
+      totalPauseTime: 0
+    };
+    
+    console.log('🟡 Estado inicial criado:', newState);
+    
+    // Criar sessão no banco de dados se eventId foi fornecido
+    if (sessionData.eventId) {
+      console.log('🟡 Criando sessão no banco para eventId:', sessionData.eventId);
+      const sessionId = await createStudySession(
+        sessionData.eventId,
+        sessionData.duration,
+        sessionData.breakDuration,
+        newState.startTime
+      );
+      if (sessionId) {
+        console.log('🟡 SessionId obtido:', sessionId);
+        newState.sessionId = sessionId;
+      } else {
+        console.log('🟡 Falha ao obter sessionId');
+      }
+    } else {
+      console.log('🟡 Nenhum eventId fornecido, sessão não será salva no banco');
+    }
+    
+    console.log('🟡 Estado final antes de setTimerState:', newState);
+    setTimerState(newState);
   }, []);
 
   // Listener para eventos customizados de iniciar sessão
   useEffect(() => {
     const handleStartSession = (event: CustomEvent) => {
+      console.log('🟢 Evento start-study-session recebido:', event.detail);
       const sessionData = event.detail;
-      const newState: TimerState = {
-        eventTitle: sessionData.eventTitle,
-        duration: sessionData.duration,
-        breakDuration: sessionData.breakDuration,
-        timeRemaining: sessionData.duration * 60,
-        breakTimeRemaining: sessionData.breakDuration * 60,
-        isBreakTime: false,
-        isActive: true,
-        isPaused: false,
-        isMinimized: false,
-        startTime: new Date()
-      };
-      setTimerState(newState);
+      // Chama a função startSession que contém a lógica de criação no banco
+      startSession(sessionData);
     };
 
+    console.log('🟢 Registrando listener para start-study-session');
     window.addEventListener('start-study-session', handleStartSession as EventListener);
     
     return () => {
+      console.log('🟢 Removendo listener para start-study-session');
       window.removeEventListener('start-study-session', handleStartSession as EventListener);
     };
-  }, []);
+  }, [startSession]);
 
   // Salvar estado no localStorage sempre que mudar
   useEffect(() => {
     if (timerState) {
+      console.log('💾 StudyTimer: Salvando estado no localStorage:', timerState);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(timerState));
     } else {
+      console.log('💾 StudyTimer: Removendo estado do localStorage');
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [timerState]);
@@ -111,23 +273,32 @@ const useStudyTimer = () => {
         if (prevState.isBreakTime) {
           // Durante o intervalo
           const newBreakTime = prevState.breakTimeRemaining - 1;
+          const newActualBreakTime = prevState.actualBreakTime + 1;
+          
           if (newBreakTime <= 0) {
-            // Fim do intervalo, volta para estudo
-            return {
-              ...prevState,
-              isBreakTime: false,
-              timeRemaining: prevState.duration * 60,
-              breakTimeRemaining: prevState.breakDuration * 60,
-              startTime: new Date()
-            };
+            // Fim do intervalo - sessão completa!
+            if (prevState.sessionId) {
+              const now = new Date();
+              updateStudySession(prevState.sessionId, {
+                endTime: now,
+                actualStudyTime: prevState.actualStudyTime,
+                actualBreakTime: newActualBreakTime,
+                completed: true,
+                totalPauseTime: prevState.totalPauseTime,
+              });
+            }
+            return null; // Remove o timer - sessão completamente finalizada
           }
           return {
             ...prevState,
-            breakTimeRemaining: newBreakTime
+            breakTimeRemaining: newBreakTime,
+            actualBreakTime: newActualBreakTime
           };
         } else {
           // Durante o estudo
           const newTime = prevState.timeRemaining - 1;
+          const newActualStudyTime = prevState.actualStudyTime + 1;
+          
           if (newTime <= 0) {
             // Fim do estudo
             if (prevState.breakDuration > 0) {
@@ -136,17 +307,29 @@ const useStudyTimer = () => {
                 ...prevState,
                 isBreakTime: true,
                 timeRemaining: 0,
+                actualStudyTime: newActualStudyTime,
                 breakTimeRemaining: prevState.breakDuration * 60,
                 startTime: new Date()
               };
             } else {
-              // Sessão completa (sem intervalo)
+              // Sessão completa (sem intervalo) - salvar no banco
+              if (prevState.sessionId) {
+                const now = new Date();
+                updateStudySession(prevState.sessionId, {
+                  endTime: now,
+                  actualStudyTime: newActualStudyTime,
+                  actualBreakTime: prevState.actualBreakTime,
+                  completed: true,
+                  totalPauseTime: prevState.totalPauseTime,
+                });
+              }
               return null; // Remove o timer
             }
           }
           return {
             ...prevState,
-            timeRemaining: newTime
+            timeRemaining: newTime,
+            actualStudyTime: newActualStudyTime
           };
         }
       });
@@ -160,36 +343,81 @@ const useStudyTimer = () => {
     };
   }, [timerState]);
 
-  const startSession = useCallback((sessionData: {
-    eventTitle: string;
-    duration: number;
-    breakDuration: number;
-  }) => {
-    const newState: TimerState = {
-      eventTitle: sessionData.eventTitle,
-      duration: sessionData.duration,
-      breakDuration: sessionData.breakDuration,
-      timeRemaining: sessionData.duration * 60,
-      breakTimeRemaining: sessionData.breakDuration * 60,
-      isBreakTime: false,
-      isActive: true,
-      isPaused: false,
-      isMinimized: false,
-      startTime: new Date()
-    };
-    setTimerState(newState);
+  const pauseSession = useCallback(async () => {
+    setTimerState(prev => {
+      if (!prev) return null;
+      
+      const now = new Date();
+      const updatedState = { ...prev, isPaused: true, pausedAt: now };
+      
+      // Atualizar no banco se há sessionId
+      if (prev.sessionId) {
+        updateStudySession(prev.sessionId, {
+          paused: true,
+          pausedAt: now,
+        });
+      }
+      
+      return updatedState;
+    });
   }, []);
 
-  const pauseSession = useCallback(() => {
-    setTimerState(prev => prev ? { ...prev, isPaused: true } : null);
+  const resumeSession = useCallback(async () => {
+    setTimerState(prev => {
+      if (!prev) return null;
+      
+      const now = new Date();
+      let newTotalPauseTime = prev.totalPauseTime;
+      
+      // Calcular tempo de pausa se estava pausado
+      if (prev.pausedAt) {
+        const pausedAtDate = prev.pausedAt instanceof Date ? prev.pausedAt : new Date(prev.pausedAt);
+        const pauseDuration = Math.floor((now.getTime() - pausedAtDate.getTime()) / 1000);
+        newTotalPauseTime = prev.totalPauseTime + pauseDuration;
+      }
+      
+      const updatedState = { 
+        ...prev, 
+        isPaused: false, 
+        startTime: now,
+        totalPauseTime: newTotalPauseTime,
+        pausedAt: undefined
+      };
+      
+      // Atualizar no banco se há sessionId
+      if (prev.sessionId) {
+        updateStudySession(prev.sessionId, {
+          paused: false,
+          resumedAt: now,
+          totalPauseTime: newTotalPauseTime,
+        });
+      }
+      
+      return updatedState;
+    });
   }, []);
 
-  const resumeSession = useCallback(() => {
-    setTimerState(prev => prev ? { ...prev, isPaused: false, startTime: new Date() } : null);
-  }, []);
-
-  const stopSession = useCallback(() => {
-    setTimerState(null);
+  const stopSession = useCallback(async () => {
+    setTimerState(prev => {
+      if (!prev) return null;
+      
+      // Salvar sessão no banco se há sessionId
+      if (prev.sessionId) {
+        const now = new Date();
+        const totalStudyTime = prev.duration * 60 - prev.timeRemaining;
+        const totalBreakTime = prev.breakDuration * 60 - prev.breakTimeRemaining;
+        
+        updateStudySession(prev.sessionId, {
+          endTime: now,
+          actualStudyTime: totalStudyTime,
+          actualBreakTime: totalBreakTime,
+          completed: false, // Parado manualmente
+          totalPauseTime: prev.totalPauseTime,
+        });
+      }
+      
+      return null;
+    });
   }, []);
 
   const toggleMinimize = useCallback(() => {
@@ -207,6 +435,8 @@ const useStudyTimer = () => {
 };
 
 export const StudyTimer = memo(function StudyTimer({ isDarkMode }: StudyTimerProps) {
+  console.log('🔄 StudyTimer: Componente renderizado/re-renderizado');
+  
   const {
     timerState,
     pauseSession,
@@ -214,6 +444,16 @@ export const StudyTimer = memo(function StudyTimer({ isDarkMode }: StudyTimerPro
     stopSession,
     toggleMinimize
   } = useStudyTimer();
+
+  console.log('🔄 StudyTimer: Estado atual do timer:', timerState);
+
+  // Monitor de lifecycle do componente
+  useEffect(() => {
+    console.log('🟢 StudyTimer: Componente montado');
+    return () => {
+      console.log('🔴 StudyTimer: Componente desmontado');
+    };
+  }, []);
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -508,6 +748,7 @@ declare global {
   interface Window {
     startStudySession: (sessionData: {
       eventTitle: string;
+      eventId?: string;
       duration: number;
       breakDuration: number;
     }) => void;
@@ -516,10 +757,13 @@ declare global {
 
 window.startStudySession = (sessionData: {
   eventTitle: string;
+  eventId?: string;
   duration: number;
   breakDuration: number;
 }) => {
+  console.log('🟠 window.startStudySession chamada com:', sessionData);
   window.dispatchEvent(new CustomEvent('start-study-session', { 
     detail: sessionData 
   }));
+  console.log('🟠 Evento start-study-session disparado');
 };

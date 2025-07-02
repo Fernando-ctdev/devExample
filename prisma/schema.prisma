@@ -3,14 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 model Technology {
-  id         String     @id @default(uuid())
-  name       String     @unique
+  id         String     @id(map: "Technology_pkey") @default(uuid())
+  name       String     @unique(map: "Technology_name_key")
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   alt        String
@@ -21,25 +21,29 @@ model Technology {
   title      String
   categories Category[]
   examples   Example[]
-  
+  studyEvents StudyEvent[]
+  studyStatistics StudyStatistics[]
+
   @@map("technology")
 }
 
 model Category {
-  id           String     @id @default(uuid())
+  id           String     @id(map: "Category_pkey") @default(uuid())
   name         String
   technologyId String
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
   items        Item[]
-  
-  @@unique([name, technologyId])
+  studyEvents  StudyEvent[]
+  studyStatistics StudyStatistics[]
+
+  @@unique([name, technologyId], map: "Category_name_technologyId_key")
   @@map("category")
 }
 
 model Item {
-  id         String   @id @default(uuid())
+  id         String   @id(map: "Item_pkey") @default(uuid())
   itemId     String
   title      String
   categoryId String
@@ -47,23 +51,100 @@ model Item {
   updatedAt  DateTime @updatedAt
   example    Example?
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  
-  @@unique([itemId, categoryId])
+  studyEvents StudyEvent[]
+
+  @@unique([itemId, categoryId], map: "Item_itemId_categoryId_key")
   @@map("item")
 }
 
 model Example {
-  id           String      @id @default(uuid())
+  id           String      @id(map: "Example_pkey") @default(uuid())
   title        String
   description  String
   code         String
   explanation  String
   createdAt    DateTime    @default(now())
-  itemId       String      @unique
-  technologyId String?
+  itemId       String      @unique(map: "Example_itemId_key")
+  technologyId String
   updatedAt    DateTime    @updatedAt
   item         Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
   technology   Technology? @relation(fields: [technologyId], references: [id], onDelete: Cascade)
-  
+
   @@map("example")
+}
+
+model StudyEvent {
+  id           String        @id @default(uuid())
+  title        String
+  description  String?
+  type         StudyEventType @default(STUDY)
+  date         DateTime
+  completed    Boolean       @default(false)
+  technologyId String?
+  categoryId   String?
+  itemId       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  // Relacionamentos
+  technology   Technology?   @relation(fields: [technologyId], references: [id], onDelete: SetNull)
+  category     Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  item         Item?         @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  studySessions StudySession[]
+  
+  @@map("study_event")
+}
+
+model StudySession {
+  id              String    @id @default(uuid())
+  eventId         String
+  startTime       DateTime
+  endTime         DateTime?
+  studyDuration   Int       // em minutos
+  breakDuration   Int       // em minutos
+  actualStudyTime Int       @default(0) // tempo real de estudo em segundos
+  actualBreakTime Int       @default(0) // tempo real de pausa em segundos
+  totalStudyTime  Int       @default(0) // tempo total efetivo de estudo em segundos (já descontadas as pausas)
+  completed       Boolean   @default(false)
+  paused          Boolean   @default(false)
+  pausedAt        DateTime?
+  resumedAt       DateTime?
+  totalPauseTime  Int       @default(0) // tempo total pausado em minutos
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relacionamento
+  event           StudyEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@map("study_session")
+}
+
+model StudyStatistics {
+  id              String   @id @default(uuid())
+  date            DateTime // data do registro (formato YYYY-MM-DD)
+  technologyId    String?
+  categoryId      String?
+  totalStudyTime  Int      @default(0) // tempo total em minutos
+  totalSessions   Int      @default(0) // número de sessões
+  completedEvents Int      @default(0) // eventos concluídos
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relacionamentos
+  technology      Technology? @relation(fields: [technologyId], references: [id], onDelete: SetNull)
+  category        Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  
+  @@unique([date, technologyId, categoryId])
+  @@map("study_statistics")
+}
+
+enum StudyEventType {
+  STUDY
+  PROJECT
+  REVIEW
+  MEETING
+  WORKSHOP
+  PRESENTATION
+  PLANNING
+  DEADLINE
 }

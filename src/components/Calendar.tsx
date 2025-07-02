@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { StudyModal } from "./StudyModal";
 import { useStudyTimerControl } from "../hooks/useStudyTimer";
-import { Technology, Topic } from "../types/types";
+import { Technology } from "../types/types";
 
 interface CalendarProps {
   isDarkMode: boolean;
@@ -61,85 +61,178 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState<number | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<{
     title: string;
     type: string;
+    id: string;
   } | null>(null);
 
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      day: 15,
-      title: "Estudar React Hooks",
-      type: "study",
-      completed: false,
-      description:
-        "Revisar conceitos de useState, useEffect e hooks customizados",
-      technologyId: "javascript",
-      categoryId: "react",
-      topicId: "hooks",
-    },
-    {
-      id: 2,
-      day: 20,
-      title: "Projeto TypeScript",
-      type: "project",
-      completed: true,
-      description:
-        "Finalizar implementação das interfaces e configuração do build",
-      technologyId: "typescript",
-      categoryId: "fundamentals",
-      topicId: "interfaces",
-    },
-    {
-      id: 3,
-      day: 25,
-      title: "Review JavaScript",
-      type: "review",
-      completed: false,
-      description:
-        "Revisar conceitos de closures, async/await e manipulação de arrays",
-      technologyId: "javascript",
-      categoryId: "fundamentals",
-      topicId: "functions",
-    },
-  ]);
+  // Tipos para eventos reais
+  interface StudyEvent {
+    id: string;
+    title: string;
+    description?: string;
+    type: 'STUDY' | 'PROJECT' | 'REVIEW' | 'MEETING' | 'WORKSHOP' | 'PRESENTATION' | 'PLANNING' | 'DEADLINE';
+    date: string;
+    completed: boolean;
+    technologyId?: string;
+    categoryId?: string;
+    itemId?: string;
+    technology?: {
+      id: string;
+      name: string;
+      title: string;
+    };
+    category?: {
+      id: string;
+      name: string;
+    };
+    item?: {
+      id: string;
+      title: string;
+    };
+  }
+
+  const [events, setEvents] = useState<StudyEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
 
   const [newEvent, setNewEvent] = useState({
     title: "",
-    type: "study",
+    type: "STUDY" as 'STUDY' | 'PROJECT' | 'REVIEW' | 'MEETING' | 'WORKSHOP' | 'PRESENTATION' | 'PLANNING' | 'DEADLINE',
     day: new Date().getDate(),
     completed: false,
     description: "",
     technologyId: "",
     categoryId: "",
-    topicId: "",
+    itemId: "",
   });
 
-  const [editingEvent, setEditingEvent] = useState<{
-    id: number;
-    day: number;
-    title: string;
-    type: string;
-    completed: boolean;
-    description: string;
-    technologyId: string;
-    categoryId: string;
-    topicId: string;
-  } | null>(null);
+  const [editingEvent, setEditingEvent] = useState<StudyEvent | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   // Estados para dados dinâmicos
-  const [topics, setTopics] = useState<Topic[]>([]);
   const [categories, setCategories] = useState<
     { id: string; name: string; technologyId: string }[]
   >([]);
-  const [items, setItems] = useState<
-    { id: string; title: string; categoryId: string }[]
-  >([]);
   const [loading, setLoading] = useState(false);
+
+  // Função para carregar eventos do banco
+  const loadEvents = React.useCallback(async () => {
+    try {
+      setEventsLoading(true);
+      
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      
+      const response = await fetch(`http://localhost:3001/api/study-events?year=${year}&month=${month}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setEvents(data.data || []);
+      } else {
+        console.error('Erro ao carregar eventos:', data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar eventos:', error);
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [currentDate]);
+
+  // Carregar eventos quando o mês mudar
+  React.useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  // Função para criar evento
+  const createEvent = async (eventData: typeof newEvent) => {
+    try {
+      const eventDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), eventData.day);
+      
+      const response = await fetch('http://localhost:3001/api/study-events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: eventData.title.trim(),
+          description: eventData.description?.trim() || undefined,
+          type: eventData.type,
+          date: eventDate.toISOString(),
+          completed: eventData.completed,
+          technologyId: eventData.technologyId || undefined,
+          categoryId: eventData.categoryId || undefined,
+          itemId: eventData.itemId || undefined,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Recarregar eventos
+        await loadEvents();
+        return true;
+      } else {
+        console.error('Erro ao criar evento:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao criar evento:', error);
+      return false;
+    }
+  };
+
+  // Função para atualizar evento
+  const updateEvent = async (eventId: string, eventData: Partial<StudyEvent>) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/study-events/${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(eventData),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Recarregar eventos
+        await loadEvents();
+        return true;
+      } else {
+        console.error('Erro ao atualizar evento:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar evento:', error);
+      return false;
+    }
+  };
+
+  // Função para deletar evento
+  const deleteEvent = async (eventId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/study-events/${eventId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Recarregar eventos
+        await loadEvents();
+        return true;
+      } else {
+        console.error('Erro ao deletar evento:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao deletar evento:', error);
+      return false;
+    }
+  };
 
   // Função utilitária para verificar se é data passada
   const isPastDate = React.useCallback((day: number) => {
@@ -171,7 +264,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
           // Carregar categorias diretamente da API
           const categoriesResponse = await fetch(
-            `/api/categories?technologyId=${techId}`
+            `http://localhost:3001/api/categories?technologyId=${techId}`
           );
           const categoriesData = await categoriesResponse.json();
           console.log("Calendar - Categorias recebidas:", categoriesData);
@@ -185,13 +278,13 @@ export const Calendar: React.FC<CalendarProps> = ({
           }
 
           // Também carregar tópicos para usar quando uma categoria for selecionada
-          const topicsResponse = await fetch(`/api/topics/${techId}`);
+          const topicsResponse = await fetch(`http://localhost:3001/api/topics/${techId}`);
           const topicsData = await topicsResponse.json();
           console.log("Calendar - Topics recebidos:", topicsData);
 
+          // Para futura implementação se necessário
           if (topicsData.success) {
-            setTopics(topicsData.data || []);
-            console.log("Calendar - Topics definidos:", topicsData.data);
+            console.log("Calendar - Topics disponíveis:", topicsData.data);
           }
         } catch (error) {
           console.error("Erro ao carregar dados da tecnologia:", error);
@@ -203,14 +296,14 @@ export const Calendar: React.FC<CalendarProps> = ({
     } else {
       // Limpar dados quando nenhuma tecnologia estiver selecionada
       setCategories([]);
-      setTopics([]);
-      setItems([]);
       console.log(
-        "Calendar - Categorias, topics e items limpos (nenhuma tecnologia selecionada)"
+        "Calendar - Categorias limpos (nenhuma tecnologia selecionada)"
       );
     }
   }, [newEvent.technologyId]);
 
+  // TODO: Implementar carregamento de items quando necessário
+  /*
   // Carregar itens quando uma categoria for selecionada
   React.useEffect(() => {
     if (newEvent.categoryId) {
@@ -233,7 +326,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             selectedCategory.id
           );
           const itemsResponse = await fetch(
-            `/api/items?categoryId=${selectedCategory.id}`
+            `http://localhost:3001/api/items?categoryId=${selectedCategory.id}`
           );
           const itemsData = await itemsResponse.json();
           console.log("Calendar - Items recebidos:", itemsData);
@@ -253,6 +346,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       console.log("Calendar - Items limpos (nenhuma categoria selecionada)");
     }
   }, [newEvent.categoryId, categories]);
+  */
 
   // Filtrar categorias pela tecnologia selecionada
   const getAvailableCategories = () => {
@@ -270,23 +364,6 @@ export const Calendar: React.FC<CalendarProps> = ({
     // Retornar as categorias carregadas da API
     console.log("Calendar - Categorias disponíveis final:", categories);
     return categories;
-  };
-
-  // Filtrar tópicos (items) pela categoria selecionada
-  const getAvailableTopics = () => {
-    console.log("Calendar - getAvailableTopics chamado");
-    console.log("Calendar - newEvent.categoryId:", newEvent.categoryId);
-    console.log("Calendar - items disponíveis:", items);
-
-    if (!newEvent.categoryId) {
-      console.log(
-        "Calendar - Nenhuma categoria selecionada, retornando array vazio"
-      );
-      return [];
-    }
-
-    console.log("Calendar - Items disponíveis final:", items);
-    return items;
   };
 
   const today = new Date();
@@ -334,41 +411,34 @@ export const Calendar: React.FC<CalendarProps> = ({
   const goToToday = () => {
     setCurrentDate(new Date());
   };
-  const handleCreateEvent = () => {
+  const handleCreateEvent = async () => {
     if (newEvent.title.trim()) {
       if (editingEvent) {
         // Editando evento existente
-        setEvents(
-          events.map((event) =>
-            event.id === editingEvent.id
-              ? {
-                  ...event,
-                  title: newEvent.title,
-                  type: newEvent.type,
-                  day: newEvent.day,
-                  completed: newEvent.completed,
-                  description: newEvent.description,
-                  technologyId: newEvent.technologyId,
-                  categoryId: newEvent.categoryId,
-                  topicId: newEvent.topicId,
-                }
-              : event
-          )
-        );
+        const eventDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), newEvent.day);
+        
+        const success = await updateEvent(editingEvent.id, {
+          title: newEvent.title.trim(),
+          description: newEvent.description?.trim() || undefined,
+          type: newEvent.type,
+          date: eventDate.toISOString(),
+          completed: newEvent.completed,
+          technologyId: newEvent.technologyId || undefined,
+          categoryId: newEvent.categoryId || undefined,
+          itemId: newEvent.itemId || undefined,
+        });
+        
+        if (success) {
+          handleCloseModal();
+        }
       } else {
         // Criando novo evento
-        const newId = Math.max(...events.map((e) => e.id), 0) + 1;
-        setEvents([
-          ...events,
-          {
-            id: newId,
-            ...newEvent,
-            day: newEvent.day,
-            completed: newEvent.completed,
-          },
-        ]);
+        const success = await createEvent(newEvent);
+        
+        if (success) {
+          handleCloseModal();
+        }
       }
-      handleCloseModal();
     }
   };
   const handleCloseModal = () => {
@@ -376,26 +446,29 @@ export const Calendar: React.FC<CalendarProps> = ({
     setEditingEvent(null);
     setNewEvent({
       title: "",
-      type: "study",
+      type: "STUDY",
       day: new Date().getDate(),
       completed: false,
       description: "",
       technologyId: "",
       categoryId: "",
-      topicId: "",
+      itemId: "",
     });
   };
-  const handleDeleteEvent = (eventId: number, e: React.MouseEvent) => {
+
+  const handleDeleteEvent = (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setEventToDelete(eventId);
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteEvent = () => {
+  const confirmDeleteEvent = async () => {
     if (eventToDelete !== null) {
-      setEvents(events.filter((event) => event.id !== eventToDelete));
-      setShowDeleteModal(false);
-      setEventToDelete(null);
+      const success = await deleteEvent(eventToDelete);
+      if (success) {
+        setShowDeleteModal(false);
+        setEventToDelete(null);
+      }
     }
   };
 
@@ -404,29 +477,31 @@ export const Calendar: React.FC<CalendarProps> = ({
     setEventToDelete(null);
   };
 
-  const handleToggleComplete = (eventId: number, e: React.MouseEvent) => {
+  const handleToggleComplete = async (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setEvents(
-      events.map((event) =>
-        event.id === eventId ? { ...event, completed: !event.completed } : event
-      )
-    );
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      await updateEvent(eventId, {
+        completed: !event.completed
+      });
+    }
   };
 
-  const handleEditEvent = (eventId: number, e: React.MouseEvent) => {
+  const handleEditEvent = (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const event = events.find((e) => e.id === eventId);
     if (event) {
       setEditingEvent(event);
+      const eventDate = new Date(event.date);
       setNewEvent({
         title: event.title,
-        type: event.type,
-        day: event.day,
+        type: event.type as "STUDY",
+        day: eventDate.getDate(),
         completed: event.completed,
-        description: event.description,
+        description: event.description || "",
         technologyId: event.technologyId || "",
         categoryId: event.categoryId || "",
-        topicId: event.topicId || "",
+        itemId: event.itemId || "",
       });
       setShowEventModal(true);
     }
@@ -445,7 +520,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         completed: false,
         technologyId: "",
         categoryId: "",
-        topicId: "",
+        itemId: "",
       });
       setShowEventModal(true);
     }
@@ -463,18 +538,24 @@ export const Calendar: React.FC<CalendarProps> = ({
         completed: false,
         technologyId: "",
         categoryId: "",
-        topicId: "",
+        itemId: "",
       });
       setShowEventModal(true);
     }
   };
+
   const getDayEvents = (day: number) => {
-    return events.filter((event) => event.day === day);
+    return events.filter((event) => {
+      const eventDate = new Date(event.date);
+      return eventDate.getDate() === day && 
+             eventDate.getMonth() === currentDate.getMonth() &&
+             eventDate.getFullYear() === currentDate.getFullYear();
+    });
   };
 
   // Funções para gerenciar sessões de estudo
-  const handleStartStudyClick = (eventTitle: string, eventType: string) => {
-    setSelectedEvent({ title: eventTitle, type: eventType });
+  const handleStartStudyClick = (eventTitle: string, eventType: string, eventId: string) => {
+    setSelectedEvent({ title: eventTitle, type: eventType, id: eventId });
     setIsStudyModalOpen(true);
   };
   const handleStartStudy = (duration: number, breakDuration: number) => {
@@ -482,6 +563,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
     startSession({
       eventTitle: selectedEvent.title,
+      eventId: selectedEvent.id,
       duration,
       breakDuration,
     });
@@ -547,11 +629,11 @@ export const Calendar: React.FC<CalendarProps> = ({
                   <div
                     key={index}
                     className={`text-xs px-2 py-1 rounded-full truncate font-medium backdrop-blur-sm ${
-                      event.type === "study"
+                      event.type === "STUDY"
                         ? isDarkMode
                           ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                           : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                        : event.type === "project"
+                        : event.type === "PROJECT"
                         ? isDarkMode
                           ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                           : "bg-blue-100 text-blue-700 border border-blue-200"
@@ -792,15 +874,26 @@ export const Calendar: React.FC<CalendarProps> = ({
               >
                 {" "}
                 <div className="p-3">
-                  {(() => {
+                  {eventsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <div className={`w-8 h-8 border-2 border-dashed rounded-full animate-spin ${
+                        isDarkMode ? "border-violet-400" : "border-violet-600"
+                      }`}></div>
+                      <p className={`text-sm mt-2 ${
+                        isDarkMode ? "text-slate-400" : "text-slate-600"
+                      }`}>
+                        Carregando eventos...
+                      </p>
+                    </div>
+                  ) : (() => {
                     const eventsToShow = selectedDay
-                      ? events.filter((event) => event.day === selectedDay)
+                      ? getDayEvents(selectedDay)
                       : events;
 
                     return eventsToShow.length > 0 ? (
                       <div className="space-y-3">
                         {eventsToShow
-                          .sort((a, b) => a.day - b.day)
+                          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                           .map((event) => (
                             <div
                               key={event.id}
@@ -825,7 +918,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                                         : "bg-slate-100 text-slate-700"
                                     }`}
                                   >
-                                    {event.day}
+                                    {new Date(event.date).getDate()}
                                   </div>
 
                                   {/* Conteúdo do evento */}
@@ -833,11 +926,11 @@ export const Calendar: React.FC<CalendarProps> = ({
                                     <div className="flex items-center gap-1 mb-1">
                                       <span
                                         className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                          event.type === "study"
+                                          event.type === "STUDY"
                                             ? isDarkMode
                                               ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                                               : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                            : event.type === "project"
+                                            : event.type === "PROJECT"
                                             ? isDarkMode
                                               ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                                               : "bg-blue-100 text-blue-700 border border-blue-200"
@@ -846,9 +939,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                                             : "bg-amber-100 text-amber-700 border border-amber-200"
                                         }`}
                                       >
-                                        {event.type === "study"
+                                        {event.type === "STUDY"
                                           ? "Estudo"
-                                          : event.type === "project"
+                                          : event.type === "PROJECT"
                                           ? "Projeto"
                                           : "Review"}
                                       </span>
@@ -889,7 +982,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                                     {/* Informações de tecnologia, categoria e tópico */}
                                     {(event.technologyId ||
                                       event.categoryId ||
-                                      event.topicId) && (
+                                      event.itemId) && (
                                       <div className="flex flex-wrap gap-1 mt-2">
                                         {event.technologyId && (
                                           <span
@@ -921,24 +1014,27 @@ export const Calendar: React.FC<CalendarProps> = ({
                                 </div>{" "}
                                 {/* Botões de Ação */}
                                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200/20">
-                                  {/* Botão de Iniciar Estudo */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStartStudyClick(
-                                        event.title,
-                                        event.type
-                                      );
-                                    }}
-                                    className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:scale-105 ${
-                                      isDarkMode
-                                        ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
-                                        : "bg-violet-100 hover:bg-violet-200 text-violet-600"
-                                    }`}
-                                    title="Iniciar sessão de estudo"
-                                  >
-                                    <Play className="w-3 h-3" />
-                                  </button>
+                                  {/* Botão de Iniciar Estudo - Apenas para eventos não concluídos */}
+                                  {!event.completed && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleStartStudyClick(
+                                          event.title,
+                                          event.type,
+                                          event.id
+                                        );
+                                      }}
+                                      className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:scale-105 ${
+                                        isDarkMode
+                                          ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
+                                          : "bg-violet-100 hover:bg-violet-200 text-violet-600"
+                                      }`}
+                                      title="Iniciar sessão de estudo"
+                                    >
+                                      <Play className="w-3 h-3" />
+                                    </button>
+                                  )}
 
                                   {/* Botão de Completar/Descompletar */}
                                   <button
@@ -961,33 +1057,37 @@ export const Calendar: React.FC<CalendarProps> = ({
                                     </span>
                                   </button>
 
-                                  {/* Botão de Editar */}
-                                  <button
-                                    onClick={(e) =>
-                                      handleEditEvent(event.id, e)
-                                    }
-                                    className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:scale-105 ${
-                                      isDarkMode
-                                        ? "bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30"
-                                        : "bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200"
-                                    }`}
-                                  >
-                                    <Edit3 className="w-3 h-3" />
-                                  </button>
+                                  {/* Botão de Editar - Apenas para eventos não concluídos */}
+                                  {!event.completed && (
+                                    <button
+                                      onClick={(e) =>
+                                        handleEditEvent(event.id, e)
+                                      }
+                                      className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:scale-105 ${
+                                        isDarkMode
+                                          ? "bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30"
+                                          : "bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200"
+                                      }`}
+                                    >
+                                      <Edit3 className="w-3 h-3" />
+                                    </button>
+                                  )}
 
-                                  {/* Botão de Deletar */}
-                                  <button
-                                    onClick={(e) =>
-                                      handleDeleteEvent(event.id, e)
-                                    }
-                                    className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:scale-105 ${
-                                      isDarkMode
-                                        ? "bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30"
-                                        : "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-                                    }`}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
+                                  {/* Botão de Deletar - Apenas para eventos não concluídos */}
+                                  {!event.completed && (
+                                    <button
+                                      onClick={(e) =>
+                                        handleDeleteEvent(event.id, e)
+                                      }
+                                      className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:scale-105 ${
+                                        isDarkMode
+                                          ? "bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                                          : "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                                      }`}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1137,9 +1237,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                 <div className="grid grid-cols-3 gap-2">
                   {/* Estudo */}
                   <button
-                    onClick={() => setNewEvent({ ...newEvent, type: "study" })}
+                    onClick={() => setNewEvent({ ...newEvent, type: "STUDY" })}
                     className={`p-3 rounded-xl border transition-all duration-300 hover:scale-105 ${
-                      newEvent.type === "study"
+                      newEvent.type === "STUDY"
                         ? isDarkMode
                           ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
                           : "bg-emerald-100 border-emerald-300 text-emerald-700"
@@ -1155,10 +1255,10 @@ export const Calendar: React.FC<CalendarProps> = ({
                   {/* Projeto */}
                   <button
                     onClick={() =>
-                      setNewEvent({ ...newEvent, type: "project" })
+                      setNewEvent({ ...newEvent, type: "PROJECT" })
                     }
                     className={`p-3 rounded-xl border transition-all duration-300 hover:scale-105 ${
-                      newEvent.type === "project"
+                      newEvent.type === "PROJECT"
                         ? isDarkMode
                           ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
                           : "bg-blue-100 border-blue-300 text-blue-700"
@@ -1173,9 +1273,9 @@ export const Calendar: React.FC<CalendarProps> = ({
 
                   {/* Review */}
                   <button
-                    onClick={() => setNewEvent({ ...newEvent, type: "review" })}
+                    onClick={() => setNewEvent({ ...newEvent, type: "REVIEW" })}
                     className={`p-3 rounded-xl border transition-all duration-300 hover:scale-105 ${
-                      newEvent.type === "review"
+                      newEvent.type === "REVIEW"
                         ? isDarkMode
                           ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
                           : "bg-amber-100 border-amber-300 text-amber-700"
@@ -1210,7 +1310,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                           ...newEvent,
                           technologyId: techId,
                           categoryId: "",
-                          topicId: "",
+                          itemId: "",
                         });
                       }}
                       className={`w-full px-2 py-2 rounded-lg border backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 text-xs ${
@@ -1240,7 +1340,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                         setNewEvent({
                           ...newEvent,
                           categoryId: e.target.value,
-                          topicId: "",
+                          itemId: "",
                         });
                       }}
                       disabled={!newEvent.technologyId}
@@ -1437,11 +1537,11 @@ export const Calendar: React.FC<CalendarProps> = ({
                         <>
                           <span
                             className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                              event.type === "study"
+                              event.type === "STUDY"
                                 ? isDarkMode
                                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                                   : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                : event.type === "project"
+                                : event.type === "PROJECT"
                                 ? isDarkMode
                                   ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                                   : "bg-blue-100 text-blue-700 border border-blue-200"
@@ -1450,9 +1550,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                                 : "bg-amber-100 text-amber-700 border border-amber-200"
                             }`}
                           >
-                            {event.type === "study"
+                            {event.type === "STUDY"
                               ? "Estudo"
-                              : event.type === "project"
+                              : event.type === "PROJECT"
                               ? "Projeto"
                               : "Review"}
                           </span>

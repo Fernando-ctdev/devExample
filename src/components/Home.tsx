@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { HomeProps } from "../types/types";
-import { Calendar, Code2, TrendingUp, Clock, Play } from "lucide-react";
+import { Calendar, Code2, TrendingUp, Clock, Play, Loader2 } from "lucide-react";
 import { StudyModal } from "./StudyModal";
 import { useStudyTimerControl } from "../hooks/useStudyTimer";
+import { useWeeklyStats } from "../hooks/useWeeklyStats";
 
 export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
   const [currentDate] = useState(new Date());
@@ -12,6 +13,64 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
     type: string;
   } | null>(null);
   const { startSession } = useStudyTimerControl();
+  const { stats: weeklyStats, loading: weeklyStatsLoading } = useWeeklyStats();
+
+  // Tipos para eventos reais
+  interface StudyEvent {
+    id: string;
+    title: string;
+    description?: string;
+    type: 'STUDY' | 'PROJECT' | 'REVIEW' | 'MEETING' | 'WORKSHOP' | 'PRESENTATION' | 'PLANNING' | 'DEADLINE';
+    date: string;
+    completed: boolean;
+    technologyId?: string;
+    categoryId?: string;
+    itemId?: string;
+    technology?: {
+      id: string;
+      name: string;
+      title: string;
+    };
+    category?: {
+      id: string;
+      name: string;
+    };
+    item?: {
+      id: string;
+      title: string;
+    };
+  }
+
+  const [events, setEvents] = useState<StudyEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+
+  // Função para carregar eventos do banco
+  const loadEvents = useCallback(async () => {
+    try {
+      setEventsLoading(true);
+      
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      
+      const response = await fetch(`http://localhost:3001/api/study-events?year=${year}&month=${month}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setEvents(data.data || []);
+      } else {
+        console.error('Erro ao carregar eventos:', data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar eventos:', error);
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [currentDate]);
+
+  // Carregar eventos quando o componente montar
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   // CSS customizado para scrollbar
   useEffect(() => {
@@ -46,46 +105,30 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
     return () => {
       document.head.removeChild(style);
     };
-  }, [isDarkMode]); // Dados resumidos para o dashboard
+  }, [isDarkMode]);  // Dados resumidos para o dashboard
   const totalTechnologies = technologies?.length || 0;
-  // Gerar dados de eventos do mês atual
-  const generateMonthEvents = () => {
-    const events: Array<{
-      date: string;
-      day: number;
-      title: string;
-      type: string;
-    }> = [];
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
 
-    // Eventos de exemplo
-    const sampleEvents = [
-      { day: 5, title: "Reunião de projeto", type: "meeting" },
-      { day: 12, title: "Deadline entrega", type: "deadline" },
-      { day: 18, title: "Workshop React", type: "workshop" },
-      { day: 23, title: "Code Review", type: "review" },
-      { day: 25, title: "Apresentação", type: "presentation" },
-      { day: 28, title: "Sprint Planning", type: "planning" },
-    ];
-
-    sampleEvents.forEach((event) => {
-      const eventDate = new Date(year, month, event.day);
-      if (eventDate.getMonth() === month) {
-        // Verificar se ainda está no mês atual
-        events.push({
-          date: eventDate.toISOString().split("T")[0],
-          day: event.day,
-          title: event.title,
-          type: event.type,
-        });
-      }
+  // Função para obter eventos do dia atual
+  const getTodayEvents = () => {
+    const today = new Date();
+    return events.filter((event) => {
+      const eventDate = new Date(event.date);
+      return eventDate.getDate() === today.getDate() && 
+             eventDate.getMonth() === today.getMonth() &&
+             eventDate.getFullYear() === today.getFullYear() &&
+             !event.completed; // Apenas eventos não concluídos
     });
-
-    return events;
   };
 
-  const monthEvents = generateMonthEvents();
+  // Função para obter eventos de um dia específico
+  const getDayEvents = (day: number) => {
+    return events.filter((event) => {
+      const eventDate = new Date(event.date);
+      return eventDate.getDate() === day && 
+             eventDate.getMonth() === currentDate.getMonth() &&
+             eventDate.getFullYear() === currentDate.getFullYear();
+    });
+  };
 
   // Gerar dados de atividade de estudos baseado no conteúdo real
   const generateStudyActivity = () => {
@@ -347,19 +390,30 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
                       >
                         Esta Semana
                       </p>
-                      <p
-                        className={`text-2xl font-bold mt-1 ${
-                          isDarkMode ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        8h
-                      </p>
+                      {weeklyStatsLoading ? (
+                        <div className="flex items-center mt-1 gap-2">
+                          <div className="w-4 h-4 border-2 border-t-transparent border-purple-500 rounded-full animate-spin"></div>
+                          <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                            Carregando...
+                          </span>
+                        </div>
+                      ) : (
+                        <p
+                          className={`text-2xl font-bold mt-1 ${
+                            isDarkMode ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {weeklyStats?.formattedTime || "0h"}
+                        </p>
+                      )}
                       <p
                         className={`text-xs ${
                           isDarkMode ? "text-slate-500" : "text-slate-500"
                         }`}
                       >
-                        de estudos - Clique para dashboard
+                        {weeklyStats?.totalSessions 
+                          ? `${weeklyStats.totalSessions} sessões - Clique para dashboard` 
+                          : "de estudos - Clique para dashboard"}
                       </p>
                     </div>{" "}
                     <div
@@ -735,7 +789,7 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
                     return days.map((day, index) => {
                       // Verificar se o dia tem eventos
                       const dayEvents = day
-                        ? monthEvents.filter((event) => event.day === day)
+                        ? getDayEvents(day)
                         : [];
                       const hasEvents = dayEvents.length > 0;
 
@@ -809,216 +863,121 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
                   {" "}
                   {/* Conteúdo dos eventos */}{" "}
                   <div className="space-y-3 pr-2">
-                    {/* Eventos de exemplo */}
-                    <div
-                      className={`p-3 rounded-lg border-l-4 ${
-                        isDarkMode ? "border-violet-400" : "border-violet-500"
-                      } ${
-                        isDarkMode
-                          ? "bg-slate-700/50 border-slate-600"
-                          : "bg-slate-50 border-slate-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
+                    {eventsLoading ? (
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <div className={`w-8 h-8 border-2 border-dashed rounded-full animate-spin ${
+                          isDarkMode ? "border-violet-400" : "border-violet-600"
+                        }`}></div>
+                        <p className={`text-sm mt-2 ${
+                          isDarkMode ? "text-slate-400" : "text-slate-600"
+                        }`}>
+                          Carregando eventos...
+                        </p>
+                      </div>
+                    ) : (() => {
+                      const todayEvents = getTodayEvents();
+                      
+                      return todayEvents.length > 0 ? (
+                        todayEvents.map((event) => (
+                          <div
+                            key={event.id}
+                            className={`p-3 rounded-lg border-l-4 ${
+                              event.type === "STUDY"
+                                ? isDarkMode ? "border-emerald-400" : "border-emerald-500"
+                                : event.type === "PROJECT"
+                                ? isDarkMode ? "border-blue-400" : "border-blue-500"
+                                : event.type === "REVIEW"
+                                ? isDarkMode ? "border-amber-400" : "border-amber-500"
+                                : isDarkMode ? "border-violet-400" : "border-violet-500"
+                            } ${
+                              isDarkMode
+                                ? "bg-slate-700/50 border-slate-600"
+                                : "bg-slate-50 border-slate-200"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h5
+                                  className={`font-semibold text-sm ${
+                                    isDarkMode ? "text-white" : "text-slate-800"
+                                  }`}
+                                >
+                                  {event.title}
+                                </h5>{" "}
+                                <p
+                                  className={`text-xs mt-1 ${
+                                    isDarkMode ? "text-slate-400" : "text-slate-600"
+                                  }`}
+                                >
+                                  {event.description || "Sem descrição"}
+                                </p>
+                                {/* Mostrar tecnologia se disponível */}
+                                {event.technology && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <span
+                                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                        isDarkMode
+                                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                                          : "bg-violet-100 text-violet-700 border border-violet-200"
+                                      }`}
+                                    >
+                                      {event.technology.name}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleStartStudyClick(
+                                    event.title,
+                                    event.type
+                                  )
+                                }
+                                className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                                  isDarkMode
+                                    ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
+                                    : "bg-violet-100 hover:bg-violet-200 text-violet-600"
+                                }`}
+                                title="Iniciar sessão de estudo"
+                              >
+                                <Play className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                          <div
+                            className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                              isDarkMode
+                                ? "bg-slate-700/50 border border-slate-600/50"
+                                : "bg-slate-100/50 border border-slate-200/50"
+                            }`}
+                          >
+                            <Calendar
+                              className={`w-8 h-8 ${
+                                isDarkMode ? "text-slate-500" : "text-slate-400"
+                              }`}
+                            />
+                          </div>
                           <h5
-                            className={`font-semibold text-sm ${
-                              isDarkMode ? "text-white" : "text-slate-800"
+                            className={`text-sm font-semibold mb-2 ${
+                              isDarkMode ? "text-slate-300" : "text-slate-700"
                             }`}
                           >
-                            Reunião de Projeto
-                          </h5>{" "}
+                            Nenhum evento hoje
+                          </h5>
                           <p
-                            className={`text-xs mt-1 ${
-                              isDarkMode ? "text-slate-400" : "text-slate-600"
+                            className={`text-xs ${
+                              isDarkMode ? "text-slate-500" : "text-slate-500"
                             }`}
                           >
-                            Discussão sobre novas funcionalidades e roadmap do
-                            projeto
+                            Aproveite o dia livre ou crie novos eventos no
+                            calendário{" "}
                           </p>
                         </div>
-                        <button
-                          onClick={() =>
-                            handleStartStudyClick(
-                              "Reunião de Projeto",
-                              "meeting"
-                            )
-                          }
-                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
-                            isDarkMode
-                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
-                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
-                          }`}
-                          title="Iniciar sessão de estudo"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`p-3 rounded-lg border-l-4 ${
-                        isDarkMode ? "border-violet-400" : "border-violet-500"
-                      } ${
-                        isDarkMode
-                          ? "bg-slate-700/50 border-slate-600"
-                          : "bg-slate-50 border-slate-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h5
-                            className={`font-semibold text-sm ${
-                              isDarkMode ? "text-white" : "text-slate-800"
-                            }`}
-                          >
-                            Code Review
-                          </h5>{" "}
-                          <p
-                            className={`text-xs mt-1 ${
-                              isDarkMode ? "text-slate-400" : "text-slate-600"
-                            }`}
-                          >
-                            Revisão do código da API e implementação de
-                            melhorias
-                          </p>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleStartStudyClick("Code Review", "review")
-                          }
-                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
-                            isDarkMode
-                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
-                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
-                          }`}
-                          title="Iniciar sessão de estudo"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`p-3 rounded-lg border-l-4 ${
-                        isDarkMode ? "border-violet-400" : "border-violet-500"
-                      } ${
-                        isDarkMode
-                          ? "bg-slate-700/50 border-slate-600"
-                          : "bg-slate-50 border-slate-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h5
-                            className={`font-semibold text-sm ${
-                              isDarkMode ? "text-white" : "text-slate-800"
-                            }`}
-                          >
-                            Workshop React
-                          </h5>{" "}
-                          <p
-                            className={`text-xs mt-1 ${
-                              isDarkMode ? "text-slate-400" : "text-slate-600"
-                            }`}
-                          >
-                            Hooks avançados e padrões de desenvolvimento React
-                          </p>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleStartStudyClick("Workshop React", "workshop")
-                          }
-                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
-                            isDarkMode
-                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
-                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
-                          }`}
-                          title="Iniciar sessão de estudo"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`p-3 rounded-lg border-l-4 ${
-                        isDarkMode ? "border-violet-400" : "border-violet-500"
-                      } ${
-                        isDarkMode
-                          ? "bg-slate-700/50 border-slate-600"
-                          : "bg-slate-50 border-slate-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h5
-                            className={`font-semibold text-sm ${
-                              isDarkMode ? "text-white" : "text-slate-800"
-                            }`}
-                          >
-                            Deadline Entrega
-                          </h5>{" "}
-                          <p
-                            className={`text-xs mt-1 ${
-                              isDarkMode ? "text-slate-400" : "text-slate-600"
-                            }`}
-                          >
-                            Finalizar implementação das funcionalidades
-                            pendentes
-                          </p>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleStartStudyClick(
-                              "Deadline Entrega",
-                              "deadline"
-                            )
-                          }
-                          className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
-                            isDarkMode
-                              ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
-                              : "bg-violet-100 hover:bg-violet-200 text-violet-600"
-                          }`}
-                          title="Iniciar sessão de estudo"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Estado vazio comentado temporariamente 
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <div
-                        className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-                          isDarkMode
-                            ? "bg-slate-700/50 border border-slate-600/50"
-                            : "bg-slate-100/50 border border-slate-200/50"
-                        }`}
-                      >
-                        <Calendar
-                          className={`w-8 h-8 ${
-                            isDarkMode ? "text-slate-500" : "text-slate-400"
-                          }`}
-                        />
-                      </div>
-                      <h5
-                        className={`text-sm font-semibold mb-2 ${
-                          isDarkMode ? "text-slate-300" : "text-slate-700"
-                        }`}
-                      >
-                        Nenhum evento hoje
-                      </h5>
-                      <p
-                        className={`text-xs ${
-                          isDarkMode ? "text-slate-500" : "text-slate-500"
-                        }`}
-                      >
-                        Aproveite o dia livre ou crie novos eventos no
-                        calendário{" "}
-                      </p>
-                    </div>
-                    */}
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
