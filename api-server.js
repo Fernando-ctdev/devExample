@@ -1139,7 +1139,21 @@ app.get('/api/study-sessions', async (req, res) => {
           select: {
             id: true,
             title: true,
-            type: true
+            description: true,
+            type: true,
+            technology: {
+              select: {
+                id: true,
+                name: true,
+                title: true
+              }
+            },
+            category: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
           }
         }
       },
@@ -1343,39 +1357,33 @@ async function getDashboardStatistics(req, res) {
   const endDateTime = new Date(endDate);
   endDateTime.setHours(23, 59, 59, 999); // Incluir o dia inteiro
 
-  // Eventos criados no período
-  const totalEvents = await prisma.studyEvent.count({
-    where: {
-      createdAt: {
-        gte: startDateTime,
-        lte: endDateTime
-      }
-    }
+  console.log('📊 getDashboardStatistics - Período solicitado:', {
+    startDate: startDateTime.toISOString(),
+    endDate: endDateTime.toISOString()
   });
 
-  // Eventos concluídos no período
-  const completedEvents = await prisma.studyEvent.count({
-    where: {
-      createdAt: {
-        gte: startDateTime,
-        lte: endDateTime
-      },
-      completed: true
-    }
-  });
-
-  // Sessões de estudo no período
+  // Sessões de estudo no período (usar startTime para maior precisão)
   const studySessions = await prisma.studySession.findMany({
     where: {
-      createdAt: {
+      startTime: {
         gte: startDateTime,
         lte: endDateTime
       }
     },
     select: {
-      totalStudyTime: true
+      totalStudyTime: true,
+      startTime: true,
+      completed: true,
+      eventId: true
     }
   });
+
+  console.log('📊 Sessões encontradas:', studySessions.length);
+  console.log('📊 Sessões detalhes:', studySessions.map(s => ({
+    date: s.startTime.toISOString(),
+    time: s.totalStudyTime,
+    completed: s.completed
+  })));
 
   const totalSessions = studySessions.length;
   const totalStudyTimeSeconds = studySessions.reduce((sum, session) => {
@@ -1385,17 +1393,36 @@ async function getDashboardStatistics(req, res) {
   // Converter segundos para minutos para exibição
   const totalStudyTimeMinutes = Math.floor(totalStudyTimeSeconds / 60);
 
-  // Progresso semanal (sempre os últimos 7 dias completos)
+  console.log('📊 Totais calculados:', {
+    totalSessions,
+    totalStudyTimeSeconds,
+    totalStudyTimeMinutes
+  });
+
+  // Eventos únicos no período (contados por sessões)
+  const uniqueEventIds = [...new Set(studySessions.map(s => s.eventId))];
+  const totalEvents = uniqueEventIds.length;
+
+  // Eventos concluídos (todos as sessões do evento foram concluídas)
+  let completedEvents = 0;
+  for (const eventId of uniqueEventIds) {
+    const eventSessions = studySessions.filter(s => s.eventId === eventId);
+    const allCompleted = eventSessions.every(s => s.completed);
+    if (allCompleted) {
+      completedEvents++;
+    }
+  }
+
+  // Progresso do período solicitado (não sempre os últimos 7 dias)
   const weeklyProgress = [];
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   
-  // Sempre mostrar os últimos 7 dias (independente do período selecionado)
-  const currentDate = new Date();
-  currentDate.setHours(23, 59, 59, 999);
+  // Calcular dias entre startDate e endDate
+  const currentDate = new Date(startDateTime);
+  const finalDate = new Date(endDateTime);
   
-  for (let i = 6; i >= 0; i--) {
+  while (currentDate <= finalDate) {
     const date = new Date(currentDate);
-    date.setDate(date.getDate() - i);
     date.setHours(0, 0, 0, 0);
     
     const dayEnd = new Date(date);
@@ -1403,7 +1430,7 @@ async function getDashboardStatistics(req, res) {
     
     const daySessionsCount = await prisma.studySession.count({
       where: {
-        createdAt: {
+        startTime: {
           gte: date,
           lte: dayEnd
         }
@@ -1412,7 +1439,7 @@ async function getDashboardStatistics(req, res) {
 
     const daySessionsTime = await prisma.studySession.aggregate({
       where: {
-        createdAt: {
+        startTime: {
           gte: date,
           lte: dayEnd
         }
@@ -1427,12 +1454,15 @@ async function getDashboardStatistics(req, res) {
       horas: (daySessionsTime._sum.totalStudyTime || 0) / 3600, // converter segundos para horas
       estudos: daySessionsCount
     });
+    
+    // Próximo dia
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   // Estatísticas por tecnologia no período
   const techSessionsWithEvents = await prisma.studySession.findMany({
     where: {
-      createdAt: {
+      startTime: {
         gte: startDateTime,
         lte: endDateTime
       },
@@ -1472,20 +1502,20 @@ async function getDashboardStatistics(req, res) {
   const monthlyActivity = [];
   const sessionsInPeriod = await prisma.studySession.findMany({
     where: {
-      createdAt: {
+      startTime: {
         gte: startDateTime,
         lte: endDateTime
       }
     },
     select: {
-      createdAt: true
+      startTime: true
     }
   });
 
   // Criar um mapa de contagem por dia
   const activityMap = new Map();
   sessionsInPeriod.forEach(session => {
-    const date = new Date(session.createdAt);
+    const date = new Date(session.startTime);
     const dateKey = date.toISOString().split('T')[0];
     activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + 1);
   });

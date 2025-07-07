@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { BarChart3, TrendingUp, Users, Activity, Loader2, RefreshCw } from "lucide-react";
+import {
+  BarChart3,
+  TrendingUp,
+  Users,
+  Activity,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -18,7 +25,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
-  const [dateRange, setDateRange] = useState<DateRangeType>('this_week');
+  const [dateRange, setDateRange] = useState<DateRangeType>("this_week");
 
   const { stats, loading, error, refetch } = useDashboardStats(dateRange);
 
@@ -33,24 +40,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
     }
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+    return remainingMinutes > 0
+      ? `${hours}h ${remainingMinutes}min`
+      : `${hours}h`;
   };
 
   // Garantir que sempre temos os 7 dias da semana no gráfico
   const getWeeklyProgressData = () => {
-    const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    
+    const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
     // Criar array com todos os dias da semana
-    const weeklyData = daysOfWeek.map(day => {
+    const weeklyData = daysOfWeek.map((day) => {
       // Procurar se existe dados para este dia
-      const dayData = stats?.weeklyProgress?.find(item => item.day === day);
+      const dayData = stats?.weeklyProgress?.find((item) => item.day === day);
       return {
         day,
         horas: dayData?.horas || 0,
-        estudos: dayData?.estudos || 0
+        estudos: dayData?.estudos || 0,
       };
     });
-    
+
     return weeklyData;
   };
 
@@ -66,7 +75,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
       >
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-violet-600" />
-          <p className={`text-lg font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+          <p
+            className={`text-lg font-medium ${
+              isDarkMode ? "text-slate-300" : "text-slate-600"
+            }`}
+          >
             Carregando estatísticas...
           </p>
         </div>
@@ -111,7 +124,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
             : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
         }`}
       >
-        <p className={`text-lg font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+        <p
+          className={`text-lg font-medium ${
+            isDarkMode ? "text-slate-300" : "text-slate-600"
+          }`}
+        >
           Nenhuma estatística encontrada
         </p>
       </div>
@@ -181,7 +198,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
                 </p>
               </div>
             </div>
-            
+
             {/* Date Range Picker */}
             <DateRangePicker
               currentRange={dateRange}
@@ -310,48 +327,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
                   >
                     Progresso Semanal
                   </h3>
-                </div>                <div className="flex-1 flex items-center justify-center">
+                </div>{" "}
+                <div className="flex-1 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={getWeeklyProgressData()}>
-                      <CartesianGrid 
-                        strokeDasharray="3 3" 
+                      <CartesianGrid
+                        strokeDasharray="3 3"
                         stroke={isDarkMode ? "#334155" : "#e2e8f0"}
                         opacity={0.5}
                       />
-                      <XAxis 
-                        dataKey="day" 
+                      <XAxis
+                        dataKey="day"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ 
-                          fill: isDarkMode ? "#94a3b8" : "#64748b", 
+                        tick={{
+                          fill: isDarkMode ? "#94a3b8" : "#64748b",
                           fontSize: 12,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                       />
-                      <YAxis 
+                      <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ 
-                          fill: isDarkMode ? "#94a3b8" : "#64748b", 
+                        tick={{
+                          fill: isDarkMode ? "#94a3b8" : "#64748b",
                           fontSize: 12,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="horas" 
+                      <Line
+                        type="monotone"
+                        dataKey="horas"
                         stroke={isDarkMode ? "#8b5cf6" : "#7c3aed"}
                         strokeWidth={3}
-                        dot={{ 
-                          fill: isDarkMode ? "#8b5cf6" : "#7c3aed", 
-                          strokeWidth: 2, 
-                          r: 5 
+                        dot={{
+                          fill: isDarkMode ? "#8b5cf6" : "#7c3aed",
+                          strokeWidth: 2,
+                          r: 5,
                         }}
-                        activeDot={{ 
-                          r: 7, 
+                        activeDot={{
+                          r: 7,
                           stroke: isDarkMode ? "#8b5cf6" : "#7c3aed",
                           strokeWidth: 2,
-                          fill: isDarkMode ? "#1e293b" : "#ffffff"
+                          fill: isDarkMode ? "#1e293b" : "#ffffff",
                         }}
                       />
                     </LineChart>
@@ -386,40 +404,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
                       isDarkMode ? "text-white" : "text-slate-800"
                     }`}
                   >
-                    Temas Mais Estudadas
+                    Temas Mais Estudados
                   </h3>
-                </div>                <div className="flex-1 flex items-center justify-center">
+                </div>{" "}
+                <div className="flex-1 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.technologiesData} layout="horizontal">
-                      <CartesianGrid 
-                        strokeDasharray="3 3" 
+                      <CartesianGrid
+                        strokeDasharray="3 3"
                         stroke={isDarkMode ? "#334155" : "#e2e8f0"}
                         opacity={0.5}
                       />
-                      <XAxis 
+                      <XAxis
                         type="number"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ 
-                          fill: isDarkMode ? "#94a3b8" : "#64748b", 
+                        tick={{
+                          fill: isDarkMode ? "#94a3b8" : "#64748b",
                           fontSize: 12,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                       />
-                      <YAxis 
+                      <YAxis
                         type="category"
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ 
-                          fill: isDarkMode ? "#94a3b8" : "#64748b", 
+                        tick={{
+                          fill: isDarkMode ? "#94a3b8" : "#64748b",
                           fontSize: 12,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                         width={80}
                       />
-                      <Bar 
-                        dataKey="value" 
+                      <Bar
+                        dataKey="value"
                         fill={isDarkMode ? "#10b981" : "#059669"}
                         radius={[0, 4, 4, 0]}
                       />

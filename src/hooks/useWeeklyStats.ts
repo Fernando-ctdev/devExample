@@ -26,15 +26,17 @@ export const useWeeklyStats = () => {
       setLoading(true);
       setError(null);
       
-      // Cálculo da data de início e fim da semana atual
+      // Cálculo da data de início e fim da semana atual (segunda a domingo)
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
-      // Encontrar segunda-feira (dia 1 da semana)
+      // Encontrar segunda-feira (ajustar para segunda ser dia 1)
+      const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, etc.
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Se domingo, volta 6 dias
       const monday = new Date(today);
-      monday.setDate(today.getDate() - today.getDay() + 1);
+      monday.setDate(today.getDate() - daysFromMonday);
       
-      // Encontrar domingo (dia 7 da semana)
+      // Encontrar domingo (último dia da semana)
       const sunday = new Date(monday);
       sunday.setDate(monday.getDate() + 6);
 
@@ -44,8 +46,16 @@ export const useWeeklyStats = () => {
         endDate: sunday.toISOString().split('T')[0]
       });
       
+      console.log('📊 useWeeklyStats - Enviando requisição:', {
+        startDate: monday.toISOString().split('T')[0],
+        endDate: sunday.toISOString().split('T')[0],
+        url: `http://localhost:3001/api/study-statistics?${params}`
+      });
+      
       const response = await fetch(`http://localhost:3001/api/study-statistics?${params}`);
       const data = await response.json();
+      
+      console.log('📊 useWeeklyStats - Resposta recebida:', data);
       
       if (data.success) {
         const weeklyStats: WeeklyStats = {

@@ -102,7 +102,20 @@ async function getStudySessions(req: any, res: any) {
         select: {
           id: true,
           title: true,
-          type: true
+          type: true,
+          technology: {
+            select: {
+              id: true,
+              name: true,
+              title: true
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
         }
       }
     },
@@ -113,7 +126,10 @@ async function getStudySessions(req: any, res: any) {
     skip: parseInt(offset as string)
   });
 
-  return res.status(200).json(sessions);
+  return res.status(200).json({
+    success: true,
+    data: sessions
+  });
 }
 
 async function createStudySession(req: any, res: any) {

@@ -32,8 +32,11 @@ const getDateRange = (type: DateRangeType): { startDate: Date; endDate: Date } =
 
   switch (type) {
     case 'this_week': {
+      // Encontrar segunda-feira (ajustar para segunda ser dia 1)
+      const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, etc.
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Se domingo, volta 6 dias
       const monday = new Date(today);
-      monday.setDate(today.getDate() - today.getDay() + 1);
+      monday.setDate(today.getDate() - daysFromMonday);
       const sunday = new Date(monday);
       sunday.setDate(monday.getDate() + 6);
       return { startDate: monday, endDate: sunday };
