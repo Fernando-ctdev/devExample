@@ -8,20 +8,26 @@ interface WeeklyStats {
 
 export const useWeeklyStats = () => {
   const [stats, setStats] = useState<WeeklyStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Função para formatar tempo em horas
-  const formatStudyTime = (minutes: number) => {
+  const formatStudyTime = useCallback((minutes: number) => {
     if (minutes < 60) {
       return `${minutes}min`;
     }
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
-  };
+  }, []);
 
-  const fetchWeeklyStats = useCallback(async () => {
+  const fetchWeeklyStats = useCallback(async (forceRefresh = false) => {
+    // Só carrega se for uma atualização forçada ou se ainda não carregou
+    if (!forceRefresh && hasInitialized) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -65,6 +71,7 @@ export const useWeeklyStats = () => {
         };
         
         setStats(weeklyStats);
+        setHasInitialized(true);
       } else {
         setError(data.error || 'Erro ao carregar estatísticas');
       }
@@ -74,16 +81,23 @@ export const useWeeklyStats = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [hasInitialized, formatStudyTime]);
 
+  // Carregar apenas na primeira montagem
   useEffect(() => {
-    fetchWeeklyStats();
+    if (!hasInitialized) {
+      fetchWeeklyStats();
+    }
+  }, [fetchWeeklyStats, hasInitialized]);
+
+  const refetch = useCallback(() => {
+    fetchWeeklyStats(true);
   }, [fetchWeeklyStats]);
 
   return {
     stats,
     loading,
     error,
-    refetch: fetchWeeklyStats
+    refetch
   };
 };

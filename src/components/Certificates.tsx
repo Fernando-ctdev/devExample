@@ -154,8 +154,8 @@ export function Certificates({ isDarkMode, technologies }: CertificatesProps) {
       {/* Header */}
       <header className={`flex-shrink-0 text-white shadow-2xl backdrop-blur-md border-b
         ${isDarkMode
-          ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
-          : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
+          ? "bg-gradient-to-r from-purple-900/90 to-violet-900/90 border-purple-700/30"
+          : "bg-gradient-to-r from-purple-600/95 to-violet-600/95 border-purple-200/50"
         }`}
       >
         <div className="container mx-auto px-6 py-6">

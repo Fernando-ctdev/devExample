@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import {
   Home,
   LogOut,
-  ImageIcon,
+  Book,
   ChevronLeft,
   ChevronRight,
   BarChart3,
   Calendar,
   Settings,
-  Code2,
   Award,
+  Brain,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -48,10 +48,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Home",
       icon: Home,
       onClick: () => onNavigate("home"),
-    },    {
+    },
+    {
       id: "gallery",
       label: "Galeria",
-      icon: ImageIcon,
+      icon: Book,
       onClick: () => onNavigate("gallery"),
     },
     {
@@ -98,21 +99,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ${isExpanded ? "w-72" : "w-16"}
       ${
         isDarkMode
-          ? "bg-gradient-to-b from-slate-900 to-slate-800 border-slate-700/50"
-          : "bg-gradient-to-b from-white to-slate-50/50 border-slate-200/50"
+          ? "bg-gradient-to-b from-slate-900/90 to-purple-900/80 border-purple-700/30"
+          : "bg-gradient-to-b from-white/90 to-purple-50/90 border-purple-200/50"
       }
       border rounded-3xl shadow-2xl backdrop-blur-md
-      ${/* Hide on mobile when collapsed */ ""}
       ${!isExpanded ? "md:block hidden" : "block"}
     `}
     >
-      {" "}      {/* Header com logo */}
+      {/* Header com logo */}
       <div
         className={`flex items-center border-b backdrop-blur-md rounded-t-3xl ${
-          isExpanded ? 'p-6' : 'px-3 py-6'
-        } ${
-          isDarkMode ? "border-slate-700/50" : "border-slate-200/50"
-        }`}
+          isExpanded ? "p-6" : "px-3 py-6"
+        } ${isDarkMode ? "border-purple-700/30" : "border-purple-200/50"}`}
       >
         <div
           className={`flex items-center ${
@@ -122,49 +120,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div
             className={`
             flex items-center justify-center w-10 h-10 rounded-2xl shadow-lg
-            ${
-              isDarkMode
-                ? "bg-gradient-to-r from-violet-600 to-purple-600"
-                : "bg-gradient-to-r from-violet-500 to-purple-500"
-            }
+            bg-gradient-to-r from-purple-500 to-violet-500
           `}
           >
-            <Code2 className="w-6 h-6 text-white" />
+            <Brain className="w-6 h-6 text-white" />
           </div>
           {isExpanded && (
             <div>
               <h1
-                className={`font-bold text-xl bg-gradient-to-r ${
-                  isDarkMode
-                    ? "from-white to-slate-300"
-                    : "from-slate-900 to-slate-700"
-                } bg-clip-text text-transparent`}
+                className={`font-bold text-xl bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent`}
               >
-                DevExamples
+                Mindra
               </h1>
               <p
                 className={`text-sm ${
                   isDarkMode ? "text-slate-400" : "text-slate-500"
                 }`}
               >
-                v1.0.0
+                Aprendizado Inteligente
               </p>
             </div>
-          )}        </div>
-      </div>{/* Botão de expansão - posicionado no meio da borda direita */}
+          )}
+        </div>
+      </div>
+
+      {/* Botão de expansão - posicionado no meio da borda direita */}
       <button
         onClick={toggleExpansion}
         className={`
           absolute top-1/2 -translate-y-1/2 z-50 transition-all duration-300 hover:scale-110
           flex items-center justify-center w-8 h-8 rounded-lg
-          ${isExpanded ? "-right-4" : "-right-4"}
+          -right-4
           ${
             isDarkMode
-              ? "hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 bg-slate-800/80"
-              : "hover:bg-slate-100 text-slate-600 hover:text-slate-900 bg-white/80"
+              ? "hover:bg-purple-700/50 text-purple-400 hover:text-purple-200 bg-purple-800/80"
+              : "hover:bg-purple-100 text-purple-600 hover:text-purple-900 bg-white/80"
           }
           backdrop-blur-sm border shadow-lg
-          ${isDarkMode ? "border-slate-600/30" : "border-slate-300/30"}
+          ${isDarkMode ? "border-purple-600/30" : "border-purple-300/30"}
         `}
         title={isExpanded ? "Fechar sidebar" : "Expandir sidebar"}
       >
@@ -173,8 +166,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ) : (
           <ChevronRight className="w-4 h-4" />
         )}
-      </button>{/* Menu principal */}
-      <nav className={`flex-1 ${isExpanded ? 'p-6' : 'px-3 py-6'}`}>
+      </button>
+
+      {/* Menu principal */}
+      <nav className={`flex-1 ${isExpanded ? "p-6" : "px-3 py-6"}`}>
         <ul className="space-y-3">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -182,7 +177,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             return (
               <li key={item.id}>
-                {" "}
                 <button
                   onClick={item.onClick}
                   className={`
@@ -195,12 +189,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }
                     ${
                       isActive
-                        ? isDarkMode
-                          ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg"
-                          : "bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg"
+                        ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/30"
                         : isDarkMode
-                        ? "text-slate-300 hover:bg-slate-700/50 hover:text-slate-100"
-                        : "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
+                        ? "text-slate-300 hover:bg-purple-700/30 hover:text-purple-200"
+                        : "text-slate-700 hover:bg-purple-100/70 hover:text-purple-800"
                     }
                   `}
                   title={!isExpanded ? item.label : ""}
@@ -216,13 +208,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
         </ul>
-      </nav>{" "}      {/* Menu inferior */}
+      </nav>
+
+      {/* Menu inferior */}
       <div
         className={`border-t backdrop-blur-md rounded-b-3xl ${
-          isExpanded ? 'p-6' : 'px-3 py-6'
-        } ${
-          isDarkMode ? "border-slate-700/50" : "border-slate-200/50"
-        }`}
+          isExpanded ? "p-6" : "px-3 py-6"
+        } ${isDarkMode ? "border-purple-700/30" : "border-purple-200/50"}`}
       >
         <ul className="space-y-3">
           {bottomItems.map((item) => {
@@ -230,7 +222,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             return (
               <li key={item.id}>
-                {" "}
                 <button
                   onClick={item.onClick}
                   className={`
@@ -260,24 +251,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
         </ul>
-      </div>{" "}
-      {/* Versão no modo compacto */}
-      {!isExpanded && (
-        <div
-          className={`p-3 border-t backdrop-blur-md rounded-b-3xl ${
-            isDarkMode ? "border-slate-700/50" : "border-slate-200/50"
-          }`}
-        >
-          <div
-            className={`
-            text-center text-xs font-semibold
-            ${isDarkMode ? "text-slate-400" : "text-slate-500"}
-          `}
-          >
-            v1.0
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

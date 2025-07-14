@@ -135,6 +135,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
     );
   }
 
+  // Debug: log dos dados recebidos
+  console.log('📊 Dashboard Stats:', {
+    totalGoals: stats.totalGoals,
+    completedGoals: stats.completedGoals,
+    dateRange,
+  });
+
   // Dados para os cards de estatísticas
   const statsCards = [
     {
@@ -159,11 +166,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
       subtitle: "Tempo total",
     },
     {
-      title: "Sequência Atual",
-      value: `${stats.currentStreak} dias`,
+      title: "Metas do Período",
+      value: `${stats.completedGoals || 0} de ${stats.totalGoals || 0}`,
       icon: Users,
       color: "orange",
-      subtitle: "Dias consecutivos",
+      subtitle: (stats.totalGoals || 0) > 0 
+        ? `${Math.round(((stats.completedGoals || 0) / (stats.totalGoals || 0)) * 100)}% concluídas`
+        : "Nenhuma meta criada",
     },
   ];
   return (
@@ -179,8 +188,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
         className={`flex-shrink-0 text-white shadow-2xl backdrop-blur-md border-b relative z-50
         ${
           isDarkMode
-            ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
-            : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
+            ? "bg-gradient-to-r from-purple-900/90 to-violet-900/90 border-purple-700/30"
+            : "bg-gradient-to-r from-purple-600/95 to-violet-600/95 border-purple-200/50"
         }`}
       >
         <div className="container mx-auto px-6 py-6">
@@ -223,8 +232,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDarkMode }) => {
                          transition-all duration-300 hover:scale-105 hover:shadow-2xl
                          ${
                            isDarkMode
-                             ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-slate-600/50"
-                             : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-slate-300/60"
+                             ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-purple-600/50"
+                             : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-purple-300/60"
                          }
                          shadow-xl hover:shadow-2xl`}
                 >

@@ -95,8 +95,8 @@ export const Config: React.FC<ConfigProps> = ({ isDarkMode, onToggleTheme }) => 
         className={`text-white shadow-2xl backdrop-blur-md border-b flex-shrink-0 rounded-t-2xl
         ${
           isDarkMode
-            ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
-            : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
+            ? "bg-gradient-to-r from-purple-900/90 to-violet-900/90 border-purple-700/30"
+            : "bg-gradient-to-r from-purple-600/95 to-violet-600/95 border-purple-200/50"
         }`}
       >
         <div className="px-6 py-5">

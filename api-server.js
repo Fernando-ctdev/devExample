@@ -29,12 +29,28 @@ app.get('/api/technologies', async (req, res) => {
   try {
     console.log('Requisição recebida em /api/technologies');
     
+    // Otimização: Buscar apenas os dados necessários com select específicos
     const technologies = await prisma.technology.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        title: true,
+        color: true,
+        hoverColor: true,
+        logo: true,
+        alt: true,
+        padding: true,
+        createdAt: true,
+        updatedAt: true,
         categories: {
-          include: {
+          select: {
+            id: true,
+            name: true,
             items: {
-              include: {
+              select: {
+                id: true,
+                itemId: true,
+                title: true,
                 example: {
                   select: {
                     id: true,
@@ -44,9 +60,11 @@ app.get('/api/technologies', async (req, res) => {
                     explanation: true
                   }
                 }
-              }
+              },
+              orderBy: { createdAt: 'desc' }
             }
-          }
+          },
+          orderBy: { createdAt: 'desc' }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -165,16 +183,22 @@ app.get('/api/topics/:tech', async (req, res) => {
       });
     }
 
+    // Otimização: Buscar apenas os dados necessários
     const technology = await prisma.technology.findUnique({
       where: { name: tech.trim() },
-      include: {
+      select: {
+        id: true,
+        name: true,
         categories: {
-          include: {
+          select: {
+            id: true,
+            name: true,
             items: {
               select: {
                 itemId: true,
                 title: true
-              }
+              },
+              orderBy: { createdAt: 'desc' }
             }
           },
           orderBy: { createdAt: 'desc' }
@@ -219,16 +243,29 @@ app.get('/api/examples/:tech', async (req, res) => {
       });
     }
 
+    // Otimização: Buscar apenas os dados necessários
     const tech = await prisma.technology.findUnique({
       where: { name: techParam.trim() },
-      include: {
+      select: {
+        id: true,
+        name: true,
         categories: {
-          include: {
+          select: {
+            id: true,
+            name: true,
             items: {
               select: {
                 itemId: true,
                 title: true,
-                example: true,
+                example: {
+                  select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    code: true,
+                    explanation: true
+                  }
+                }
               }
             }
           }
@@ -531,8 +568,20 @@ app.get('/api/test', (req, res) => {
 // GET /api/certificates - Buscar todos os certificados
 app.get('/api/certificates', async (req, res) => {
   try {
+    // Otimização: Buscar apenas os dados necessários
     const certificates = await prisma.certificate.findMany({
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        issuer: true,
+        issueDate: true,
+        expiryDate: true,
+        credentialId: true,
+        link: true,
+        imageUrl: true,
+        skills: true,
+        technologyId: true,
         technology: {
           select: {
             id: true,
@@ -1355,42 +1404,91 @@ async function getDashboardStatistics(req, res) {
 
   const startDateTime = new Date(startDate);
   const endDateTime = new Date(endDate);
-  endDateTime.setHours(23, 59, 59, 999); // Incluir o dia inteiro
+  endDateTime.setHours(23, 59, 59, 999);
 
   console.log('📊 getDashboardStatistics - Período solicitado:', {
     startDate: startDateTime.toISOString(),
     endDate: endDateTime.toISOString()
   });
 
-  // Sessões de estudo no período (usar startTime para maior precisão)
-  const studySessions = await prisma.studySession.findMany({
-    where: {
-      startTime: {
-        gte: startDateTime,
-        lte: endDateTime
+  // Otimização: Executar consultas em paralelo e buscar apenas dados necessários
+  const [studySessions, uniqueEventsCount, completedEventsData, techSessionsData] = await Promise.all([
+    // Sessões de estudo no período
+    prisma.studySession.findMany({
+      where: {
+        startTime: {
+          gte: startDateTime,
+          lte: endDateTime
+        }
+      },
+      select: {
+        totalStudyTime: true,
+        startTime: true,
+        completed: true,
+        eventId: true
       }
-    },
-    select: {
-      totalStudyTime: true,
-      startTime: true,
-      completed: true,
-      eventId: true
-    }
-  });
+    }),
 
-  console.log('📊 Sessões encontradas:', studySessions.length);
-  console.log('📊 Sessões detalhes:', studySessions.map(s => ({
-    date: s.startTime.toISOString(),
-    time: s.totalStudyTime,
-    completed: s.completed
-  })));
+    // Contar eventos únicos diretamente no banco
+    prisma.studySession.groupBy({
+      by: ['eventId'],
+      where: {
+        startTime: {
+          gte: startDateTime,
+          lte: endDateTime
+        }
+      },
+      _count: {
+        eventId: true
+      }
+    }),
+
+    // Eventos concluídos (verificando o campo completed da tabela study_event)
+    prisma.studyEvent.findMany({
+      where: {
+        date: {
+          gte: startDateTime,
+          lte: endDateTime
+        },
+        completed: true
+      },
+      select: {
+        id: true
+      }
+    }),
+
+    // Estatísticas por tecnologia (otimizado)
+    prisma.studySession.findMany({
+      where: {
+        startTime: {
+          gte: startDateTime,
+          lte: endDateTime
+        },
+        event: {
+          technologyId: { not: null }
+        }
+      },
+      select: {
+        totalStudyTime: true,
+        event: {
+          select: {
+            technology: {
+              select: {
+                id: true,
+                name: true,
+                title: true
+              }
+            }
+          }
+        }
+      }
+    })
+  ]);
 
   const totalSessions = studySessions.length;
   const totalStudyTimeSeconds = studySessions.reduce((sum, session) => {
     return sum + (session.totalStudyTime || 0);
   }, 0);
-
-  // Converter segundos para minutos para exibição
   const totalStudyTimeMinutes = Math.floor(totalStudyTimeSeconds / 60);
 
   console.log('📊 Totais calculados:', {
@@ -1399,89 +1497,43 @@ async function getDashboardStatistics(req, res) {
     totalStudyTimeMinutes
   });
 
-  // Eventos únicos no período (contados por sessões)
-  const uniqueEventIds = [...new Set(studySessions.map(s => s.eventId))];
-  const totalEvents = uniqueEventIds.length;
+  const totalEvents = uniqueEventsCount.length;
+  const completedEvents = completedEventsData.length;
 
-  // Eventos concluídos (todos as sessões do evento foram concluídas)
-  let completedEvents = 0;
-  for (const eventId of uniqueEventIds) {
-    const eventSessions = studySessions.filter(s => s.eventId === eventId);
-    const allCompleted = eventSessions.every(s => s.completed);
-    if (allCompleted) {
-      completedEvents++;
-    }
-  }
+  // Progresso do período solicitado (otimizado com uma única consulta)
+  const weeklyProgressData = await prisma.$queryRaw`
+    SELECT 
+      DATE("startTime") as date,
+      COUNT(*) as sessions_count,
+      COALESCE(SUM("totalStudyTime"), 0) as total_time
+    FROM "study_session" 
+    WHERE "startTime" >= ${startDateTime} AND "startTime" <= ${endDateTime}
+    GROUP BY DATE("startTime")
+    ORDER BY DATE("startTime")
+  `;
 
-  // Progresso do período solicitado (não sempre os últimos 7 dias)
   const weeklyProgress = [];
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   
-  // Calcular dias entre startDate e endDate
   const currentDate = new Date(startDateTime);
   const finalDate = new Date(endDateTime);
   
   while (currentDate <= finalDate) {
-    const date = new Date(currentDate);
-    date.setHours(0, 0, 0, 0);
+    const dateKey = currentDate.toISOString().split('T')[0];
+    const dayData = weeklyProgressData.find(d => d.date.toISOString().split('T')[0] === dateKey);
     
-    const dayEnd = new Date(date);
-    dayEnd.setHours(23, 59, 59, 999);
-    
-    const daySessionsCount = await prisma.studySession.count({
-      where: {
-        startTime: {
-          gte: date,
-          lte: dayEnd
-        }
-      }
-    });
-
-    const daySessionsTime = await prisma.studySession.aggregate({
-      where: {
-        startTime: {
-          gte: date,
-          lte: dayEnd
-        }
-      },
-      _sum: {
-        totalStudyTime: true
-      }
-    });
-
     weeklyProgress.push({
-      day: dayNames[date.getDay()],
-      horas: (daySessionsTime._sum.totalStudyTime || 0) / 3600, // converter segundos para horas
-      estudos: daySessionsCount
+      day: dayNames[currentDate.getDay()],
+      horas: dayData ? Number(dayData.total_time) / 3600 : 0,
+      estudos: dayData ? Number(dayData.sessions_count) : 0
     });
     
-    // Próximo dia
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
-  // Estatísticas por tecnologia no período
-  const techSessionsWithEvents = await prisma.studySession.findMany({
-    where: {
-      startTime: {
-        gte: startDateTime,
-        lte: endDateTime
-      },
-      event: {
-        technologyId: { not: null }
-      }
-    },
-    include: {
-      event: {
-        include: {
-          technology: true
-        }
-      }
-    }
-  });
-
-  // Agrupar por tecnologia
+  // Estatísticas por tecnologia (processamento otimizado)
   const techStatsMap = new Map();
-  techSessionsWithEvents.forEach(session => {
+  techSessionsData.forEach(session => {
     const tech = session.event?.technology;
     if (tech && session.totalStudyTime) {
       const existing = techStatsMap.get(tech.id) || { name: tech.title || tech.name, totalTime: 0 };
@@ -1495,69 +1547,165 @@ async function getDashboardStatistics(req, res) {
     .slice(0, 6)
     .map(tech => ({
       name: tech.name,
-      value: Math.round((tech.totalTime / 3600) * 10) / 10 // converter segundos para horas
+      value: Math.round((tech.totalTime / 3600) * 10) / 10
     }));
 
-  // Atividade mensal (baseada no período selecionado)
-  const monthlyActivity = [];
-  const sessionsInPeriod = await prisma.studySession.findMany({
-    where: {
-      startTime: {
-        gte: startDateTime,
-        lte: endDateTime
-      }
-    },
-    select: {
-      startTime: true
-    }
-  });
+  // Atividade mensal (otimizada com uma única consulta)
+  const monthlyActivityData = await prisma.$queryRaw`
+    SELECT 
+      DATE("startTime") as date,
+      COUNT(*) as session_count
+    FROM "study_session" 
+    WHERE "startTime" >= ${startDateTime} AND "startTime" <= ${endDateTime}
+    GROUP BY DATE("startTime")
+  `;
 
-  // Criar um mapa de contagem por dia
-  const activityMap = new Map();
-  sessionsInPeriod.forEach(session => {
-    const date = new Date(session.startTime);
-    const dateKey = date.toISOString().split('T')[0];
-    activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + 1);
-  });
-
-  // Converter para o formato esperado
-  activityMap.forEach((count, dateKey) => {
-    const date = new Date(dateKey);
-    monthlyActivity.push({
-      date: dateKey,
-      count: Math.min(count, 4), // Máximo 4 para o display
+  const monthlyActivity = monthlyActivityData.map(row => {
+    const date = new Date(row.date);
+    return {
+      date: row.date.toISOString().split('T')[0],
+      count: Math.min(Number(row.session_count), 4),
       day: date.getDate(),
       month: date.getMonth(),
       year: date.getFullYear()
-    });
+    };
   });
 
-  // Calcular sequência atual (mantendo a lógica original)
+  // Calcular sequência atual (otimizada)
+  const streakData = await prisma.$queryRaw`
+    SELECT DISTINCT DATE("startTime") as study_date
+    FROM "study_session" 
+    WHERE "startTime" >= ${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)}
+    ORDER BY study_date DESC
+  `;
+
   let currentStreak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  const streakStats = await prisma.studyStatistics.findMany({
-    where: {
-      technologyId: null,
-      categoryId: null,
-      totalSessions: { gt: 0 }
-    },
-    orderBy: {
-      date: 'desc'
-    },
-    take: 365
-  });
-
-  for (const stat of streakStats) {
-    const statDate = new Date(stat.date);
+  for (const row of streakData) {
+    const studyDate = new Date(row.study_date);
     const expectedDate = new Date(today);
     expectedDate.setDate(expectedDate.getDate() - currentStreak);
     
-    if (statDate.toDateString() === expectedDate.toDateString()) {
+    if (studyDate.toDateString() === expectedDate.toDateString()) {
       currentStreak++;
     } else {
       break;
+    }
+  }
+
+  // Calcular metas do período
+  let totalGoals = 0;
+  let completedGoals = 0;
+
+  // Função para obter semana do ano (mesma lógica do frontend)
+  const getWeekNumber = (date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return {
+      year: d.getFullYear(),
+      week: 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)
+    };
+  };
+
+  // Para debug, vou calcular a semana do dia atual também
+  const currentDay = new Date();
+  const currentWeek = getWeekNumber(currentDay);
+  console.log('📅 Comparação de semanas:', {
+    today: currentDay.toISOString(),
+    currentWeekCalc: currentWeek,
+    dashboardPeriodStart: startDateTime.toISOString(),
+    dashboardWeekCalc: getWeekNumber(startDateTime)
+  });
+
+  // Se for período semanal, buscar metas da semana específica
+  if (req.query.type === 'dashboard') {
+    const daysDiff = Math.ceil((endDateTime - startDateTime) / (1000 * 60 * 60 * 24));
+    
+    console.log('🗓️ Analisando período:', {
+      startDate: startDateTime.toISOString(),
+      endDate: endDateTime.toISOString(),
+      daysDiff,
+      isWeeklyPeriod: daysDiff <= 7
+    });
+    
+    try {
+      if (daysDiff <= 7) { 
+        // Para períodos semanais, usar a semana atual
+        const { year, week } = getWeekNumber(new Date());
+        
+        console.log('� Buscando metas semanais com:', { weekYear: year, weekNumber: week });
+        
+        const weeklyGoals = await prisma.weeklyGoal.findMany({
+          where: {
+            weekYear: year,
+            weekNumber: week,
+          }
+        });
+
+        totalGoals = weeklyGoals.length;
+        completedGoals = weeklyGoals.filter(goal => goal.completed).length;
+        
+        console.log('🎯 Metas semanais encontradas:', {
+          year,
+          week,
+          totalGoals,
+          completedGoals
+        });
+      } else {
+        // Para períodos maiores (mês, ano), buscar todas as semanas dentro do período
+        console.log('🔍 Buscando metas para período maior que uma semana');
+        
+        // Calcular todas as semanas que estão dentro do período
+        const weeksInPeriod = [];
+        const currentDate = new Date(startDateTime);
+        
+        while (currentDate <= endDateTime) {
+          const weekInfo = getWeekNumber(currentDate);
+          const weekKey = `${weekInfo.year}-${weekInfo.week}`;
+          
+          if (!weeksInPeriod.find(w => `${w.year}-${w.week}` === weekKey)) {
+            weeksInPeriod.push(weekInfo);
+          }
+          
+          currentDate.setDate(currentDate.getDate() + 7); // Avançar uma semana
+        }
+        
+        console.log('� Semanas no período:', weeksInPeriod);
+        
+        // Buscar metas de todas as semanas do período
+        const allGoalsInPeriod = await prisma.weeklyGoal.findMany({
+          where: {
+            OR: weeksInPeriod.map(week => ({
+              weekYear: week.year,
+              weekNumber: week.week
+            }))
+          }
+        });
+
+        totalGoals = allGoalsInPeriod.length;
+        completedGoals = allGoalsInPeriod.filter(goal => goal.completed).length;
+        
+        console.log('🎯 Metas do período encontradas:', {
+          periodsSearched: weeksInPeriod.length,
+          totalGoals,
+          completedGoals,
+          goals: allGoalsInPeriod.map(g => ({ 
+            title: g.title, 
+            completed: g.completed, 
+            weekYear: g.weekYear, 
+            weekNumber: g.weekNumber 
+          }))
+        });
+      }
+    } catch (error) {
+      console.warn('Erro ao buscar metas (tabela pode não existir ainda):', error.message);
+      // Se a tabela não existir ainda, usar valores padrão
+      totalGoals = 0;
+      completedGoals = 0;
     }
   }
 
@@ -1567,6 +1715,8 @@ async function getDashboardStatistics(req, res) {
     totalEvents: totalEvents,
     completedEvents: completedEvents,
     currentStreak: currentStreak,
+    totalGoals: totalGoals,
+    completedGoals: completedGoals,
     weeklyProgress: weeklyProgress,
     technologiesData: technologiesData,
     monthlyActivity: monthlyActivity
@@ -1734,3 +1884,129 @@ async function updateStudyStatistics(eventId, studyTime) {
     });
   }
 }
+
+// ===== WEEKLY GOALS API =====
+
+// GET /api/weekly-goals - Obter metas de uma semana específica
+app.get('/api/weekly-goals', async (req, res) => {
+  try {
+    const { weekYear, weekNumber } = req.query;
+
+    if (!weekYear || !weekNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'weekYear e weekNumber são obrigatórios'
+      });
+    }
+
+    const goals = await prisma.weeklyGoal.findMany({
+      where: {
+        weekYear: parseInt(weekYear),
+        weekNumber: parseInt(weekNumber),
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    res.json({
+      success: true,
+      data: goals,
+    });
+  } catch (error) {
+    console.error('Erro ao buscar metas semanais:', error);
+    handleError(res, error, 'Erro ao buscar metas semanais');
+  }
+});
+
+// POST /api/weekly-goals - Criar nova meta semanal
+app.post('/api/weekly-goals', async (req, res) => {
+  try {
+    const { title, description, weekYear, weekNumber } = req.body;
+
+    if (!title || !weekYear || !weekNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'title, weekYear e weekNumber são obrigatórios'
+      });
+    }
+
+    const goal = await prisma.weeklyGoal.create({
+      data: {
+        title,
+        description,
+        weekYear: parseInt(weekYear),
+        weekNumber: parseInt(weekNumber),
+      },
+    });
+
+    res.json({
+      success: true,
+      data: goal,
+    });
+  } catch (error) {
+    console.error('Erro ao criar meta semanal:', error);
+    handleError(res, error, 'Erro ao criar meta semanal');
+  }
+});
+
+// PUT /api/weekly-goals - Atualizar meta semanal
+app.put('/api/weekly-goals', async (req, res) => {
+  try {
+    const { id, title, description, completed } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID é obrigatório'
+      });
+    }
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (completed !== undefined) {
+      updateData.completed = completed;
+      updateData.completedAt = completed ? new Date() : null;
+    }
+
+    const goal = await prisma.weeklyGoal.update({
+      where: { id },
+      data: updateData,
+    });
+
+    res.json({
+      success: true,
+      data: goal,
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar meta semanal:', error);
+    handleError(res, error, 'Erro ao atualizar meta semanal');
+  }
+});
+
+// DELETE /api/weekly-goals - Remover meta semanal
+app.delete('/api/weekly-goals', async (req, res) => {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID é obrigatório'
+      });
+    }
+
+    await prisma.weeklyGoal.delete({
+      where: { id },
+    });
+
+    res.json({
+      success: true,
+      message: 'Meta removida com sucesso',
+    });
+  } catch (error) {
+    console.error('Erro ao remover meta semanal:', error);
+    handleError(res, error, 'Erro ao remover meta semanal');
+  }
+});

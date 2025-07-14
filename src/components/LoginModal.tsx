@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Brain } from 'lucide-react';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -42,115 +42,106 @@ const MicrosoftIcon = () => (
 
 const LoginModal = ({ 
   isOpen = true,
-  onClose = () => {}, 
-  isDark = true
+  onClose = () => {}
 }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Overlay com blur e grid pattern */}
+      {/* Overlay com blur e efeito glassmorphism */}
       <div className="absolute inset-0">
         <div 
-          className={`absolute inset-0 backdrop-blur-md ${isDark ? 'bg-blue-900/50' : 'bg-blue-50/50'}`}
+          className="absolute inset-0 backdrop-blur-md bg-black/70"
           onClick={onClose}
         />
         <div 
-          className={`absolute inset-0 opacity-10`}
+          className="absolute inset-0 opacity-10"
           style={{
-            backgroundImage: `linear-gradient(to right, ${isDark ? '#ffffff' : '#000000'} 1px, transparent 1px),
-                           linear-gradient(to bottom, ${isDark ? '#ffffff' : '#000000'} 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(to right, #8B5CF6 1px, transparent 1px),
+                           linear-gradient(to bottom, #8B5CF6 1px, transparent 1px)`,
             backgroundSize: '50px 50px'
           }}
         />
       </div>
       
-      {/* Modal */}
-      <div className={`relative w-full max-w-md ${isDark 
-        ? 'bg-gradient-to-b from-white/10 to-white/5' 
-        : 'bg-gradient-to-b from-white/80 to-white/40'} 
-        backdrop-blur-xl rounded-2xl border ${isDark 
-        ? 'border-white/20' 
-        : 'border-black/5'} 
-        shadow-2xl transform transition-all animate-fade-in
-        hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]`}>
+      {/* Modal com design moderno */}
+      <div className="relative w-full max-w-md bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl transform transition-all animate-fade-in hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]">
         
         {/* Conteúdo do Modal */}
         <div className="p-8">
           {/* Botão de fechar */}
           <button 
             onClick={onClose}
-            className={`absolute top-4 right-4 p-2 rounded-full 
-              ${isDark
-                ? 'hover:bg-white/10 text-white'
-                : 'hover:bg-black/5 text-gray-800'} 
-              transition-colors`}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-white transition-colors"
           >
             <X size={20} />
           </button>
 
-          {/* Cabeçalho */}
+          {/* Cabeçalho com branding */}
           <div className="text-center mb-8">
-            <h2 className={`text-3xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-              Acesse sua biblioteca
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-violet-500 flex items-center justify-center">
+                <Brain className="text-white" size={24} />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold mb-3 text-white">
+              Bem-vindo à <span className="bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">Mindra</span>
             </h2>
-            <p className={`${isDark ? 'text-blue-200' : 'text-gray-600'}`}>
-              Continue com sua conta preferida
+            <p className="text-gray-400">
+              Acesse sua plataforma de aprendizado inteligente
             </p>
           </div>
 
           {/* Botões de Login */}
           <div className="space-y-4">
             {/* Google */}
-            <button
-              className={`w-full p-4 rounded-xl backdrop-blur-sm border
-                ${isDark
-                  ? 'border-white/20 hover:bg-white/10 text-white'
-                  : 'border-black/10 hover:bg-black/5 text-gray-800'}
-                transition-all flex items-center justify-center gap-3
-                hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]
-                transform hover:-translate-y-0.5`}
-            >
+            <button className="w-full p-4 rounded-xl backdrop-blur-sm border border-white/20 hover:bg-white/10 text-white transition-all flex items-center justify-center gap-3 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)] transform hover:-translate-y-0.5 hover:border-purple-400/50">
               <GoogleIcon />
               <span>Continuar com Google</span>
             </button>
 
             {/* GitHub */}
-            <button
-              className={`w-full p-4 rounded-xl backdrop-blur-sm border
-                ${isDark
-                  ? 'border-white/20 hover:bg-white/10 text-white'
-                  : 'border-black/10 hover:bg-black/5 text-gray-800'}
-                transition-all flex items-center justify-center gap-3
-                hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]
-                transform hover:-translate-y-0.5`}
-            >
+            <button className="w-full p-4 rounded-xl backdrop-blur-sm border border-white/20 hover:bg-white/10 text-white transition-all flex items-center justify-center gap-3 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)] transform hover:-translate-y-0.5 hover:border-purple-400/50">
               <GithubIcon />
               <span>Continuar com GitHub</span>
             </button>
 
             {/* Microsoft */}
-            <button
-              className={`w-full p-4 rounded-xl backdrop-blur-sm border
-                ${isDark
-                  ? 'border-white/20 hover:bg-white/10 text-white'
-                  : 'border-black/10 hover:bg-black/5 text-gray-800'}
-                transition-all flex items-center justify-center gap-3
-                hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]
-                transform hover:-translate-y-0.5`}
-            >
+            <button className="w-full p-4 rounded-xl backdrop-blur-sm border border-white/20 hover:bg-white/10 text-white transition-all flex items-center justify-center gap-3 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)] transform hover:-translate-y-0.5 hover:border-purple-400/50">
               <MicrosoftIcon />
               <span>Continuar com Microsoft</span>
             </button>
           </div>
 
+          {/* Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 h-px bg-white/20"></div>
+            <span className="px-4 text-gray-400 text-sm">ou</span>
+            <div className="flex-1 h-px bg-white/20"></div>
+          </div>
+
+          {/* Botão de acesso como visitante */}
+          <button className="w-full p-4 rounded-xl backdrop-blur-sm bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white transition-all transform hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+            Continuar como visitante
+          </button>
+
           {/* Termos e Política */}
           <div className="mt-8">
-            <p className={`text-sm text-center max-w-sm mx-auto ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Ao continuar, você concorda com nossos <a href="#" className={`underline hover:text-blue-400 transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Termos de Serviço</a> e <a href="#" className={`underline hover:text-blue-400 transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Política de Privacidade</a>
+            <p className="text-sm text-center max-w-sm mx-auto text-gray-400">
+              Ao continuar, você concorda com nossos{' '}
+              <a href="#" className="underline hover:text-purple-400 transition-colors text-gray-300">
+                Termos de Serviço
+              </a>
+              {' '}e{' '}
+              <a href="#" className="underline hover:text-purple-400 transition-colors text-gray-300">
+                Política de Privacidade
+              </a>
             </p>
           </div>
         </div>
+
+        {/* Efeito de borda brilhante */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 via-transparent to-violet-500/20 pointer-events-none"></div>
       </div>
     </div>
   );

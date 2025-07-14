@@ -7,6 +7,7 @@ import {
   Edit2,
   ArrowLeft,
   Check,
+  Book,
 } from "lucide-react";
 import Prism from "prismjs";
 import "prismjs/components/prism-javascript";
@@ -15,7 +16,6 @@ import "prismjs/components/prism-go";
 import "prismjs/components/prism-sql";
 import "prismjs/themes/prism-tomorrow.css";
 import { ExampleViewProps } from "../types/types";
-import { TECH_LOGOS } from "../constants/technologies";
 
 export function ExampleView({
   example,
@@ -102,8 +102,8 @@ export function ExampleView({
         className={`sticky top-0 z-50 text-white shadow-2xl backdrop-blur-md border-b
         ${
           isDarkMode
-            ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
-            : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
+            ? "bg-gradient-to-r from-slate-900/90 via-purple-900/90 to-violet-900/90 border-purple-700/30"
+            : "bg-gradient-to-r from-purple-400/95 via-purple-500/95 to-violet-500/95 border-purple-200/50"
         }`}
       >
         <div className="container mx-auto px-6 py-4">
@@ -131,13 +131,10 @@ export function ExampleView({
                           bg-white/15 backdrop-blur-md border border-white/20
                           shadow-lg transition-all duration-300 hover:bg-white/25 hover:scale-105"
             >
-              {TECH_LOGOS[currentTech] && (
-                <img
-                  src={TECH_LOGOS[currentTech]}
-                  alt={`${currentTech} Logo`}
-                  className="w-6 h-6"
-                />
-              )}
+              <div className="flex items-center justify-center w-7 h-7 bg-white/20 rounded-full p-1.5">
+                {/* Ícone de caderno no lugar da imagem */}
+                <Book size={16} className="text-white" strokeWidth={2.5} />
+              </div>
               <span className="font-semibold capitalize text-base">
                 {currentTech}
               </span>
@@ -145,7 +142,7 @@ export function ExampleView({
               <div className="flex rounded-2xl bg-white/10 backdrop-blur-md shadow-lg">
                 <button
                   onClick={onNavigatePrevious}
-                  className="p-3 rounded-l-2xl hover:bg-white/20 
+                  className="p-3 rounded-l-2xl hover:bg-purple-500/30 
                            transition-all duration-300 hover:scale-105
                            shadow-sm hover:shadow active:scale-95"
                   title="Exemplo anterior"
@@ -154,7 +151,7 @@ export function ExampleView({
                 </button>
                 <button
                   onClick={onNavigateNext}
-                  className="p-3 rounded-r-2xl hover:bg-white/20 
+                  className="p-3 rounded-r-2xl hover:bg-purple-500/30 
                            transition-all duration-300 hover:scale-105
                            shadow-sm hover:shadow active:scale-95"
                   title="Próximo exemplo"
@@ -218,9 +215,9 @@ export function ExampleView({
           </div>
           {/* Explanation Card */}
           <div className="group bg-[#282a36] rounded-2xl overflow-hidden border border-[#44475a] shadow-[0_10px_40px_-4px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_50px_-4px_rgba(0,0,0,0.4)] transition-all duration-300">
-            <div className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-900/80 to-violet-900/80 border-b border-[#44475a]">
               <div className="flex items-center gap-2"></div>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-100">
+              <span className="text-sm font-medium text-slate-200">
                 Explicação
               </span>
               <button
@@ -229,7 +226,7 @@ export function ExampleView({
                     ? handleSave("explanation")
                     : setIsEditingExplanation(true)
                 }
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 transition-all duration-200 ease-in-out shadow-sm hover:shadow-md active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-white/10 hover:bg-purple-500/30 text-slate-200 transition-all duration-200 ease-in-out shadow-sm hover:shadow-md active:scale-95"
                 title={isEditingExplanation ? "Salvar" : "Editar"}
               >
                 {isEditingExplanation ? (
@@ -258,14 +255,14 @@ export function ExampleView({
         </div>
       </main>
 
-      {/* Copy Alert - Dracula Style */}
+      {/* Copy Alert - Projeto Style */}
       {showCopyAlert && (
         <div
           className="fixed bottom-12 right-12 
-                     bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
+                     bg-gradient-to-r from-purple-600/90 to-violet-600/90 text-white px-4 py-2.5
                      rounded-lg
-                     border border-[#6272a4]
-                     shadow-lg shadow-[#282a36]/50
+                     border border-purple-300/30
+                     shadow-lg shadow-purple-900/20
                      flex items-center gap-2 animate-slide-up"
         >
           <Check size={16} className="text-[#50fa7b]" />
@@ -278,12 +275,12 @@ export function ExampleView({
       {isSaving && (
         <div
           className="fixed bottom-12 right-12 
-                     bg-[#44475a] text-[#f8f8f2] px-4 py-2.5
-                     rounded-lg border border-[#6272a4]
-                     shadow-lg shadow-[#282a36]/50
+                     bg-gradient-to-r from-purple-600/90 to-violet-600/90 text-white px-4 py-2.5
+                     rounded-lg border border-purple-300/30
+                     shadow-lg shadow-purple-900/20
                      flex items-center gap-2"
         >
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#50fa7b]" />
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white" />
           <span className="font-medium">Salvando...</span>
         </div>
       )}
@@ -291,8 +288,8 @@ export function ExampleView({
       {saveError && (
         <div
           className="fixed bottom-12 right-12 
-                     bg-[#ff5555] text-white px-4 py-2.5
-                     rounded-lg border border-[#ff6e6e]
+                     bg-red-500/90 text-white px-4 py-2.5
+                     rounded-lg border border-red-300/30
                      shadow-lg
                      flex items-center gap-2"
         >

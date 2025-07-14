@@ -14,7 +14,7 @@ export function StudyModal({
 
   const studyDurations = [
     { value: 15, label: '15 min', description: 'Sessão rápida' },
-    { value: 25, label: '25 min', description: 'Pomodoro tradicional' },
+    { value: 25, label: '25 min', description: 'Pomodoro' },
     { value: 30, label: '30 min', description: 'Sessão média' },
     { value: 45, label: '45 min', description: 'Sessão longa' },
     { value: 60, label: '1 hora', description: 'Foco intenso' },
@@ -105,7 +105,7 @@ export function StudyModal({
                 <button
                   key={duration.value}
                   onClick={() => setSelectedDuration(duration.value)}
-                  className={`p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] ${
+                  className={`p-3 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] ${
                     selectedDuration === duration.value
                       ? isDarkMode
                         ? 'bg-gradient-to-r from-violet-600/20 to-purple-600/20 border-violet-500/50 shadow-lg'
@@ -116,7 +116,7 @@ export function StudyModal({
                   }`}
                 >
                   <div
-                    className={`text-lg font-bold ${
+                    className={`text-base font-bold ${
                       selectedDuration === duration.value
                         ? isDarkMode
                           ? 'text-violet-300'
@@ -129,7 +129,7 @@ export function StudyModal({
                     {duration.label}
                   </div>
                   <div
-                    className={`text-xs mt-1 ${
+                    className={`text-xs ${
                       selectedDuration === duration.value
                         ? isDarkMode
                           ? 'text-violet-400'

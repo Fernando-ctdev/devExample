@@ -2,6 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes beam {
+  0% {
+    transform: translateX(-100px) rotateZ(45deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100px) rotateZ(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes slide {
+  to {
+    transform: translate(calc(100cqw - 100%), calc(100cqh - 100%));
+  }
+}
+
+@keyframes spin-around {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+  }
+}
+
+.animate-beam {
+  animation: beam 8s linear infinite;
+}
+
+.animate-slide {
+  animation: slide var(--speed) ease-in-out infinite alternate;
+}
+
+.animate-spin-around {
+  animation: spin-around var(--speed) linear infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

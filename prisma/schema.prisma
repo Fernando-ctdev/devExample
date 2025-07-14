@@ -160,6 +160,22 @@ model Certificate {
   @@map("certificate")
 }
 
+model WeeklyGoal {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  completed   Boolean   @default(false)
+  weekYear    Int       // Ano da semana (ex: 2025)
+  weekNumber  Int       // Número da semana no ano (1-53)
+  completedAt DateTime? // Data quando foi marcada como concluída
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Índice composto para buscar metas por semana específica
+  @@index([weekYear, weekNumber])
+  @@map("weekly_goal")
+}
+
 enum StudyEventType {
   STUDY
   PROJECT

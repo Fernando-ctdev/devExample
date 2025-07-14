@@ -676,8 +676,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         className={`text-white shadow-2xl backdrop-blur-md border-b flex-shrink-0 rounded-t-2xl
         ${
           isDarkMode
-            ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
-            : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
+            ? "bg-gradient-to-r from-purple-900/90 to-violet-900/90 border-purple-700/30"
+            : "bg-gradient-to-r from-purple-600/95 to-violet-600/95 border-purple-200/50"
         }`}
       >
         <div className="px-6 py-5">
@@ -718,8 +718,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               onClick={() => setSelectedDay(null)}
               className={`text-lg font-bold cursor-pointer transition-all duration-300 hover:scale-105 ${
                 isDarkMode
-                  ? "text-white hover:text-violet-300"
-                  : "text-slate-900 hover:text-violet-600"
+                  ? "text-white hover:text-purple-300"
+                  : "text-slate-900 hover:text-purple-600"
               }`}
             >
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
@@ -738,8 +738,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               onClick={goToToday}
               className={`px-3 py-2 rounded-xl font-semibold text-xs transition-all duration-300 hover:scale-105 shadow-lg backdrop-blur-md border ${
                 isDarkMode
-                  ? "bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white border-violet-500/30"
-                  : "bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 text-white border-violet-400/30"
+                  ? "bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white border-purple-500/30"
+                  : "bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-white border-purple-400/30"
               }`}
             >
               Hoje
@@ -833,8 +833,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                       onClick={handleNewEventFromDay}
                       className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 hover:scale-105 ${
                         isDarkMode
-                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30"
-                          : "bg-violet-100 text-violet-700 border border-violet-200 hover:bg-violet-200"
+                          ? "bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30"
+                          : "bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200"
                       }`}
                     >
                       <Plus className="w-3 h-3" />
@@ -877,7 +877,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   {eventsLoading ? (
                     <div className="flex flex-col items-center justify-center py-8">
                       <div className={`w-8 h-8 border-2 border-dashed rounded-full animate-spin ${
-                        isDarkMode ? "border-violet-400" : "border-violet-600"
+                        isDarkMode ? "border-purple-400" : "border-purple-600"
                       }`}></div>
                       <p className={`text-sm mt-2 ${
                         isDarkMode ? "text-slate-400" : "text-slate-600"
@@ -988,8 +988,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                                           <span
                                             className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                               isDarkMode
-                                                ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                                                : "bg-violet-100 text-violet-700 border border-violet-200"
+                                                ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                                : "bg-purple-100 text-purple-700 border border-purple-200"
                                             }`}
                                           >
                                             {technologies.find(
@@ -1027,8 +1027,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                                       }}
                                       className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:scale-105 ${
                                         isDarkMode
-                                          ? "bg-violet-600/20 hover:bg-violet-600/30 text-violet-400"
-                                          : "bg-violet-100 hover:bg-violet-200 text-violet-600"
+                                          ? "bg-purple-600/20 hover:bg-purple-600/30 text-purple-400"
+                                          : "bg-purple-100 hover:bg-purple-200 text-purple-600"
                                       }`}
                                       title="Iniciar sessão de estudo"
                                     >
@@ -1159,12 +1159,12 @@ export const Calendar: React.FC<CalendarProps> = ({
                 <div className="flex items-center gap-3">
                   <div
                     className={`p-2 rounded-xl ${
-                      isDarkMode ? "bg-violet-500/20" : "bg-violet-100"
+                      isDarkMode ? "bg-purple-500/20" : "bg-purple-100"
                     }`}
                   >
                     <CalendarIcon
                       className={`w-5 h-5 ${
-                        isDarkMode ? "text-violet-400" : "text-violet-600"
+                        isDarkMode ? "text-purple-400" : "text-purple-600"
                       }`}
                     />
                   </div>{" "}
@@ -1219,8 +1219,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                   placeholder="Digite o nome do evento..."
                   className={`w-full px-4 py-3 rounded-xl border backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 text-base ${
                     isDarkMode
-                      ? "bg-slate-700/30 border-slate-600/50 text-white placeholder-slate-400 focus:ring-violet-500/50 focus:border-violet-500/50"
-                      : "bg-white/50 border-slate-200/50 text-slate-900 placeholder-slate-500 focus:ring-violet-400/50 focus:border-violet-400/50"
+                      ? "bg-slate-700/30 border-slate-600/50 text-white placeholder-slate-400 focus:ring-purple-500/50 focus:border-purple-500/50"
+                      : "bg-white/50 border-slate-200/50 text-slate-900 placeholder-slate-500 focus:ring-purple-400/50 focus:border-purple-400/50"
                   }`}
                 />
               </div>
@@ -1315,8 +1315,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                       }}
                       className={`w-full px-2 py-2 rounded-lg border backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 text-xs ${
                         isDarkMode
-                          ? "bg-slate-700/30 border-slate-600/50 text-white focus:ring-violet-500/50 focus:border-violet-500/50"
-                          : "bg-white/50 border-slate-200/50 text-slate-900 focus:ring-violet-400/50 focus:border-violet-400/50"
+                          ? "bg-slate-700/30 border-slate-600/50 text-white focus:ring-purple-500/50 focus:border-purple-500/50"
+                          : "bg-white/50 border-slate-200/50 text-slate-900 focus:ring-purple-400/50 focus:border-purple-400/50"
                       }`}
                     >
                       <option value="">Tecnologia</option>
@@ -1350,8 +1350,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                             ? "bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed"
                             : "bg-slate-100/50 border-slate-300/50 text-slate-400 cursor-not-allowed"
                           : isDarkMode
-                          ? "bg-slate-700/30 border-slate-600/50 text-white focus:ring-violet-500/50 focus:border-violet-500/50"
-                          : "bg-white/50 border-slate-200/50 text-slate-900 focus:ring-violet-400/50 focus:border-violet-400/50"
+                          ? "bg-slate-700/30 border-slate-600/50 text-white focus:ring-purple-500/50 focus:border-purple-500/50"
+                          : "bg-white/50 border-slate-200/50 text-slate-900 focus:ring-purple-400/50 focus:border-purple-400/50"
                       }`}
                     >
                       <option value="">Categoria</option>
@@ -1383,8 +1383,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                   rows={2}
                   className={`w-full px-3 py-2.5 rounded-xl border backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 resize-none text-sm ${
                     isDarkMode
-                      ? "bg-slate-700/30 border-slate-600/50 text-white placeholder-slate-400 focus:ring-violet-500/50 focus:border-violet-500/50"
-                      : "bg-white/50 border-slate-200/50 text-slate-900 placeholder-slate-500 focus:ring-violet-400/50 focus:border-violet-400/50"
+                      ? "bg-slate-700/30 border-slate-600/50 text-white placeholder-slate-400 focus:ring-purple-500/50 focus:border-purple-500/50"
+                      : "bg-white/50 border-slate-200/50 text-slate-900 placeholder-slate-500 focus:ring-purple-400/50 focus:border-purple-400/50"
                   }`}
                 />
               </div>
@@ -1406,11 +1406,11 @@ export const Calendar: React.FC<CalendarProps> = ({
                     className={`w-4 h-4 rounded border transition-all duration-300 focus:ring-2 focus:ring-offset-2 ${
                       isPastDate(newEvent.day) && newEvent.completed
                         ? isDarkMode
-                          ? "bg-slate-600/50 border-slate-500/50 text-violet-400 cursor-not-allowed opacity-60"
-                          : "bg-slate-200/50 border-slate-400/50 text-violet-400 cursor-not-allowed opacity-60"
+                          ? "bg-slate-600/50 border-slate-500/50 text-purple-400 cursor-not-allowed opacity-60"
+                          : "bg-slate-200/50 border-slate-400/50 text-purple-400 cursor-not-allowed opacity-60"
                         : isDarkMode
-                        ? "bg-slate-700/50 border-slate-600/50 text-violet-500 focus:ring-violet-500/50 focus:ring-offset-slate-800"
-                        : "bg-white border-slate-300 text-violet-500 focus:ring-violet-400/50 focus:ring-offset-white"
+                        ? "bg-slate-700/50 border-slate-600/50 text-purple-500 focus:ring-purple-500/50 focus:ring-offset-slate-800"
+                        : "bg-white border-slate-300 text-purple-500 focus:ring-purple-400/50 focus:ring-offset-white"
                     }`}
                   />
                   <span
@@ -1454,8 +1454,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                   className={`flex-1 px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:scale-105 text-sm ${
                     newEvent.title.trim()
                       ? isDarkMode
-                        ? "bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white"
-                        : "bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 text-white"
+                        ? "bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white"
+                        : "bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-white"
                       : isDarkMode
                       ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
                       : "bg-slate-200/50 text-slate-400 cursor-not-allowed"

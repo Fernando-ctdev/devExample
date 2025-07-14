@@ -103,6 +103,8 @@ async function getStudySessions(req: any, res: any) {
           id: true,
           title: true,
           type: true,
+          completed: true,
+          description: true,
           technology: {
             select: {
               id: true,
@@ -126,9 +128,15 @@ async function getStudySessions(req: any, res: any) {
     skip: parseInt(offset as string)
   });
 
+  // Adicionar cabeçalhos para evitar cache
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
   return res.status(200).json({
     success: true,
-    data: sessions
+    data: sessions,
+    timestamp: new Date().toISOString() // adicionar timestamp para debug
   });
 }
 

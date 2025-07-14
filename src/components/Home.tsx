@@ -1,13 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { HomeProps } from "../types/types";
-import { Calendar, Code2, TrendingUp, Clock, Play, BookOpen, Target } from "lucide-react";
+import { Calendar, Code2, TrendingUp, Clock, Play, BookOpen, Target, Home as HomeIcon, Plus, Edit2, Trash2, Check } from "lucide-react";
 import { StudyModal } from "./StudyModal";
+import { WeeklyGoalsModal } from "./WeeklyGoalsModal";
 import { useStudyTimerControl } from "../hooks/useStudyTimer";
 import { useWeeklyStats } from "../hooks/useWeeklyStats";
+import { useWeeklyGoals } from "../hooks/useWeeklyGoals";
 
 export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
   const [currentDate] = useState(new Date());
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
+  const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<{
+    id: string;
+    title: string;
+    description?: string;
+  } | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<{
     id: string;
     title: string;
@@ -15,6 +23,15 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
   } | null>(null);
   const { startSession } = useStudyTimerControl();
   const { stats: weeklyStats, loading: weeklyStatsLoading } = useWeeklyStats();
+  const { 
+    goals, 
+    loading: goalsLoading, 
+    stats: goalsStats,
+    addGoal,
+    updateGoal,
+    toggleGoalCompletion,
+    removeGoal,
+  } = useWeeklyGoals();
 
   // Tipos para eventos reais
   interface StudyEvent {
@@ -104,8 +121,14 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
 
   // Função para agrupar sessões por evento
   const groupSessionsByEvent = useCallback((sessions: StudySession[]): GroupedStudySession[] => {
+    console.log('Agrupando sessões, primeira sessão event.completed:', 
+      sessions.length > 0 ? sessions[0].event.completed : 'sem sessões');
+    
     const grouped = sessions.reduce((acc, session) => {
       const eventId = session.eventId;
+      
+      // Debug para verificar o campo completed do evento
+      console.log(`Sessão do evento ${session.event.title} tem completed = ${session.event.completed}`);
       
       if (!acc[eventId]) {
         acc[eventId] = {
@@ -113,7 +136,8 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
           eventTitle: session.event.title,
           eventDescription: session.event.description,
           eventType: session.event.type,
-          eventCompleted: session.event.completed || false,
+          // Garantir que o valor boolean do completed seja preservado
+          eventCompleted: session.event.completed === true,
           technology: session.event.technology,
           category: session.event.category,
           totalStudyTime: 0,
@@ -194,16 +218,30 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
         today: today.toISOString()
       });
       
+      // Adicionar um timestamp para evitar cache
+      const timestamp = new Date().getTime();
       const response = await fetch(
-        `http://localhost:3001/api/study-sessions?startDate=${startOfWeek.toISOString()}&endDate=${endOfWeek.toISOString()}&limit=10`
+        `http://localhost:3001/api/study-sessions?startDate=${startOfWeek.toISOString()}&endDate=${endOfWeek.toISOString()}&limit=10&_=${timestamp}`
       );
       
       if (response.ok) {
         const data = await response.json();
         console.log('🔍 Resposta da API de sessões:', data);
         if (data.success && data.data) {
+          // Debug para verificar se os eventos têm o campo 'completed'
+          data.data.forEach((session: StudySession) => {
+            console.log(`Evento: ${session.event.title}, completed: ${session.event.completed}`);
+          });
+          
           setStudySessions(data.data);
-          setGroupedStudySessions(groupSessionsByEvent(data.data));
+          const grouped = groupSessionsByEvent(data.data);
+          setGroupedStudySessions(grouped);
+          
+          // Debug para verificar se o agrupamento mantém o valor 'completed'
+          grouped.forEach((group) => {
+            console.log(`Grupo: ${group.eventTitle}, eventCompleted: ${group.eventCompleted}`);
+          });
+          
           console.log('✅ Sessões carregadas:', data.data.length);
         } else {
           setStudySessions([]);
@@ -331,6 +369,45 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
     });
   };
 
+  // Funções para gerenciar metas
+  const handleAddGoal = () => {
+    setEditingGoal(null);
+    setIsGoalsModalOpen(true);
+  };
+
+  const handleEditGoal = (goal: { id: string; title: string; description?: string }) => {
+    setEditingGoal(goal);
+    setIsGoalsModalOpen(true);
+  };
+
+  const handleSaveGoal = async (goalData: { title: string; description?: string }) => {
+    try {
+      if (editingGoal) {
+        await updateGoal(editingGoal.id, goalData);
+      } else {
+        await addGoal(goalData);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar meta:', error);
+    }
+  };
+
+  const handleToggleGoal = async (goalId: string) => {
+    try {
+      await toggleGoalCompletion(goalId);
+    } catch (error) {
+      console.error('Erro ao alternar meta:', error);
+    }
+  };
+
+  const handleDeleteGoal = async (goalId: string) => {
+    try {
+      await removeGoal(goalId);
+    } catch (error) {
+      console.error('Erro ao remover meta:', error);
+    }
+  };
+
   // Funções para gerenciar sessões de estudo
   const handleStartStudyClick = (eventId: string, eventTitle: string, eventType: string) => {
     setSelectedEvent({ id: eventId, title: eventTitle, type: eventType });
@@ -364,14 +441,14 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
         className={`flex-shrink-0 text-white shadow-2xl backdrop-blur-md border-b
         ${
           isDarkMode
-            ? "bg-gradient-to-r from-violet-900/90 to-purple-900/90 border-slate-700/50"
-            : "bg-gradient-to-r from-violet-600/95 to-purple-600/95 border-slate-200/50"
+            ? "bg-gradient-to-r from-purple-900/90 to-violet-900/90 border-purple-700/30"
+            : "bg-gradient-to-r from-purple-600/95 to-violet-600/95 border-purple-200/50"
         }`}
       >
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl backdrop-blur-md border border-white/20 bg-white/15">
-              <TrendingUp className="w-7 h-7 text-white" />
+              <HomeIcon className="w-7 h-7 text-white" />
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
@@ -388,371 +465,623 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
       {/* Main Content */}
       <main className="flex-1 p-6 flex flex-col min-h-0">
           <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0 pb-8">
-            {/* Cards de Estatísticas */}
-            <div className="flex-1 flex flex-col gap-6 min-h-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-fit">
-                {/* Total de Tecnologias */}
+        <div className="flex-1 flex flex-col gap-6 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-fit">
+            {/* Total de Tecnologias */}
+            <div
+              onClick={() => onNavigate("gallery")}
+              className={`group p-4 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl cursor-pointer hover:scale-[1.02] ${
+                isDarkMode
+                  ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-purple-500/50"
+                  : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-purple-400/50"
+              }`}
+              title="Clique para ver a galeria de tecnologias"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p
+                    className={`text-sm font-medium ${
+                      isDarkMode ? "text-slate-400" : "text-slate-600"
+                    }`}
+                  >
+                    Temas
+                  </p>
+                  <p
+                    className={`text-2xl font-bold mt-1 ${
+                      isDarkMode ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {totalTechnologies}
+                  </p>
+                  <p
+                    className={`text-xs mt-1 ${
+                      isDarkMode ? "text-slate-500" : "text-slate-500"
+                    }`}
+                  >
+                    Clique para ver galeria de estudo
+                  </p>
+                </div>
                 <div
-                  onClick={() => onNavigate("gallery")}
-                  className={`group p-4 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl cursor-pointer hover:scale-[1.02] ${
+                  className={`p-2 rounded-2xl transition-all duration-300 group-hover:scale-110 ${
                     isDarkMode
-                      ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-blue-500/50"
-                      : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-blue-400/50"
+                      ? "bg-blue-500/20 group-hover:bg-blue-500/30"
+                      : "bg-blue-100 group-hover:bg-blue-200"
                   }`}
-                  title="Clique para ver a galeria de tecnologias"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p
-                        className={`text-sm font-medium ${
-                          isDarkMode ? "text-slate-400" : "text-slate-600"
-                        }`}
-                      >
-                        Temas
-                      </p>
-                      <p
-                        className={`text-2xl font-bold mt-1 ${
-                          isDarkMode ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        {totalTechnologies}
-                      </p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          isDarkMode ? "text-slate-500" : "text-slate-500"
-                        }`}
-                      >
-                        Clique para ver galeria
-                      </p>
+                  <Code2
+                    className={`w-6 h-6 ${
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Progresso da Semana */}
+            <div
+              onClick={() => onNavigate("dashboard")}
+              className={`group p-4 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl cursor-pointer hover:scale-[1.02] ${
+                isDarkMode
+                  ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-purple-500/50"
+                  : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-purple-400/50"
+              }`}
+              title="Clique para ver o dashboard"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p
+                    className={`text-sm font-medium ${
+                      isDarkMode ? "text-slate-400" : "text-slate-600"
+                    }`}
+                  >
+                    Esta Semana
+                  </p>
+                  {weeklyStatsLoading ? (
+                    <div className="flex items-center mt-1 gap-2">
+                      <div className="w-4 h-4 border-2 border-t-transparent border-purple-500 rounded-full animate-spin"></div>
+                      <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                        Carregando...
+                      </span>
                     </div>
-                    <div
-                      className={`p-2 rounded-2xl transition-all duration-300 group-hover:scale-110 ${
-                        isDarkMode
-                          ? "bg-blue-500/20 group-hover:bg-blue-500/30"
-                          : "bg-blue-100 group-hover:bg-blue-200"
+                  ) : (
+                    <p
+                      className={`text-2xl font-bold mt-1 ${
+                        isDarkMode ? "text-white" : "text-gray-900"
                       }`}
                     >
-                      <Code2
-                        className={`w-6 h-6 ${
-                          isDarkMode ? "text-blue-400" : "text-blue-600"
-                        }`}
-                      />
-                    </div>
-                  </div>
+                      {weeklyStats?.formattedTime || "0h"}
+                    </p>
+                  )}
+                  <p
+                    className={`text-xs ${
+                      isDarkMode ? "text-slate-500" : "text-slate-500"
+                    }`}
+                  >
+                    {weeklyStats?.totalSessions 
+                      ? `${weeklyStats.totalSessions} sessões - Clique para dashboard` 
+                      : "de estudos - Clique para dashboard"}
+                  </p>
                 </div>
-
-                {/* Progresso da Semana */}
                 <div
-                  onClick={() => onNavigate("dashboard")}
-                  className={`group p-4 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl cursor-pointer hover:scale-[1.02] ${
+                  className={`p-2 rounded-2xl transition-all duration-300 group-hover:scale-110 ${
                     isDarkMode
-                      ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 hover:border-purple-500/50"
-                      : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50 hover:border-purple-400/50"
+                      ? "bg-purple-500/20 group-hover:bg-purple-500/30"
+                      : "bg-purple-100 group-hover:bg-purple-200"
                   }`}
-                  title="Clique para ver o dashboard"
                 >
-                  <div className="flex items-center justify-between">
+                  <Clock
+                    className={`w-6 h-6 ${
+                      isDarkMode ? "text-purple-400" : "text-purple-600"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Container para Histórico de Estudos e Metas da Semana */}
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
+            {/* Histórico de Estudos da Semana */}
+            <div
+              className={`rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl flex flex-col min-h-0 ${
+                isDarkMode
+                  ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50"
+                  : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50"
+              }`}
+            >
+              {/* Header */}
+              <div
+                className={`p-4 border-b flex-shrink-0 ${
+                  isDarkMode ? "border-slate-700/50" : "border-slate-200/50"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-4 rounded-xl ${
+                        isDarkMode
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-600"
+                          : "bg-gradient-to-r from-emerald-500 to-teal-500"
+                      } shadow-lg`}
+                    >
+                      <BookOpen className="w-5 h-5 text-white" />
+                    </div>
                     <div>
-                      <p
-                        className={`text-sm font-medium ${
-                          isDarkMode ? "text-slate-400" : "text-slate-600"
+                      <h3
+                        className={`text-sm font-bold ${
+                          isDarkMode ? "text-white" : "text-slate-800"
                         }`}
                       >
-                        Esta Semana
-                      </p>
-                      {weeklyStatsLoading ? (
-                        <div className="flex items-center mt-1 gap-2">
-                          <div className="w-4 h-4 border-2 border-t-transparent border-purple-500 rounded-full animate-spin"></div>
-                          <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                            Carregando...
-                          </span>
-                        </div>
-                      ) : (
-                        <p
-                          className={`text-2xl font-bold mt-1 ${
-                            isDarkMode ? "text-white" : "text-gray-900"
-                          }`}
-                        >
-                          {weeklyStats?.formattedTime || "0h"}
-                        </p>
-                      )}
+                        Histórico da Semana
+                      </h3>
                       <p
                         className={`text-xs ${
-                          isDarkMode ? "text-slate-500" : "text-slate-500"
+                          isDarkMode ? "text-slate-400" : "text-slate-600"
                         }`}
                       >
-                        {weeklyStats?.totalSessions 
-                          ? `${weeklyStats.totalSessions} sessões - Clique para dashboard` 
-                          : "de estudos - Clique para dashboard"}
+                        Últimos temas estudados
                       </p>
                     </div>
-                    <div
-                      className={`p-2 rounded-2xl transition-all duration-300 group-hover:scale-110 ${
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        console.log('🔄 Recarregando sessões...');
+                        // Força uma nova requisição sem cache
+                        fetch('http://localhost:3001/api/study-sessions?nocache=' + new Date().getTime())
+                          .then(r => r.text())
+                          .then(console.log)
+                          .catch(console.error);
+                        loadWeeklyStudySessions();
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 ${
                         isDarkMode
-                          ? "bg-purple-500/20 group-hover:bg-purple-500/30"
-                          : "bg-purple-100 group-hover:bg-purple-200"
+                          ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                       }`}
                     >
-                      <Clock
-                        className={`w-6 h-6 ${
-                          isDarkMode ? "text-purple-400" : "text-purple-600"
-                        }`}
-                      />
-                    </div>
+                      Atualizar Agora
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Histórico de Estudos da Semana */}
-              <div
-                className={`rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl flex-1 flex flex-col min-h-0 ${
-                  isDarkMode
-                    ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50"
-                    : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50"
-                }`}
+              {/* Conteúdo do Histórico com altura fixa e scroll */}
+              <div 
+                className="flex-1 overflow-y-auto min-h-0 events-scrollbar"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: isDarkMode
+                    ? "rgba(71, 85, 105, 0.5) transparent"
+                    : "rgba(148, 163, 184, 0.5) transparent",
+                }}
               >
-                {/* Header */}
-                <div
-                  className={`p-4 border-b flex-shrink-0 ${
-                    isDarkMode ? "border-slate-700/50" : "border-slate-200/50"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-4 rounded-xl ${
-                          isDarkMode
-                            ? "bg-gradient-to-r from-emerald-600 to-teal-600"
-                            : "bg-gradient-to-r from-emerald-500 to-teal-500"
-                        } shadow-lg`}
-                      >
-                        <BookOpen className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h3
-                          className={`text-sm font-bold ${
-                            isDarkMode ? "text-white" : "text-slate-800"
-                          }`}
-                        >
-                          Histórico da Semana
-                        </h3>
-                        <p
-                          className={`text-xs ${
-                            isDarkMode ? "text-slate-400" : "text-slate-600"
-                          }`}
-                        >
-                          Últimos temas estudados
-                        </p>
-                      </div>
+                <div className="p-4">
+                  {sessionsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <div className={`w-8 h-8 border-2 border-dashed rounded-full animate-spin ${
+                        isDarkMode ? "border-emerald-400" : "border-emerald-600"
+                      }`}></div>
+                      <p className={`text-sm mt-2 ${
+                        isDarkMode ? "text-slate-400" : "text-slate-600"
+                      }`}>
+                        Carregando histórico...
+                      </p>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          console.log('🔄 Recarregando sessões...');
-                          loadWeeklyStudySessions();
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 ${
+                  ) : groupedStudySessions.length > 0 ? (
+                    <div className="space-y-4">
+                      {groupedStudySessions.map((groupedSession) => (
+                      <div
+                        key={groupedSession.eventId}
+                        onClick={() => onNavigate("dashboard")}
+                        className={`p-4 rounded-xl border cursor-pointer ${
                           isDarkMode
-                            ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                            : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                            ? "bg-slate-700/50 border-slate-600/50"
+                            : "bg-slate-50/80 border-slate-200/50"
                         }`}
                       >
-                        Atualizar
+                        {/* Cabeçalho da Sessão */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            {/* Linha do topo com título e badges */}
+                            <div className="flex items-start gap-3 mb-1">
+                              <h4
+                                className={`font-semibold text-sm flex-1 ${
+                                  isDarkMode ? "text-white" : "text-slate-800"
+                                }`}
+                              >
+                                {groupedSession.eventTitle}
+                              </h4>
+                              
+                              {/* Container dos badges com espaçamento adequado */}
+                              <div className="flex items-center gap-2">
+                                {/* Badge da Tecnologia */}
+                                {groupedSession.technology && (
+                                  <span
+                                    className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                                      isDarkMode
+                                        ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                                        : "bg-violet-100 text-violet-700 border border-violet-200"
+                                    }`}
+                                  >
+                                    📚 {groupedSession.technology.name}
+                                  </span>
+                                )}
+                                
+                                {/* Badge do Tipo de Evento */}
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+                                    groupedSession.eventType === "STUDY"
+                                      ? isDarkMode 
+                                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                        : "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                      : groupedSession.eventType === "PROJECT"
+                                      ? isDarkMode 
+                                        ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                                        : "bg-blue-100 text-blue-700 border border-blue-200"
+                                      : isDarkMode 
+                                        ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                                        : "bg-violet-100 text-violet-700 border border-violet-200"
+                                  }`}
+                                >
+                                  <Target className="w-3 h-3" />
+                                  {groupedSession.eventType === "STUDY" 
+                                    ? "Estudo" 
+                                    : groupedSession.eventType === "PROJECT" 
+                                    ? "Projeto" 
+                                    : groupedSession.eventType === "REVIEW"
+                                    ? "Revisão"
+                                    : groupedSession.eventType === "MEETING"
+                                    ? "Reunião"
+                                    : groupedSession.eventType === "WORKSHOP"
+                                    ? "Workshop"
+                                    : groupedSession.eventType === "PRESENTATION"
+                                    ? "Apresentação"
+                                    : groupedSession.eventType === "PLANNING"
+                                    ? "Planejamento"
+                                    : groupedSession.eventType === "DEADLINE"
+                                    ? "Prazo"
+                                    : groupedSession.eventType}
+                                </span>
+                              </div>
+                            </div>
+
+                            {groupedSession.eventDescription && (
+                              <p
+                                className={`text-xs mb-1 ${
+                                  isDarkMode ? "text-slate-300" : "text-slate-600"
+                                }`}
+                              >
+                                {groupedSession.eventDescription}
+                              </p>
+                            )}
+                            <p
+                              className={`text-xs ${
+                                isDarkMode ? "text-slate-400" : "text-slate-600"
+                              }`}
+                            >
+                              {formatRelativeDate(groupedSession.lastSessionDate)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Estatísticas da Sessão */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div
+                            className={`p-3 rounded-lg ${
+                              isDarkMode
+                                ? "bg-slate-600/30 border border-slate-500/30"
+                                : "bg-white/80 border border-slate-200/50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <TrendingUp className={`w-3 h-3 ${
+                                isDarkMode ? "text-blue-400" : "text-blue-600"
+                              }`} />
+                              <span
+                                className={`text-sm font-medium ${
+                                  isDarkMode ? "text-slate-300" : "text-slate-700"
+                                }`}
+                              >
+                                Sessões
+                              </span>
+                            </div>
+                            <p
+                              className={`text-lg font-bold ${
+                                isDarkMode ? "text-blue-400" : "text-blue-600"
+                              }`}
+                            >
+                              {groupedSession.totalSessions} {groupedSession.totalSessions === 1 ? 'sessão' : 'sessões'}
+                            </p>
+                          </div>
+
+                          <div
+                            className={`p-3 rounded-lg ${
+                              isDarkMode
+                                ? "bg-slate-600/30 border border-slate-500/30"
+                                : "bg-white/80 border border-slate-200/50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <Clock className={`w-3 h-3 ${
+                                isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                              }`} />
+                              <span
+                                className={`text-sm font-medium ${
+                                  isDarkMode ? "text-slate-300" : "text-slate-700"
+                                }`}
+                              >
+                                Tempo Total
+                              </span>
+                            </div>
+                            <p
+                              className={`text-lg font-bold ${
+                                isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                              }`}
+                            >
+                              {formatStudyTime(groupedSession.totalStudyTime)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Estado vazio */
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center py-8">
+                      <div
+                        className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto ${
+                          isDarkMode
+                            ? "bg-slate-700/50 border border-slate-600/50"
+                            : "bg-slate-100/50 border border-slate-200/50"
+                        }`}
+                      >
+                        <BookOpen
+                          className={`w-8 h-8 ${
+                            isDarkMode ? "text-slate-500" : "text-slate-400"
+                          }`}
+                        />
+                      </div>
+                      <h4
+                        className={`text-lg font-semibold mb-2 ${
+                          isDarkMode ? "text-slate-300" : "text-slate-700"
+                        }`}
+                      >
+                        Nenhum estudo esta semana
+                      </h4>
+                      <p
+                        className={`text-sm mb-4 ${
+                          isDarkMode ? "text-slate-500" : "text-slate-500"
+                        }`}
+                      >
+                        Comece uma sessão de estudo para ver seu histórico aqui
+                      </p>
+                      <button
+                        onClick={() => onNavigate("calendar")}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                          isDarkMode
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                            : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                        }`}
+                      >
+                        Criar Evento
                       </button>
                     </div>
                   </div>
+                )}
                 </div>
+              </div>
+            </div>
 
-                {/* Conteúdo do Histórico com altura fixa e scroll */}
-                <div 
-                  className="flex-1 overflow-y-auto min-h-0 events-scrollbar"
-                  style={{
-                    scrollbarWidth: "thin",
-                    scrollbarColor: isDarkMode
-                      ? "rgba(71, 85, 105, 0.5) transparent"
-                      : "rgba(148, 163, 184, 0.5) transparent",
-                  }}
-                >
-                  <div className="p-4">
-                    {sessionsLoading ? (
-                      <div className="flex flex-col items-center justify-center py-8">
-                        <div className={`w-8 h-8 border-2 border-dashed rounded-full animate-spin ${
-                          isDarkMode ? "border-emerald-400" : "border-emerald-600"
-                        }`}></div>
-                        <p className={`text-sm mt-2 ${
+            {/* Metas da Semana */}
+            <div
+              className={`rounded-2xl border backdrop-blur-md transition-all duration-300 hover:shadow-2xl shadow-xl flex flex-col min-h-0 ${
+                isDarkMode
+                  ? "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50"
+                  : "bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-200/50"
+              }`}
+            >
+              {/* Header */}
+              <div
+                className={`p-4 border-b flex-shrink-0 ${
+                  isDarkMode ? "border-slate-700/50" : "border-slate-200/50"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-4 rounded-xl ${
+                        isDarkMode
+                          ? "bg-gradient-to-r from-violet-600 to-purple-600"
+                          : "bg-gradient-to-r from-violet-500 to-purple-500"
+                      } shadow-lg`}
+                    >
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3
+                        className={`text-sm font-bold ${
+                          isDarkMode ? "text-white" : "text-slate-800"
+                        }`}
+                      >
+                        Metas da Semana
+                      </h3>
+                      <p
+                        className={`text-xs ${
                           isDarkMode ? "text-slate-400" : "text-slate-600"
-                        }`}>
-                          Carregando histórico...
-                        </p>
-                      </div>
-                    ) : groupedStudySessions.length > 0 ? (
-                      <div className="space-y-4">
-                        {groupedStudySessions.map((groupedSession) => (
+                        }`}
+                      >
+                        {goalsStats.formattedPercentage} concluídas
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleAddGoal}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2 ${
+                      isDarkMode
+                        ? "bg-violet-600 hover:bg-violet-700 text-white"
+                        : "bg-violet-500 hover:bg-violet-600 text-white"
+                    }`}
+                  >
+                    <Plus className="w-3 h-3" />
+                    Nova Meta
+                  </button>
+                </div>
+              </div>
+
+              {/* Barra de Progresso */}
+              <div className="p-4 flex-shrink-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span
+                      className={`text-xs font-medium ${
+                        isDarkMode ? "text-slate-300" : "text-slate-700"
+                      }`}
+                    >
+                      Progresso da Semana
+                    </span>
+                    <span
+                      className={`text-xs font-bold ${
+                        isDarkMode ? "text-violet-400" : "text-violet-600"
+                      }`}
+                    >
+                      {goalsStats.completedGoals} de {goalsStats.totalGoals} metas
+                    </span>
+                  </div>
+                  <div
+                    className={`w-full h-2 rounded-full overflow-hidden ${
+                      isDarkMode ? "bg-slate-700" : "bg-slate-200"
+                    }`}
+                  >
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        isDarkMode
+                          ? "bg-gradient-to-r from-violet-600 to-purple-600"
+                          : "bg-gradient-to-r from-violet-500 to-purple-500"
+                      }`}
+                      style={{ width: `${goalsStats.completionPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de Metas */}
+              <div 
+                className="flex-1 overflow-y-auto min-h-0 events-scrollbar"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: isDarkMode
+                    ? "rgba(71, 85, 105, 0.5) transparent"
+                    : "rgba(148, 163, 184, 0.5) transparent",
+                }}
+              >
+                <div className="p-4">
+                  {goalsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <div className={`w-8 h-8 border-2 border-dashed rounded-full animate-spin ${
+                        isDarkMode ? "border-violet-400" : "border-violet-600"
+                      }`}></div>
+                      <p className={`text-sm mt-2 ${
+                        isDarkMode ? "text-slate-400" : "text-slate-600"
+                      }`}>
+                        Carregando metas...
+                      </p>
+                    </div>
+                  ) : goals.length > 0 ? (
+                    <div className="space-y-3">
+                      {goals.map((goal) => (
                         <div
-                          key={groupedSession.eventId}
-                          onClick={() => onNavigate("dashboard")}
-                          className={`p-4 rounded-xl border cursor-pointer ${
-                            isDarkMode
+                          key={goal.id}
+                          className={`p-4 rounded-xl border transition-all duration-200 ${
+                            goal.completed
+                              ? isDarkMode
+                                ? "bg-emerald-500/10 border-emerald-500/30"
+                                : "bg-emerald-50 border-emerald-200"
+                              : isDarkMode
                               ? "bg-slate-700/50 border-slate-600/50"
                               : "bg-slate-50/80 border-slate-200/50"
                           }`}
                         >
-                          {/* Cabeçalho da Sessão */}
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              {/* Linha do topo com título e badges */}
-                              <div className="flex items-start gap-3 mb-1">
-                                <h4
-                                  className={`font-semibold text-sm flex-1 ${
-                                    isDarkMode ? "text-white" : "text-slate-800"
-                                  }`}
-                                >
-                                  {groupedSession.eventTitle}
-                                </h4>
-                                
-                                {/* Container dos badges com espaçamento adequado */}
-                                <div className="flex items-center gap-2">
-                                  {/* Badge da Tecnologia */}
-                                  {groupedSession.technology && (
-                                    <span
-                                      className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                                        isDarkMode
-                                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                                          : "bg-violet-100 text-violet-700 border border-violet-200"
-                                      }`}
-                                    >
-                                      📚 {groupedSession.technology.name}
-                                    </span>
-                                  )}
-                                  
-                                  {/* Badge do Tipo de Evento */}
-                                  <span
-                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                                      groupedSession.eventType === "STUDY"
-                                        ? isDarkMode 
-                                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                                          : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                        : groupedSession.eventType === "PROJECT"
-                                        ? isDarkMode 
-                                          ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                                          : "bg-blue-100 text-blue-700 border border-blue-200"
-                                        : isDarkMode 
-                                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                                          : "bg-violet-100 text-violet-700 border border-violet-200"
-                                    }`}
-                                  >
-                                    <Target className="w-3 h-3" />
-                                    {groupedSession.eventType === "STUDY" 
-                                      ? "Estudo" 
-                                      : groupedSession.eventType === "PROJECT" 
-                                      ? "Projeto" 
-                                      : groupedSession.eventType === "REVIEW"
-                                      ? "Revisão"
-                                      : groupedSession.eventType === "MEETING"
-                                      ? "Reunião"
-                                      : groupedSession.eventType === "WORKSHOP"
-                                      ? "Workshop"
-                                      : groupedSession.eventType === "PRESENTATION"
-                                      ? "Apresentação"
-                                      : groupedSession.eventType === "PLANNING"
-                                      ? "Planejamento"
-                                      : groupedSession.eventType === "DEADLINE"
-                                      ? "Prazo"
-                                      : groupedSession.eventType}
-                                  </span>
-                                </div>
-                              </div>
+                          <div className="flex items-start gap-3">
+                            {/* Checkbox */}
+                            <button
+                              onClick={() => handleToggleGoal(goal.id)}
+                              className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 hover:scale-110 ${
+                                goal.completed
+                                  ? isDarkMode
+                                    ? "bg-emerald-600 border-emerald-600"
+                                    : "bg-emerald-500 border-emerald-500"
+                                  : isDarkMode
+                                  ? "border-slate-500 hover:border-violet-400"
+                                  : "border-slate-300 hover:border-violet-500"
+                              }`}
+                            >
+                              {goal.completed && (
+                                <Check className="w-3 h-3 text-white" />
+                              )}
+                            </button>
 
-                              {groupedSession.eventDescription && (
+                            {/* Conteúdo da Meta */}
+                            <div className="flex-1 min-w-0">
+                              <h4
+                                className={`font-semibold text-sm ${
+                                  goal.completed
+                                    ? isDarkMode
+                                      ? "text-emerald-300 line-through"
+                                      : "text-emerald-700 line-through"
+                                    : isDarkMode
+                                    ? "text-white"
+                                    : "text-slate-800"
+                                }`}
+                              >
+                                {goal.title}
+                              </h4>
+                              {goal.description && (
                                 <p
-                                  className={`text-xs mb-1 ${
-                                    isDarkMode ? "text-slate-300" : "text-slate-600"
+                                  className={`text-xs mt-1 ${
+                                    goal.completed
+                                      ? isDarkMode
+                                        ? "text-emerald-400/70"
+                                        : "text-emerald-600/70"
+                                      : isDarkMode
+                                      ? "text-slate-400"
+                                      : "text-slate-600"
                                   }`}
                                 >
-                                  {groupedSession.eventDescription}
+                                  {goal.description}
                                 </p>
                               )}
-                              <p
-                                className={`text-xs ${
-                                  isDarkMode ? "text-slate-400" : "text-slate-600"
-                                }`}
-                              >
-                                {formatRelativeDate(groupedSession.lastSessionDate)} • {groupedSession.totalSessions} {groupedSession.totalSessions === 1 ? 'sessão' : 'sessões'}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Estatísticas da Sessão */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div
-                              className={`p-3 rounded-lg ${
-                                isDarkMode
-                                  ? "bg-slate-600/30 border border-slate-500/30"
-                                  : "bg-white/80 border border-slate-200/50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 mb-1">
-                                <Clock className={`w-3 h-3 ${
-                                  isDarkMode ? "text-emerald-400" : "text-emerald-600"
-                                }`} />
-                                <span
-                                  className={`text-sm font-medium ${
-                                    isDarkMode ? "text-slate-300" : "text-slate-700"
-                                  }`}
-                                >
-                                  Tempo Total
-                                </span>
-                              </div>
-                              <p
-                                className={`text-lg font-bold ${
-                                  isDarkMode ? "text-emerald-400" : "text-emerald-600"
-                                }`}
-                              >
-                                {formatStudyTime(groupedSession.totalStudyTime)}
-                              </p>
                             </div>
 
-                            <div
-                              className={`p-3 rounded-lg ${
-                                isDarkMode
-                                  ? "bg-slate-600/30 border border-slate-500/30"
-                                  : "bg-white/80 border border-slate-200/50"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <div className="flex items-center gap-2">
-                                  <TrendingUp className={`w-3 h-3 ${
-                                    isDarkMode ? "text-blue-400" : "text-blue-600"
-                                  }`} />
-                                  <span
-                                    className={`text-sm font-medium ${
-                                      isDarkMode ? "text-slate-300" : "text-slate-700"
-                                    }`}
-                                  >
-                                    Status
-                                  </span>
-                                </div>
-                                <span
-                                  className={`text-sm px-2 py-0.5 rounded-full ${
-                                    groupedSession.eventCompleted || groupedSession.completedSessions === groupedSession.totalSessions
-                                      ? isDarkMode 
-                                        ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                                        : "bg-green-100 text-green-700 border border-green-200"
-                                      : isDarkMode 
-                                        ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                                        : "bg-yellow-100 text-yellow-700 border border-yellow-200"
-                                  }`}
-                                >
-                                  {groupedSession.eventCompleted || groupedSession.completedSessions === groupedSession.totalSessions ? 'Concluído' : 'Em andamento'}
-                                </span>
-                              </div>
-                              <p
-                                className={`text-lg font-bold ${
-                                  isDarkMode ? "text-blue-400" : "text-blue-600"
+                            {/* Botões de Ação */}
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleEditGoal({
+                                  id: goal.id,
+                                  title: goal.title,
+                                  description: goal.description,
+                                })}
+                                className={`p-1.5 rounded-md transition-all duration-200 hover:scale-110 ${
+                                  isDarkMode
+                                    ? "text-slate-400 hover:text-violet-400 hover:bg-violet-500/20"
+                                    : "text-slate-500 hover:text-violet-600 hover:bg-violet-100"
                                 }`}
+                                title="Editar meta"
                               >
-                                {groupedSession.totalSessions} {groupedSession.totalSessions === 1 ? 'sessão' : 'sessões'}
-                              </p>
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteGoal(goal.id)}
+                                className={`p-1.5 rounded-md transition-all duration-200 hover:scale-110 ${
+                                  isDarkMode
+                                    ? "text-slate-400 hover:text-red-400 hover:bg-red-500/20"
+                                    : "text-slate-500 hover:text-red-600 hover:bg-red-100"
+                                }`}
+                                title="Remover meta"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -769,7 +1098,7 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
                               : "bg-slate-100/50 border border-slate-200/50"
                           }`}
                         >
-                          <BookOpen
+                          <Target
                             className={`w-8 h-8 ${
                               isDarkMode ? "text-slate-500" : "text-slate-400"
                             }`}
@@ -780,32 +1109,34 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
                             isDarkMode ? "text-slate-300" : "text-slate-700"
                           }`}
                         >
-                          Nenhum estudo esta semana
+                          Nenhuma meta definida
                         </h4>
                         <p
                           className={`text-sm mb-4 ${
                             isDarkMode ? "text-slate-500" : "text-slate-500"
                           }`}
                         >
-                          Comece uma sessão de estudo para ver seu histórico aqui
+                          Defina suas metas para esta semana
                         </p>
                         <button
-                          onClick={() => onNavigate("calendar")}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                          onClick={handleAddGoal}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2 mx-auto ${
                             isDarkMode
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                              : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                              ? "bg-violet-600 hover:bg-violet-700 text-white"
+                              : "bg-violet-500 hover:bg-violet-600 text-white"
                           }`}
                         >
-                          Criar Evento
+                          <Plus className="w-4 h-4" />
+                          Nova Meta
                         </button>
                       </div>
                     </div>
                   )}
-                  </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
             {/* Mini Calendário e Eventos */}
             <div className="w-full lg:w-96 flex flex-col gap-4 min-h-0">
@@ -1083,6 +1414,18 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
           </div>
       </main>
 
+      {/* Modal de Metas da Semana */}
+      <WeeklyGoalsModal
+        isOpen={isGoalsModalOpen}
+        onClose={() => {
+          setIsGoalsModalOpen(false);
+          setEditingGoal(null);
+        }}
+        onSave={handleSaveGoal}
+        isDarkMode={isDarkMode}
+        editingGoal={editingGoal}
+      />
+
       {/* Modal de Configuração de Estudo */}
       {selectedEvent && (
         <StudyModal
@@ -1097,6 +1440,15 @@ export function Home({ isDarkMode, technologies, onNavigate }: HomeProps) {
           isDarkMode={isDarkMode}
         />
       )}
+
+      {/* Modal de Metas Semanais */}
+      <WeeklyGoalsModal
+        isOpen={isGoalsModalOpen}
+        onClose={() => setIsGoalsModalOpen(false)}
+        onSave={handleSaveGoal}
+        editingGoal={editingGoal}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 }

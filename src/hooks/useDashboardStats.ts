@@ -8,6 +8,8 @@ interface DashboardStats {
   totalEvents: number;
   completedEvents: number;
   currentStreak: number;
+  totalGoals: number; // total de metas no período
+  completedGoals: number; // metas concluídas no período
   weeklyProgress: Array<{
     day: string;
     horas: number;
@@ -58,10 +60,16 @@ const getDateRange = (type: DateRangeType): { startDate: Date; endDate: Date } =
 
 export const useDashboardStats = (rangeType: DateRangeType = 'this_week') => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (forceRefresh = false) => {
+    // Só carrega se for uma atualização forçada ou se ainda não carregou
+    if (!forceRefresh && hasInitialized) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -79,6 +87,7 @@ export const useDashboardStats = (rangeType: DateRangeType = 'this_week') => {
       
       if (data.success) {
         setStats(data.data);
+        setHasInitialized(true);
       } else {
         setError(data.error || 'Erro ao carregar estatísticas');
       }
@@ -88,16 +97,29 @@ export const useDashboardStats = (rangeType: DateRangeType = 'this_week') => {
     } finally {
       setLoading(false);
     }
+  }, [rangeType, hasInitialized]);
+
+  // Carregar apenas na primeira montagem ou quando o rangeType mudar
+  useEffect(() => {
+    if (!hasInitialized) {
+      fetchStats();
+    }
+  }, [fetchStats, hasInitialized]);
+
+  // Quando o rangeType muda, resetar o estado e recarregar
+  useEffect(() => {
+    setHasInitialized(false);
+    setStats(null);
   }, [rangeType]);
 
-  useEffect(() => {
-    fetchStats();
+  const refetch = useCallback(() => {
+    fetchStats(true);
   }, [fetchStats]);
 
   return {
     stats,
     loading,
     error,
-    refetch: fetchStats
+    refetch
   };
 };
